@@ -11,13 +11,20 @@
     "style": {
       "type": "object",
       "optional": true
+    },
+    "attr": {
+      "type": "object",
+      "optional": true,
+      "defaultIgnored": true,
+      "metadata": {
+        "examples": ["{tabIndex:1}", "{title:'hello'}", "{draggable:true}"]
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "image",
-    "description": "TODO",
-    "complexity": 43,
+    "description": "HTML image element",
     "tags": ["platform", "component", "media"]
   },
   "id": "059579bb-184f-435b-ace0-64ec95c9f125",
@@ -26,7 +33,7 @@
     "defaultWidth": 180,
     "defaultHeight": 240
   },
-  "type": "`U`&`C`&`V`&`J`",
+  "type": "`U`&`C`&`V`&`J`&`IM`",
   "system": true,
   "render": true
 }

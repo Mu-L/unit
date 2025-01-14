@@ -51,7 +51,7 @@ export const randomLiteralType = () => {
   return randomInArray(LITERAL_TREE_NODE_TYPE)
 }
 
-export const getTreeNodeTypeName = (tree_node_type: TreeNodeType) => {
+export const getTreeNodeTypeNameFallback = (tree_node_type: TreeNodeType) => {
   switch (tree_node_type) {
     case TreeNodeType.Number:
       return 'number'
@@ -60,9 +60,9 @@ export const getTreeNodeTypeName = (tree_node_type: TreeNodeType) => {
     case TreeNodeType.Boolean:
       return 'boolean'
     case TreeNodeType.ObjectExpression:
-      return 'string{}' // TODO
+      return 'string{}'
     case TreeNodeType.ArrayExpression:
-      return 'number[]' // TODO
+      return 'number[]'
   }
 }
 
@@ -110,19 +110,6 @@ export function randomTreeOfObjectLiteral(
       }
       children.push(key_value_tree)
     }
-  }
-
-  if (children.length === 0) {
-    const key_tree = getTree("'foo'")
-    const value_tree = getTree("'foo'")
-
-    let sample_key_value: TreeNode = {
-      value: `${key_tree.value}:${value_tree.value}`,
-      children: [key_tree, value_tree],
-      type: TreeNodeType.KeyValue,
-    }
-
-    children.push(sample_key_value)
   }
 
   return {
@@ -186,7 +173,7 @@ export function randomTreeOfTypeExpression(
   if (generics.size > 0) {
     for (const generic of generics) {
       const chosen_tree_type = randomInArray(LITERAL_TREE_NODE_TYPE)
-      const chosen_type = getTreeNodeTypeName(chosen_tree_type)
+      const chosen_type = getTreeNodeTypeNameFallback(chosen_tree_type)
 
       generic_type_map[generic] = chosen_type
     }

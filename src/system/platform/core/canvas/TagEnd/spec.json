@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "tag",
     "description": "{end: `end`}",
-    "complexity": 7,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "tag",
           "pinId": "v"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -36,8 +34,7 @@
           "unitId": "tag",
           "pinId": "kv"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "fe80edec-454f-4e87-ace4-51cdb5b5456f",

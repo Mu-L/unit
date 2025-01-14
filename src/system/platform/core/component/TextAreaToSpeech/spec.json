@@ -8,7 +8,6 @@
           "pinId": "style"
         }
       },
-      "type": "object",
       "metadata": {
         "position": {
           "0": {
@@ -25,7 +24,6 @@
           "pinId": "value"
         }
       },
-      "type": "string",
       "metadata": {
         "position": {
           "0": {
@@ -35,7 +33,7 @@
         }
       }
     },
-    "a": {
+    "voice": {
       "plug": {
         "0": {
           "unitId": "default",
@@ -49,8 +47,7 @@
             "y": -53
           }
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {},
@@ -211,7 +208,7 @@
         }
       }
     },
-    "ntxmggphc": {
+    "3": {
       "default": {
         "output": {
           "a": true
@@ -235,9 +232,8 @@
     "defaultHeight": 150
   },
   "metadata": {
-    "complexity": 77,
     "icon": "align-left",
-    "description": "speech text on enter",
+    "description": "speak text on enter",
     "tags": ["platform", "core", "component"],
     "position": {
       "merge": {
@@ -249,7 +245,7 @@
           "x": 22,
           "y": -2
         },
-        "ntxmggphc": {
+        "3": {
           "x": 130,
           "y": -14
         }
@@ -257,7 +253,7 @@
     }
   },
   "id": "360c691a-ac2d-11eb-95ec-b3053bd928da",
-  "type": "`U`&`G`",
+  "type": "`U`&`C`&`G`",
   "system": true,
   "render": true
 }

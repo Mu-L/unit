@@ -14,7 +14,7 @@
       }
     },
     "child": {
-      "type": "`C`",
+      "type": "<T:`C`>",
       "metadata": {
         "examples": ["${unit:{id:'f27cae4e-fea8-11ea-b91e-db41e114c426'}}"],
         "position": {
@@ -36,7 +36,6 @@
   "metadata": {
     "icon": "square",
     "description": "append `child` instance to `parent`",
-    "complexity": 3,
     "tags": ["platform", "api", "component"]
   },
   "id": "ee4715e6-f479-11ea-b231-bf95a7f38a99",

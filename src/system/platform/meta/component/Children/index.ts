@@ -1,7 +1,7 @@
 import { $ } from '../../../../../Class/$'
 import { Element_ } from '../../../../../Class/Element'
+import { Functional } from '../../../../../Class/Functional'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
 import { MethodNotImplementedError } from '../../../../../exception/MethodNotImplementedError'
 import { System } from '../../../../../system'
 import { A } from '../../../../../types/interface/A'
@@ -16,13 +16,12 @@ export interface O {
   children: A<C>
 }
 
-export default class Children extends Semifunctional<I, O> {
+export default class Children extends Functional<I, O> {
   constructor(system: System) {
     super(
       {
-        fi: ['parent'],
-        fo: ['children'],
-        i: [],
+        i: ['parent'],
+        o: ['children'],
       },
       {
         input: {
@@ -44,7 +43,7 @@ export default class Children extends Semifunctional<I, O> {
   f({ parent }: I, done: Done<O>): void {
     const _children = parent.refChildren()
 
-    const children = new (class Chidren_ extends $ implements A<any> {
+    const children = new (class Children_ extends $ implements A<any> {
       async append(a: any): Promise<void> {
         throw new MethodNotImplementedError()
       }
@@ -62,6 +61,14 @@ export default class Children extends Semifunctional<I, O> {
       }
 
       async indexOf(a: any): Promise<number> {
+        throw new MethodNotImplementedError()
+      }
+
+      async pop(): Promise<any> {
+        throw new MethodNotImplementedError()
+      }
+
+      shift(): Promise<any> {
         throw new MethodNotImplementedError()
       }
     })(this.__system)

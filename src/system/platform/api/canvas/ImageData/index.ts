@@ -1,14 +1,15 @@
+import { $ } from '../../../../../Class/$'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
 import { ID } from '../../../../../types/interface/ID'
 import { J } from '../../../../../types/interface/J'
-import { V } from '../../../../../types/interface/V'
+import { TA } from '../../../../../types/interface/TA'
 import { wrapImageData } from '../../../../../wrap/ImageData'
 import { ID_IMAGE_DATA } from '../../../../_ids'
 
 export interface I<T> {
-  data: V
+  data: TA & $
   width: number
   height: number
   opt: ImageDataSettings
@@ -19,13 +20,12 @@ export interface O<T> {
   image: J & ID
 }
 
-export default class ImageData_<T> extends Semifunctional<I<T>, O<T>> {
+export default class ImageData_<T> extends Holder<I<T>, O<T>> {
   constructor(system: System) {
     super(
       {
         fi: ['data', 'width', 'height', 'opt'],
         fo: ['image'],
-        i: ['done'],
       },
       {
         input: {
@@ -48,7 +48,7 @@ export default class ImageData_<T> extends Semifunctional<I<T>, O<T>> {
     let imageData: ImageData
 
     try {
-      const _data = await data.read()
+      const _data = data.raw()
 
       imageData = new ImageData(_data, width, height, opt)
     } catch (err) {
@@ -62,17 +62,5 @@ export default class ImageData_<T> extends Semifunctional<I<T>, O<T>> {
     done({
       image,
     })
-  }
-
-  onIterDataInputData(name: string) {
-    // if (name === 'done') {
-    this._forward_all_empty()
-
-    this._backward_all()
-
-    this._backward('data')
-
-    this._backward('done')
-    // }
   }
 }

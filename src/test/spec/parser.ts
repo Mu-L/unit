@@ -2,9 +2,11 @@ import * as assert from 'assert'
 import { evaluate } from '../../spec/evaluate'
 import { evaluateBundleStr } from '../../spec/idFromUnitValue'
 import {
+  TreeNodeType,
   applyGenerics,
   extractGenerics,
   filterEmptyNodes,
+  findAndReplaceUnitNodes,
   findGenerics,
   getLastLeafPath,
   getNextLeafPath,
@@ -23,17 +25,21 @@ import {
   isValidValue,
   matchAllExcTypes,
   removeNodeAt,
-  TreeNodeType,
   updateNodeAt,
 } from '../../spec/parser'
 import _classes from '../../system/_classes'
 import { ID_IDENTITY } from '../../system/_ids'
 import _specs from '../../system/_specs'
-import isEqual from '../../system/f/comparisson/Equals/f'
+import isEqual from '../../system/f/comparison/Equals/f'
 import { system } from '../util/system'
 
 const CUSTOM_GRAPH_UNIT_STR =
   '${unit:{id:"03972fcf-ab18-4f58-9ed0-b395f9589d0d"},specs:{"03972fcf-ab18-4f58-9ed0-b395f9589d0d":{type:"`U`&`G`&`C`",name:"untitled",units:{textbox:{id:"9988a56e-6bee-46c8-864c-e351d84bc7e2",input:{value:{constant:false},style:{constant:true,data:"{}"}},output:{div:{ignored:true}},metadata:{position:{x:-92,y:-281},component:{width:199.90983628557666,height:42.03120109148989}}},checkbox:{id:"096fc4ca-edd2-11ea-8266-37b634a3ee0b",input:{value:{ignored:true},style:{constant:true,data:"{width:\\\\"16px\\\\",height:\\\\"16px\\\\"}"},attr:{ignored:true}},output:{value:{}},metadata:{position:{x:237,y:-11}}},icon:{id:"63a417e5-d354-4b39-9ebd-05f55e70de7b",input:{style:{constant:true,data:"{width:\\\\"16px\\\\",height:\\\\"16px\\\\"}"},icon:{constant:true,data:"\\\\"x\\\\""}},output:{},metadata:{position:{x:229,y:-189}}},flexrow:{id:"ad5a2fcc-fdee-11ea-a34f-77e9c48dbe57",input:{style:{constant:true,data:"{gap:\\\\"12px\\\\"}"}},output:{},metadata:{position:{x:-112,y:-120}}}},merges:{},inputs:{value:{plug:{0:{unitId:"textbox",pinId:"value"}},type:"string"}},outputs:{},metadata:{icon:"question",description:""},render:true,component:{subComponents:{textbox:{children:[],childSlot:{}},checkbox:{children:[],childSlot:{}},icon:{children:[],childSlot:{}},flexrow:{children:[],childSlot:{}}},children:["checkbox","textbox","icon","flexrow"],defaultWidth:270,defaultHeight:180},id:"03972fcf-ab18-4f58-9ed0-b395f9589d0d"}}}'
+
+Error.stackTraceLimit = 30
+
+const _evaluate = (str: string) => evaluate(str, _specs, _classes)
+const _isTypeMatch = (a: string, b: string) => isTypeMatch(system.specs, a, b)
 
 assert(getTree('{a:"1,2,3"}').children.length === 1)
 assert(getTree("{a:'1,2,3'}").children.length === 1)
@@ -46,6 +52,7 @@ assert(
 )
 
 assert.deepEqual(getTreeNodeType(':'), TreeNodeType.Invalid)
+assert.deepEqual(getTree('{:}').children[0].type, TreeNodeType.KeyValue)
 assert.deepEqual(getTreeNodeType('foo'), TreeNodeType.Invalid)
 assert.deepEqual(getTreeNodeType('1[2]'), TreeNodeType.PropExpression)
 assert.deepEqual(getTreeNodeType('[1[]'), TreeNodeType.ArrayLiteral)
@@ -55,6 +62,7 @@ assert.deepEqual(getTreeNodeType('{a:}'), TreeNodeType.ObjectLiteral)
 assert.deepEqual(getTreeNodeType('{:1}'), TreeNodeType.ObjectLiteral)
 assert.deepEqual(getTreeNodeType('{a:{b:"}}'), TreeNodeType.ObjectLiteral)
 assert.deepEqual(getTreeNodeType('"a:b"'), TreeNodeType.StringLiteral)
+// assert.deepEqual(getTreeNodeType('"\\""'), TreeNodeType.StringLiteral)
 assert.deepEqual(getTreeNodeType('"\\""'), TreeNodeType.StringLiteral)
 assert.deepEqual(getTreeNodeType('"\r"'), TreeNodeType.StringLiteral)
 assert.deepEqual(
@@ -67,12 +75,27 @@ assert.deepEqual(getTreeNodeType('/abc/'), TreeNodeType.RegexLiteral)
 assert.deepEqual(getTreeNodeType('null'), TreeNodeType.Null)
 assert.deepEqual(getTreeNodeType('1+1'), TreeNodeType.ArithmeticExpression)
 assert.deepEqual(getTreeNodeType('`U`'), TreeNodeType.Class)
-assert.deepEqual(getTreeNodeType('`E`'), TreeNodeType.Class)
+assert.deepEqual(getTreeNodeType('`C`'), TreeNodeType.Class)
 assert.deepEqual(getTreeNodeType('`V<T>`'), TreeNodeType.Class)
 assert.deepEqual(getTreeNodeType('<T>[]'), TreeNodeType.ArrayExpression)
 assert.deepEqual(getTreeNodeType('string[]'), TreeNodeType.ArrayExpression)
+assert.deepEqual(getTreeNodeType('string[]|object[]'), TreeNodeType.Or)
+assert.deepEqual(
+  getTreeNodeType('string[]|(string|number|boolean)[]'),
+  TreeNodeType.Or
+)
+assert.deepEqual(
+  getTreeNodeType('(string[]|(string|number|boolean)[])[]'),
+  TreeNodeType.ArrayExpression
+)
+
 assert.deepEqual(getTreeNodeType("'string|number'"), TreeNodeType.StringLiteral)
 assert.deepEqual(getTreeNodeType('(string)'), TreeNodeType.Expression)
+assert.deepEqual(getTreeNodeType('(string)[]|(<T>[])'), TreeNodeType.Or)
+assert.deepEqual(
+  getTreeNodeType('(string|(number)[])[]|(string|<T>[])'),
+  TreeNodeType.Or
+)
 assert.deepEqual(
   getTreeNodeType("'{a:number}&{b:string}'"),
   TreeNodeType.StringLiteral
@@ -193,8 +216,6 @@ assert(!isValidType('foo:false'))
 assert(!isValidType('<T>["S",K]'))
 assert(!isValidObjKey('*'))
 
-const _isTypeMatch = (a: string, b: string) => isTypeMatch(system.specs, a, b)
-
 assert(_isTypeMatch('number', 'number|string'))
 assert(_isTypeMatch('string', 'number|string'))
 assert(_isTypeMatch('number', '(number|string)'))
@@ -255,6 +276,13 @@ assert(_isTypeMatch('string[]&object', 'string[]'))
 assert(_isTypeMatch('string[]&object', '<A>[]'))
 assert(_isTypeMatch('string[]|object', 'string[]|object'))
 assert(_isTypeMatch('string[]|{foo:"bar"}', 'string[]|object'))
+assert(_isTypeMatch('(string|(string|boolean))[]', '(string|boolean)[]'))
+assert(
+  _isTypeMatch(
+    '(string|(string|number|boolean))[][]',
+    '(string|number|boolean)[][]'
+  )
+)
 assert(_isTypeMatch('[]', '[]'))
 assert(_isTypeMatch('{a:"foo"}', 'string{}'))
 assert(_isTypeMatch('{a:1}', 'number{}'))
@@ -265,6 +293,8 @@ assert(_isTypeMatch('<T>', '<K>[]'))
 assert(_isTypeMatch('any', 'object'))
 assert(_isTypeMatch('object', '{}'))
 assert(_isTypeMatch('object', '{"x":number,"y":number}'))
+assert(_isTypeMatch('{background: "color"}', 'object'))
+assert(_isTypeMatch('{background:"color"}', 'object'))
 assert(_isTypeMatch('<T>', ID_IDENTITY))
 assert(_isTypeMatch('any', ID_IDENTITY))
 assert(_isTypeMatch(`\${${ID_IDENTITY}}`, 'any'))
@@ -284,6 +314,13 @@ assert(_isTypeMatch('`C`', '<T>'))
 assert(_isTypeMatch('`C`', 'any'))
 assert(_isTypeMatch('any', '`C`'))
 assert(_isTypeMatch('{a:}', '{a:any}'))
+assert(
+  _isTypeMatch(
+    '(string[]|(string|number|boolean)[])[]',
+    '(string|number|boolean)[][]'
+  )
+)
+assert(_isTypeMatch('`U`&`G`', '`U`&`C`&`G`'))
 
 assert(!_isTypeMatch('', 'any'))
 assert(!_isTypeMatch('abc', 'any'))
@@ -297,7 +334,6 @@ assert(!_isTypeMatch('string[]|object', '<A>[]'))
 assert(!_isTypeMatch('[]', '[1]'))
 assert(!_isTypeMatch('[1,2,3]', '[1,2,3,4]'))
 assert(!_isTypeMatch('[1,2,3]', '[number,number, string]'))
-// assert(!_isTypeMatch('{background: "color"}', 'object'))
 assert(!_isTypeMatch('null', ID_IDENTITY))
 assert(!_isTypeMatch('object', 'class'))
 assert(!_isTypeMatch('number', 'class'))
@@ -307,7 +343,6 @@ assert(!_isTypeMatch('`U`', '`G`'))
 assert(!_isTypeMatch('`U`', '`G`&`U`'))
 assert(!_isTypeMatch('`U`&`C`', '`U`&`G`'))
 assert(!_isTypeMatch('`U`&`C`&`V`&`J`', '`G`'))
-assert(!_isTypeMatch('`U`&`G`', '`U`&`C`&`G`'))
 
 assert(isValidValue('null'))
 assert(isValidValue('"foo"'))
@@ -319,7 +354,7 @@ assert(isValidValue('"\\"foo\\""'))
 assert(isValidValue('"\\"foo\\""'))
 assert(isValidValue('"\\"\\\\"foo\\\\"\\""'))
 assert(isValidValue('"\\"\\\\"\\\\\\"foo\\\\\\"\\\\"\\""'))
-// assert(!isValidValue('"\\"\\\\"\\\\"foo\\\\\\"\\\\"\\""')) // TODO
+assert(isValidValue('"\\"\\\\"\\\\"foo\\\\\\"\\\\"\\""'))
 assert(isValidValue('"foo   "'))
 assert(isValidValue('"\t"'))
 assert(isValidValue('"\n"'))
@@ -350,6 +385,8 @@ assert(isValidValue('{number:1}'))
 assert(isValidValue('{class:1}'))
 assert(isValidValue('{foo:"bar",}')) // trailing comma
 assert(isValidValue("{Ç:'Ç'}"))
+assert(isValidValue('"\\""'))
+assert(isValidValue(JSON.stringify("\""))) // prettier-ignore
 assert(isValidValue(JSON.stringify(["", "\""]))) // prettier-ignore
 assert(isValidValue('1e23'))
 assert(isValidValue('{foo?:"bar"}'))
@@ -403,6 +440,12 @@ assert(
   )
 )
 assert(isValidValue('[{a:1,b:2,},]'))
+assert(isValidValue('{"data":{"data":";overflow:hidden;}</style>"}}'))
+assert(isValidValue('""'))
+assert(isValidValue('["\\"","g"]'))
+assert(isValidValue('["\\\\","g"]'))
+assert(isValidValue("'\\''"))
+assert(isValidValue("['\\'',\"g\"]"))
 
 assert(!isValidValue('foo'))
 assert(!isValidValue('{foo:bar}'))
@@ -419,6 +462,9 @@ assert(!isValidValue('{::1}'))
 assert(!isValidValue('{""":1}'))
 assert(!isValidValue("{{':1}"))
 assert(!isValidValue('a + 1'))
+assert(!isValidValue('"\\"'))
+assert(!isValidValue('["\\"]'))
+assert(!isValidValue('[\'\\\',"g"]'))
 // assert(!isValidValue('{foo: "bar"}'))
 
 const _getValueType = (str: string) => getValueType(_specs, str)
@@ -426,7 +472,6 @@ const _getValueType = (str: string) => getValueType(_specs, str)
 assert.equal(_getValueType('"foo"'), 'string')
 assert.equal(_getValueType("'foo'"), 'string')
 assert.equal(_getValueType('1'), 'number')
-// assert.equal(_getValueType(), 'any[]')
 assert.equal(_getValueType('[]'), '<T>[]')
 assert.equal(_getValueType('-2e-23'), 'number')
 assert.equal(_getValueType('/abc/'), 'regex')
@@ -434,11 +479,23 @@ assert.equal(_getValueType('true'), 'boolean')
 assert.equal(_getValueType('false'), 'boolean')
 assert.equal(_getValueType('{}'), '{}')
 assert.equal(_getValueType('{a:1,b:2}'), '{a:number,b:number}')
+assert.equal(_getValueType('["foo",1]'), '(string|number)[]')
+assert.equal(_getValueType('["foo",1,2,true]'), '(string|number|boolean)[]')
+assert.equal(
+  _getValueType('[{a:1,b:2},{a:1,c:3}]'),
+  '({a:number,b:number}|{a:number,c:number})[]'
+)
 assert.equal(
   _getValueType(
     `'{ "error": {  "errors": [   {    "domain": "global",    "reason": "required",    "message": "Login Required",    "locationType": "header",    "location": "Authorization"   }  ],  "code": 401,  "message": "Login Required" }}'`
   ),
   'string'
+)
+assert.equal(
+  _getValueType(
+    '[["beginPath"],["arc",100,100,19.399999999999224,84.08996336108721,84.28996336108722,false],["stroke"]]'
+  ),
+  '(string[]|(string|number|boolean)[])[]'
 )
 
 assert.deepEqual(findGenerics('"foo"'), new Set())
@@ -555,8 +612,6 @@ assert.equal(removeNodeAt('[0,1,2,3]', [0]), '[1,2,3]')
 assert.equal(removeNodeAt('{foo:"bar zaz"}', [0]), '{}')
 assert.equal(removeNodeAt('{foo:}', [0, 1]), '{foo}')
 
-const _evaluate = (str: string) => evaluate(str, _specs, _classes)
-
 assert.deepEqual(_evaluate('1'), 1)
 assert.deepEqual(_evaluate('Infinity'), Infinity)
 assert.deepEqual(_evaluate('"foo"'), 'foo')
@@ -666,19 +721,7 @@ assert.deepEqual(
   }
 )
 
-// assert(
-//   isTypeMatch(
-//     system,
-//     "${unit:{id:'dc5852d3-b212-48ee-9f05-6ea2de2ef515',input:{},output:{},memory:{input:{},output:{},memory:{unit:{},merge:{},exposedMerge:{},waitAll:{input:'{}',output:'{}',memory:'{__buffer:[],_forwarding:false,_backwarding:false,_forwarding_empty:false,_looping:false}'}}}},specs:{\"dc5852d3-b212-48ee-9f05-6ea2de2ef515\":{type:'`U`&`G`&`C`',name:'untitled',units:{},merges:{},inputs:{},outputs:{},metadata:{icon:null,description:''},id:'dc5852d3-b212-48ee-9f05-6ea2de2ef515'}}}",
-//     '`G`'
-//   )
-// )
-
-// assert(
-//   _getTypeTree(
-//     '{name:"cybermilla 0",inputs:{},outputs:{click:{plug:{0:{unitId:"onclick",pinId:"event"},1:{unitId:"onclick0",pinId:"event"},2:{unitId:"onclick1",pinId:"event"}}}},units:{cybermillabutton:{id:"91bbfe94-8960-4ef0-946d-d786a8dfceb6",input:{style:{data:"{background:\\"#FD5F55\\",background:\\"radial-gradient(ellipse at center, #ffffff -100%, #FD5F55 50%)\\"}\\"},value:{data:"\\"Fashion\\""}},output:{},metadata:{component:{width:274.7310791015625,height:122.5975341796875},position:{x:-550,y:57}}},cybermillabutton0:{id:"91bbfe94-8960-4ef0-946d-d786a8dfceb6",input:{style:{data:"{background:\\"#A6496A\\",background:\\"radial-gradient(ellipse at center, #ffffff -100%, #A6496A 50%)\\"}"},value:{data:"\\"Design"\\"}}},onclick:{id:"97c94516-add1-11ea-ba72-8f55299b735c",input:{element:{}},output:{event:{}},metadata:{position:{x:-368,y:57}}},onclick0:{id:"97c94516-add1-11ea-ba72-8f55299b735c",input:{element:{}},output:{event:{}},metadata:{position:{x:93,y:62}}},onclick1:{id:"97c94516-add1-11ea-ba72-8f55299b735c",input:{element:{}},output:{event:{}},metadata:{position:{x:343,y:39}}}},merges:{0:{onclick:{input:{element:true}},cybermillabutton:{output:{_self:true}}},1:{onclick0:{input:{element:true}},cybermillabutton0:{output:{_self:true}}},2:{onclick1:{input:{element:true}},cybermillabutton1:{output:{_self:true}}}},render:true,component:{subComponents:{box:{children:["box4"],childSlot:{box4:"default"}},box4:{children:["image","textdiv","textdiv0","box5"],childSlot:{image:"default",textdiv:"default",textdiv0:"default",box5:"default"}},box5:{children:["cybermillabutton","cybermillabutton0","cybermillabutton1"],childSlot:{cybermillabutton:"default",cybermillabutton0:"default",cybermillabutton1:"default"}},textdiv:{children:[]},textdiv0:{children:[]},image:{children:[]},cybermillabutton:{children:[]},cybermillabutton0:{children:[]},cybermillabutton1:{children:[]}},children:["box"],defaultWidth:480,defaultHeight:690},metadata:{complexity:26},type:"`U`&`G`&`C`",id:"56304648-a9f7-483b-ac7d-2bc63f0bf67f"}'
-//   )
-// )
+assert(isValidValue('\n{spec:{}\n}'))
 
 assert(
   isValidValue(
@@ -697,3 +740,14 @@ assert(
 
 assert.equal(filterEmptyNodes('{a:1,}').value, '{a:1}')
 assert.equal(filterEmptyNodes('[{a:1,},]').value, '[{a:1}]')
+
+assert.deepEqual(findAndReplaceUnitNodes(`\${unit:{id:'${ID_IDENTITY}'}}`)[0], [
+  [],
+])
+
+assert.deepEqual(
+  findAndReplaceUnitNodes(
+    '${"unit":{"id":"6575ff7d-7092-4461-996f-22c1a32d777b"},"specs":{"adc0a412-daa1-4083-a6a5-4196c1b05185":{"type":"`U`&`G`","name":"set title description","units":{"wait0":{"id":"ba38b0af-80c0-49e4-9e39-864396964ccc","input":{"a":{},"b":{}},"output":{"a":{}},"metadata":{"position":{"x":157,"y":-32}}},"setdescription":{"id":"954f5e49-021e-4b53-ba0a-ff3d820751e7","input":{"description":{}},"output":{},"metadata":{"position":{"x":201,"y":-115}}},"emptystring":{"id":"7c8e8a47-2225-4716-986e-1cb2af3ed3b3","input":{"any":{}},"output":{"\\"\\"":{}},"metadata":{"position":{"x":110,"y":-95}}},"emptystring0":{"id":"7c8e8a47-2225-4716-986e-1cb2af3ed3b3","input":{"any":{}},"output":{"\\"\\"":{}},"metadata":{"position":{"x":101,"y":-27}}},"constant0":{"id":"ff976ac8-c54f-4d37-8c7d-089c271cb433","input":{"a":{}},"output":{"a":{}},"metadata":{"position":{"x":271,"y":-31}}},"settitle":{"id":"4c407fad-f641-41c0-b7e9-db2f84676a3a","input":{"title":{}},"output":{},"metadata":{"position":{"x":186,"y":34}}},"onpointerenter":{"id":"c0bb493a-af78-11ea-b6fa-3b893b757a39","input":{"element":{}},"output":{"event":{}},"metadata":{"position":{"x":36,"y":7}}},"onpointerleave":{"id":"c7dba94e-af78-11ea-b7d7-47e14ca215b5","input":{"element":{}},"output":{"event":{}},"metadata":{"position":{"x":20,"y":-60}}},"wait1":{"id":"ba38b0af-80c0-49e4-9e39-864396964ccc","input":{"a":{},"b":{}},"output":{"a":{}},"metadata":{"position":{"x":112,"y":57}}},"constant1":{"id":"ff976ac8-c54f-4d37-8c7d-089c271cb433","input":{"a":{}},"output":{"a":{}},"metadata":{"position":{"x":185,"y":128}}}},"merges":{"7":{"wait0":{"input":{"a":true}},"constant0":{"output":{"a":true}}},"8":{"wait0":{"input":{"b":true}},"onpointerenter":{"output":{"event":true}},"wait1":{"input":{"b":true}}},"9":{"wait1":{"input":{"a":true}},"constant1":{"output":{"a":true}}},"10":{"emptystring0":{"output":{"\\"\\"":true}},"settitle":{"input":{"title":true}},"wait1":{"output":{"a":true}}},"11":{"wait0":{"output":{"a":true}},"setdescription":{"input":{"description":true}},"emptystring":{"output":{"\\"\\"":true}}},"12":{"emptystring":{"input":{"any":true}},"emptystring0":{"input":{"any":true}},"onpointerleave":{"output":{"event":true}}}},"inputs":{"description":{"plug":{"0":{"unitId":"constant0","pinId":"a","kind":"input"}},"ref":false},"element":{"plug":{"0":{"unitId":"onpointerleave","pinId":"element","kind":"input"},"1":{"unitId":"onpointerenter","pinId":"element","kind":"input"}},"ref":true},"name":{"plug":{"0":{"unitId":"constant1","pinId":"a","kind":"input"}},"ref":false}},"outputs":{},"metadata":{"icon":"question","description":""},"id":"adc0a412-daa1-4083-a6a5-4196c1b05185"},"954f5e49-021e-4b53-ba0a-ff3d820751e7":{"type":"`U`&`G`","name":"set description","units":{"set":{"id":"074ef6f4-a0a1-40f9-95c0-cf0ecc3d420c","input":{"obj":{},"name":{"constant":true,"data":"\\"description\\""},"data":{}},"output":{"data":{"ignored":true}}},"global0":{"id":"8383c41e-3f9b-4d04-8380-feb583a1404f","input":{},"output":{}}},"merges":{"9":{"set":{"input":{"obj":true}},"global0":{"output":{"_self":true}}}},"inputs":{"description":{"plug":{"0":{"unitId":"set","pinId":"data"}},"ref":false}},"outputs":{},"metadata":{"icon":"question","description":""},"id":"954f5e49-021e-4b53-ba0a-ff3d820751e7"},"4c407fad-f641-41c0-b7e9-db2f84676a3a":{"type":"`U`&`G`","name":"set title","units":{"set1":{"id":"074ef6f4-a0a1-40f9-95c0-cf0ecc3d420c","input":{"obj":{},"name":{"constant":true,"data":"\\"title\\""},"data":{}},"output":{"data":{"ignored":true}}},"global":{"id":"8383c41e-3f9b-4d04-8380-feb583a1404f","input":{},"output":{}}},"merges":{"18":{"set1":{"input":{"obj":true}},"global":{"output":{"_self":true}}}},"inputs":{"title":{"plug":{"0":{"unitId":"set1","pinId":"data","kind":"input"}},"ref":false}},"outputs":{},"metadata":{"icon":"question","description":""},"id":"4c407fad-f641-41c0-b7e9-db2f84676a3a"},"6575ff7d-7092-4461-996f-22c1a32d777b":{"type":"`U`&`G`&`C`","name":"gate","units":{"attachtext":{"id":"05b6f707-a009-40aa-aacb-a15888c2a8b3","input":{"component":{},"text":{"constant":false},"type":{"constant":true,"data":"\\"text/plain\\""},"done":{"ignored":true}},"output":{},"metadata":{"position":{"x":46,"y":186}}},"deepset":{"id":"419e468e-e4d4-11ea-8efb-2b9d815b1798","input":{"path":{"constant":true,"data":"[\\"spec\\",\\"units\\",\\"gate\\",\\"id\\"]"},"value":{"constant":false},"obj":{"constant":true,"data":"{}"}},"output":{"result":{}},"metadata":{"position":{"x":-164,"y":227}}},"box":{"id":"9eba84b6-d2ca-47e6-9195-8208dbb880bc","input":{"style":{"ignored":false},"attr":{"constant":true,"data":"{\\"draggable\\":true}"}},"output":{},"metadata":{"position":{"x":149,"y":132}}},"stringify":{"id":"ee184ea6-3c80-4119-919e-290620aafab0","input":{"json":{}},"output":{"string":{}},"metadata":{"position":{"x":-58,"y":207}}},"icon0":{"id":"63a417e5-d354-4b39-9ebd-05f55e70de7b","input":{"style":{"constant":false,"metadata":{"position":{"x":22,"y":-24}}},"attr":{"ignored":true,"metadata":{"position":{"x":219,"y":-135}},"constant":false},"icon":{"constant":false,"metadata":{"position":{"x":29,"y":-164}}}},"output":{},"metadata":{"position":{"x":-335,"y":-243},"component":{"width":128,"height":96}}},"mergedefault":{"id":"304e98ac-bda1-11ea-b416-9746f024148c","input":{"a":{},"default":{"constant":true,"data":"{\\"border\\":\\"4px solid\\",\\"borderRadius\\":\\"50%\\",\\"padding\\":\\"6px\\",\\"width\\":\\"45px\\",\\"height\\":\\"45px\\",\\"boxSizing\\":\\"border-box\\",\\"strokeWidth\\":\\"3px\\",\\"overflow\\":\\"visible\\"}","metadata":{"position":{"x":-71,"y":-136}}}},"output":{"a":{}},"metadata":{"position":{"x":-487,"y":-227}}},"mergedefault0":{"id":"304e98ac-bda1-11ea-b416-9746f024148c","input":{"a":{},"default":{"constant":true,"data":"{\\"width\\":\\"fit-content\\",\\"height\\":\\"fit-content\\"}"}},"output":{"a":{}},"metadata":{"position":{"x":297,"y":132}}},"idtospec":{"id":"b2626d61-b17d-4737-bea3-627c0322f9d6","input":{"id":{}},"output":{"spec":{}},"metadata":{"position":{"x":340,"y":-217}}},"deepget":{"id":"2ff102a7-b469-461f-a3b1-a61b81c1b325","input":{"path":{"constant":true,"data":"[\\"metadata\\",\\"icon\\"]"},"obj":{}},"output":{"result":{}},"metadata":{"position":{"x":-184,"y":-243}}},"deepget0":{"id":"2ff102a7-b469-461f-a3b1-a61b81c1b325","input":{"path":{"constant":true,"data":"[\\"name\\"]"},"obj":{}},"output":{"value":{}},"metadata":{"position":{"x":244,"y":-42}}},"settitledescription":{"id":"adc0a412-daa1-4083-a6a5-4196c1b05185","input":{"description":{},"element":{},"name":{}},"output":{},"metadata":{"position":{"x":53,"y":53}}},"touppercase":{"id":"d4e4d4b2-80e0-4066-8d6f-5051e9a11a10","input":{"a":{}},"output":{"A":{}},"metadata":{"position":{"x":145,"y":-2}}},"constant":{"id":"ff976ac8-c54f-4d37-8c7d-089c271cb433","input":{"a":{}},"output":{"a":{}}}},"merges":{"0":{"attachtext":{"input":{"component":true}},"box":{"output":{"_self":true}},"settitledescription":{"input":{"element":true}}},"1":{"stringify":{"input":{"json":true}},"deepset":{"output":{"result":true}}},"2":{"stringify":{"output":{"string":true}},"attachtext":{"input":{"text":true}}},"3":{"mergedefault":{"output":{"a":true}},"icon0":{"input":{"style":true}}},"4":{"deepget":{"output":{"value":true}},"icon0":{"input":{"icon":true}}},"5":{"mergedefault0":{"output":{"a":true}},"box":{"input":{"style":true}}},"6":{"deepget0":{"output":{"value":true}},"touppercase":{"input":{"a":true}}},"7":{"constant":{"output":{"a":true}},"deepget0":{"input":{"obj":true}}},"8":{"touppercase":{"output":{"A":true}},"settitledescription":{"input":{"name":true}}}},"inputs":{"id":{"plug":{"0":{"unitId":"idtospec","pinId":"id","kind":"input"},"1":{"unitId":"deepset","pinId":"value","kind":"input"}},"ref":false,"type":"string"},"style":{"plug":{"0":{"unitId":"mergedefault0","pinId":"a","kind":"input"}},"ref":false,"type":"object"},"description":{"plug":{"0":{"unitId":"settitledescription","pinId":"description","kind":"input"}},"type":"<A>"}},"outputs":{"spec":{"plug":{"0":{"unitId":"idtospec","pinId":"spec","kind":"output"},"1":{"unitId":"deepget","pinId":"obj","kind":"input"},"2":{"unitId":"constant","pinId":"a","kind":"input"}},"type":"object"}},"metadata":{"icon":"question","description":"","complexity":56},"render":true,"component":{"subComponents":{"box":{"children":["icon0"]},"icon0":{}},"children":["box"],"defaultWidth":278,"defaultHeight":245},"id":"6575ff7d-7092-4461-996f-22c1a32d777b"}}}'
+  )[0],
+  [[]]
+)

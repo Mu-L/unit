@@ -5,12 +5,12 @@ import { V } from '../../../../../types/interface/V'
 import { ID_WRITE } from '../../../../_ids'
 
 export interface I<T> {
-  value: V
+  value: V<T>
   data: T
 }
 
 export interface O<T> {
-  data: any
+  data: T
 }
 
 export default class Write<T> extends Functional<I<T>, O<T>> {
@@ -33,11 +33,14 @@ export default class Write<T> extends Functional<I<T>, O<T>> {
   }
 
   async f({ value, data }: I<T>, done: Done<O<T>>) {
-    try {
-      await value.write(data)
+    value.write(data, (data, err) => {
+      if (err) {
+        done(undefined, err)
+
+        return
+      }
+
       done({ data })
-    } catch (err) {
-      done(undefined, err.message)
-    }
+    })
   }
 }

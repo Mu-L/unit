@@ -103,9 +103,8 @@
   "inputs": {},
   "outputs": {},
   "metadata": {
-    "icon": "question",
-    "description": "SVG text",
-    "complexity": 88
+    "icon": "square",
+    "description": "SVG text"
   },
   "render": true,
   "component": {

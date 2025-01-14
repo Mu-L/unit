@@ -11,13 +11,13 @@
   "outputs": {
     "stream": {
       "type": "`MS`",
-      "ref": true
+      "ref": true,
+      "icon": "audio-waveform"
     }
   },
   "metadata": {
     "icon": "file-output",
-    "description": "streams audio from a source url",
-    "complexity": 12,
+    "description": "streams audio from a source url silently",
     "tags": ["platform", "api", "media", "audio"],
     "globals": ["Audio"]
   },

@@ -22,7 +22,7 @@
   "base": true,
   "metadata": {
     "icon": "film",
-    "complexity": 13,
+    "description": "get `stream` video tracks",
     "tags": ["platform", "api", "media"],
     "globals": ["MediaStreamTrack"]
   },

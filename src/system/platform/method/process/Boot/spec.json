@@ -17,8 +17,7 @@
   },
   "metadata": {
     "icon": "server",
-    "description": "asynchronously control a graph",
-    "complexity": 21,
+    "description": "boot a new sub system",
     "tags": ["platform", "method", "process"]
   },
   "id": "bddaba6f-83c8-4d25-97e2-ef1cdecd19e4",

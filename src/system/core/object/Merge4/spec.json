@@ -25,7 +25,6 @@
   "metadata": {
     "icon": "brackets-curly",
     "description": "merge objects `a`, `b`, `c` and `d` into `abcd`",
-    "complexity": 9,
     "tags": ["core", "object"]
   },
   "inputs": {
@@ -36,8 +35,7 @@
           "pinId": "b"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     },
     "c": {
       "plug": {
@@ -46,8 +44,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     },
     "a": {
       "plug": {
@@ -56,8 +53,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     },
     "b": {
       "plug": {
@@ -66,8 +62,7 @@
           "pinId": "b"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     }
   },
   "outputs": {
@@ -77,8 +72,7 @@
           "unitId": "merge3",
           "pinId": "abc"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "1f1b065a-937b-4630-be80-54edf795eb19",

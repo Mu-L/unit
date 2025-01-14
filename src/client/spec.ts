@@ -1,7 +1,9 @@
 import { UNTITLED } from '../constant/STRING'
 import { emptyGraphSpec } from '../spec/emptySpec'
-import { System } from '../system'
+import { getMergePinCount } from '../spec/util/spec'
 import { keyCount } from '../system/core/object/KeyCount/f'
+import isEqual from '../system/f/comparison/Equals/f'
+import deepMerge from '../system/f/object/DeepMerge/f'
 import { keys } from '../system/f/object/Keys/f'
 import {
   ComponentSpec,
@@ -10,12 +12,12 @@ import {
   Spec,
   Specs,
 } from '../types'
-import { Dict } from '../types/Dict'
+import { GraphPinSpec } from '../types/GraphPinSpec'
 import { GraphSpec } from '../types/GraphSpec'
-import { GraphSpecs } from '../types/GraphSpecs'
 import { IO } from '../types/IO'
+import { clone } from '../util/clone'
 import { uuidNotIn } from '../util/id'
-import { clone, deepGetOrDefault } from '../util/object'
+import { deepGetOrDefault } from '../util/object'
 import { removeWhiteSpace } from '../util/string'
 
 export function getSpec(specs: Specs, id: string): Spec {
@@ -197,13 +199,167 @@ export function hasMergeId(spec: GraphSpec, merge_id: string): boolean {
   return has
 }
 
-export function sameSpec(a_spec: GraphSpec, b_spec: GraphSpec): boolean {
-  // TODO
-  return false
+export function sameSpec(a: GraphSpec, b: GraphSpec): boolean {
+  a = deepMerge(emptySpec(), a)
+  b = deepMerge(emptySpec(), b)
+
+  if (a.name !== b.name) {
+    return false
+  }
+
+  if (!sameUnits(a, b)) {
+    return false
+  }
+
+  if (!sameMerges(a, b)) {
+    return false
+  }
+
+  if (!sameInputs(a, b)) {
+    return false
+  }
+
+  if (!sameOutputs(a, b)) {
+    return false
+  }
+
+  if (!sameMetadata(a, b)) {
+    return false
+  }
+
+  return true
+}
+
+export function sameUnits(a: GraphSpec, b: GraphSpec): boolean {
+  if (keyCount(a.units) !== keyCount(b.units)) {
+    return false
+  }
+
+  for (const unitId in a.units) {
+    if (!b.units[unitId]) {
+      return false
+    }
+
+    a.units[unitId] = deepMerge({ input: {} }, a.units[unitId])
+    b.units[unitId] = deepMerge({ input: {} }, b.units[unitId])
+
+    for (const inputId in a.units[unitId].input) {
+      const aInput = a.units[unitId].input[inputId] ?? {}
+      const bInput = b.units[unitId].input[inputId] ?? {}
+
+      if (!!aInput.constant !== !!bInput.constant) {
+        return false
+      }
+
+      if (!isEqual(aInput.data, bInput.data)) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+export function sameMerges(a: GraphSpec, b: GraphSpec): boolean {
+  for (const mergeId in a.merges) {
+    if (!b.merges[mergeId]) {
+      return false
+    }
+
+    const aMergePinCount = getMergePinCount(a.merges[mergeId])
+    const bMergePinCount = getMergePinCount(b.merges[mergeId])
+
+    if (aMergePinCount !== bMergePinCount) {
+      return false
+    }
+
+    const merge = a.merges[mergeId]
+
+    for (const unitId in merge) {
+      if (!b.merges[mergeId][unitId]) {
+        return false
+      }
+
+      for (const type in merge[unitId]) {
+        for (const pinId in merge[unitId][type]) {
+          if (!b.merges[mergeId]?.[unitId]?.[type]?.[pinId]) {
+            return false
+          }
+        }
+      }
+    }
+  }
+
+  return true
+}
+
+export function sameInputs(a: GraphSpec, b: GraphSpec): boolean {
+  return samePins(a, b, 'input')
+}
+
+export function sameOutputs(a: GraphSpec, b: GraphSpec): boolean {
+  return samePins(a, b, 'output')
+}
+
+export function samePins(a: GraphSpec, b: GraphSpec, type: IO): boolean {
+  for (const pinId in a[`${type}s`]) {
+    let aPin = a[`${type}s`][pinId] ?? {}
+    let bPin = b[`${type}s`][pinId] ?? {}
+
+    if (!bPin) {
+      return false
+    }
+
+    if (!samePin(aPin, bPin)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+export function samePin(a: GraphPinSpec, b: GraphPinSpec): boolean {
+  a = deepMerge({ plug: {} }, a)
+  b = deepMerge({ plug: {} }, b)
+
+  const { plug } = a
+
+  for (const subPinId in plug) {
+    const aSubPin = a.plug[subPinId]
+    const bSubPin = b.plug[subPinId]
+
+    if (!bSubPin) {
+      return false
+    }
+
+    if (!isEqual(aSubPin, bSubPin)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+export function sameMetadata(a: GraphSpec, b: GraphSpec): boolean {
+  let aMetadata = a.metadata ?? {}
+  let bMetadata = b.metadata ?? {}
+
+  aMetadata = deepMerge({ description: '', icon: null }, aMetadata)
+  bMetadata = deepMerge({ description: '', icon: null }, bMetadata)
+
+  if (!isEqual(aMetadata, bMetadata)) {
+    return false
+  }
+
+  return true
+}
+
+export function isInternalSpecId(specId: string): boolean {
+  return specId.startsWith('_')
 }
 
 export function isSystemSpecId(specs: Specs, specId: string): boolean {
-  if (specId.startsWith('_')) {
+  if (isInternalSpecId(specId)) {
     return true
   }
 
@@ -232,56 +388,6 @@ export function isEmptySpec(spec: GraphSpec): boolean {
   const empty = unitCount === 0
 
   return empty
-}
-
-export function __injectSpecs(
-  system: System,
-  new_specs: GraphSpecs
-): Dict<string> {
-  const map_spec_id: Dict<string> = {}
-
-  for (const spec_id in new_specs) {
-    const spec = new_specs[spec_id]
-
-    let new_spec_id = spec_id
-    let has_spec = false
-
-    while (system.hasSpec(new_spec_id)) {
-      new_spec_id = system.newSpecId()
-      has_spec = true
-    }
-
-    if (has_spec) {
-      map_spec_id[spec_id] = new_spec_id
-    }
-
-    system.setSpec(spec_id, spec)
-  }
-  return map_spec_id
-}
-
-export function injectSpecs(specs: Specs, new_specs: GraphSpecs): Dict<string> {
-  const map_spec_id: Dict<string> = {}
-
-  for (const spec_id in new_specs) {
-    const spec = new_specs[spec_id]
-
-    let new_spec_id = spec_id
-    let has_spec = false
-
-    while (specs[new_spec_id]) {
-      new_spec_id = newSpecId(specs)
-      has_spec = true
-    }
-
-    if (has_spec) {
-      map_spec_id[spec_id] = new_spec_id
-    }
-
-    specs[spec_id] = spec
-  }
-
-  return map_spec_id
 }
 
 export function getSpecRenderById(
@@ -356,7 +462,11 @@ export function findInputDataExamples(
       for (const subPinId in plug) {
         const subPin = plug[subPinId]
 
-        const { unitId, pinId, mergeId } = subPin
+        const { unitId, kind = 'input', pinId, mergeId } = subPin
+
+        if (kind !== 'input') {
+          continue
+        }
 
         if (unitId && pinId) {
           const unit = units[unitId]

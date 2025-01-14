@@ -78,16 +78,14 @@
           "unitId": "arraybuilderfrom",
           "pinId": "a"
         }
-      },
-      "type": "<B>"
+      }
     },
     "a": {
       "plug": {
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "outputs": {
@@ -97,8 +95,7 @@
           "unitId": "foreach",
           "pinId": "a[i]"
         }
-      },
-      "type": "<A>"
+      }
     },
     "b": {
       "plug": {
@@ -106,8 +103,7 @@
           "unitId": "arraybuilderfrom",
           "pinId": "a[]"
         }
-      },
-      "type": "<B>[]"
+      }
     },
     "test": {
       "plug": {
@@ -115,14 +111,12 @@
           "mergeId": "0"
         }
       },
-      "type": "boolean",
       "defaultIgnored": true
     }
   },
   "metadata": {
-    "icon": "map",
+    "icon": "array",
     "description": "map elements of an array `a` to a new array `b`",
-    "complexity": 42,
     "tags": ["core", "array"]
   },
   "id": "1c68d1e5-9170-417d-bfc8-fb7f7f12e714",

@@ -38,7 +38,7 @@ export const dataRegex = new RegExp(`^${DATA}/[^#_]+$`)
 export const metadataRegex = new RegExp(`^\\$/[^]+/${UNIT_ID_REGEX}$`)
 export const mergeRegex = new RegExp(`^${MERGE}/[^/#$]+$`)
 export const externalRegex = new RegExp(
-  `^${EXTERNAL}/(input|output)/[^${SEPARATOR}${DATA}${MERGE}]+$`
+  `^${EXTERNAL}/(input|output)/${PIN_ID_REGEX}/[^${SEPARATOR}${DATA}${MERGE}]+$`
 )
 export const internalRegex = new RegExp(
   `^\\${INTERNAL}/(input|output)/${PIN_ID_REGEX}/[^${SEPARATOR}${DATA}${MERGE}]+$`
@@ -414,7 +414,7 @@ export function getExtNodeIdFromIntNodeId(intNodeId: string): string {
 }
 
 export function getIntNodeIdFromExtNodeId(ext_node_id: string): string {
-  const { type, pinId, subPinId } = segmentPlugNodeId(ext_node_id)
+  const { type, pinId: pinId, subPinId } = segmentPlugNodeId(ext_node_id)
 
   return getIntNodeId(type, pinId, subPinId)
 }
@@ -440,7 +440,7 @@ export function segmentPlugNodeId(exposedNodeId: string): {
     string,
     IO,
     string,
-    string
+    string,
   ]
   return {
     type,
@@ -458,7 +458,7 @@ export function segmentInternalNodeId(internalNodeId: string): {
     string,
     IO,
     string,
-    string
+    string,
   ]
   return {
     type,
@@ -525,6 +525,17 @@ export function camelToSnake(str: string): string {
   const segments = str.split(/(?=[A-Z])/)
   const kebab = segments.map((_str) => _str.toLowerCase()).join('_')
   return kebab
+}
+
+export function snakeToCamel(str: string): string {
+  const segments = str.split(/\s*_\s*/)
+  const first_segment = segments[0]
+  const segments_tail = segments.slice(1)
+  const camelled_segments_tail = segments_tail.map((_str) =>
+    upperCaseFirstLetter(_str)
+  )
+  const camel = first_segment + camelled_segments_tail.join('')
+  return camel
 }
 
 export function camelToDashed(str: string): string {

@@ -1,5 +1,4 @@
 import { System } from '../system'
-import { Dict } from '../types/Dict'
 import { PositionObserver } from '../types/global/PositionObserver'
 import { Unlisten } from '../types/Unlisten'
 import { last, remove } from '../util/array'
@@ -11,10 +10,8 @@ import { Theme } from './theme'
 export interface Context extends Listenable {
   $system: System
   $mounted: boolean
-  $listenCount: Dict<number>
   $disabled: boolean
-  $parent: Component | null
-  $parent_unlisten: Unlisten | null
+  $parent: Context | null
   $element: HTMLElement
   $context: Context
   $x: number
@@ -32,8 +29,6 @@ export interface Context extends Listenable {
   $resizeObserver: ResizeObserver
   $positionObserver: PositionObserver
 }
-
-export interface Ref extends Dict<any[]> {}
 
 export function dispatchContextEvent(
   $context: Context,
@@ -54,13 +49,13 @@ export function dispatchCustomEvent(
   $element.dispatchEvent(new CustomEvent(`_${type}`, { detail, bubbles }))
 }
 
-export function setParent($context: Context, $parent: Component | null): void {
+export function setParent($context: Context, $parent: Context | null): void {
   $context.$parent = $parent
 
   const { $children } = $context
 
   for (const component of $children) {
-    component.$parent = $parent
+    // component.$parent = $parent
   }
 }
 
@@ -74,17 +69,12 @@ export function mount($context: Context): void {
   $context.$width = width
   $context.$height = height
 
-  // AD HOC browser offsetParent not set on first mount
-  setTimeout(() => {
-    if ($context.$mounted) {
-      const { x, y, sx, sy } = $positionObserver.observe($element)
+  const { x, y, sx, sy } = $positionObserver.observe($element)
 
-      $context.$x = x
-      $context.$y = y
-      $context.$sx = sx
-      $context.$sy = sy
-    }
-  }, 0)
+  $context.$x = x
+  $context.$y = y
+  $context.$sx = sx
+  $context.$sy = sy
 
   $resizeObserver.observe($element)
 
@@ -94,7 +84,6 @@ export function mount($context: Context): void {
 }
 
 export function unmount($context: Context): void {
-  // console.log('unmount')
   $context.$mounted = false
 
   const { $element, $positionObserver, $resizeObserver } = $context
@@ -164,23 +153,29 @@ export function appendChild(
   const { $element } = component
 
   $context.$element.appendChild($element)
-  $context.$children.push(component)
 
-  // the component share $parent
-  component.$parent = $context.$parent
+  const base = component.getRootLeaves()
+
+  for (const leaf of base) {
+    $context.$element.appendChild(leaf.$element)
+  }
+
+  $context.$children.push(component)
 
   if ($context.$mounted) {
     component.mount($context)
   }
 
   return () => {
-    const { $element } = component
-
     if ($context.$mounted) {
       component.unmount()
     }
 
-    $context.$element.removeChild($element)
+    const base = component.getRootLeaves()
+
+    for (const leaf of base) {
+      $context.$element.removeChild(leaf.$element)
+    }
 
     remove($context.$children, component)
 

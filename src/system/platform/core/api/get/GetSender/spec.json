@@ -8,7 +8,6 @@
           "pinId": "obj"
         }
       },
-      "type": "`U`",
       "ref": true,
       "metadata": {
         "position": {
@@ -26,7 +25,6 @@
           "pinId": "b"
         }
       },
-      "type": "any",
       "metadata": {
         "position": {
           "0": {
@@ -45,7 +43,6 @@
           "pinId": "value"
         }
       },
-      "type": "any",
       "metadata": {
         "position": {
           "0": {
@@ -137,7 +134,6 @@
   "metadata": {
     "icon": "object-get",
     "description": "get unit's current sender",
-    "complexity": 8,
     "tags": ["platform", "core", "api", "get"],
     "position": {
       "merge": {

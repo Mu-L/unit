@@ -98,7 +98,7 @@
   },
   "metadata": {
     "icon": "info-square",
-    "complexity": 58,
+    "description": "checks whether an element `a` is present in array `a[]`",
     "tags": ["core", "method", "array"]
   },
   "component": {

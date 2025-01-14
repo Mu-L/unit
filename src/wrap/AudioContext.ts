@@ -10,7 +10,7 @@ export function wrapAudioContext(
   const ctx = new (class Node extends $ implements AC {
     __: string[] = ['AC']
 
-    get(): AudioContext {
+    audioContext(): AudioContext {
       return audioContext
     }
 
@@ -18,7 +18,7 @@ export function wrapAudioContext(
       return audioContext.destination
     }
 
-    createOscilator(opt: OscillatorOptions): OscillatorNode {
+    createOscillator(opt: OscillatorOptions): OscillatorNode {
       const {
         api: {
           window: { OscillatorNode },
@@ -31,6 +31,10 @@ export function wrapAudioContext(
 
     createAnalyser(opt: AnalyserOptions): AnalyserNode {
       throw new MethodNotImplementedError()
+    }
+
+    disconnect(audioNode?: AudioNode): void {
+      //
     }
   })(system)
 

@@ -65,8 +65,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "number[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -76,14 +75,12 @@
           "unitId": "reduce",
           "pinId": "result"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "plus",
     "description": "sum all elements of array `a`",
-    "complexity": 37,
     "tags": ["core", "array"]
   },
   "id": "bd1a9bbb-6129-4031-b7e9-aec351d847d9",

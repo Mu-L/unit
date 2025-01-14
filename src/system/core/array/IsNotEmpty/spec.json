@@ -28,7 +28,6 @@
   "metadata": {
     "icon": "question",
     "description": "check whether array `a` is empty",
-    "complexity": 15,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -38,8 +37,7 @@
           "unitId": "isempty",
           "pinId": "obj"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "outputs": {
@@ -49,8 +47,7 @@
           "unitId": "not",
           "pinId": "!a"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "id": "b74c6c04-8fe8-4009-9f61-b22f7a404342",

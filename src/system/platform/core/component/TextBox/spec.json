@@ -7,8 +7,15 @@
           "unitId": "text",
           "pinId": "value"
         }
-      },
-      "type": "string"
+      }
+    },
+    "attr": {
+      "plug": {
+        "0": {
+          "unitId": "box",
+          "pinId": "attr"
+        }
+      }
     },
     "style": {
       "plug": {
@@ -16,8 +23,7 @@
           "unitId": "box",
           "pinId": "style"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -31,6 +37,14 @@
       "defaultIgnored": true,
       "ref": true,
       "component": true
+    },
+    "value": {
+      "plug": {
+        "0": {
+          "unitId": "text",
+          "pinId": "value"
+        }
+      }
     }
   },
   "units": {
@@ -56,7 +70,11 @@
       "input": {
         "value": {}
       },
-      "output": {},
+      "output": {
+        "value": {
+          "ignored": false
+        }
+      },
       "metadata": {
         "position": {
           "x": 20,
@@ -80,7 +98,7 @@
     "defaultHeight": 180
   },
   "metadata": {
-    "complexity": 97,
+    "description": "text inside a box",
     "tags": ["platform", "component", "app"]
   },
   "id": "9988a56e-6bee-46c8-864c-e351d84bc7e2",

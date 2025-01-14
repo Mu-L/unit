@@ -8,7 +8,13 @@
           "pinId": "arc"
         }
       },
-      "type": "{x:number,y:number,r:number,start:number,end:number,anticlockwise?:boolean}"
+      "type": "{x:number,y:number,r:number,start:number,end:number,anticlockwise?:boolean}",
+      "metadata": {
+        "examples": [
+          "{x:100,y:100,r:60,start:0.78,end:2.35}",
+          "{x:100,y:100,r:50,start:0,end:6.29}"
+        ]
+      }
     },
     "style": {
       "plug": {
@@ -16,8 +22,7 @@
           "unitId": "canvas",
           "pinId": "style"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -90,11 +95,12 @@
     "defaultHeight": 200
   },
   "metadata": {
-    "complexity": 64,
+    "icon": "radius",
+    "description": "canvas with an arc drawn",
     "tags": ["platform", "core", "canvas"]
   },
   "id": "01562c38-9973-43f4-982b-1dbdbea49c5b",
-  "type": "`U`&`G`",
+  "type": "`U`&`C`&`G`",
   "render": true,
   "system": true
 }

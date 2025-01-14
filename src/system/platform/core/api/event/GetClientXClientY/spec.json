@@ -40,8 +40,7 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -51,8 +50,7 @@
           "unitId": "getclienty",
           "pinId": "clientY"
         }
-      },
-      "type": "number"
+      }
     },
     "x": {
       "plug": {
@@ -60,14 +58,12 @@
           "unitId": "getclientx",
           "pinId": "clientX"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
-    "icon": "brackets-curly",
+    "icon": "object-get",
     "description": "extract `clientX` and `clientY` from `obj`",
-    "complexity": 10,
     "tags": ["platform", "core", "api", "event"]
   },
   "id": "1cbbfd58-c4ee-4c83-a5c8-83f614eb7027",

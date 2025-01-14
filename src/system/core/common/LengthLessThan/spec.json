@@ -29,8 +29,7 @@
           "unitId": "length",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "b": {
       "plug": {
@@ -38,8 +37,7 @@
           "unitId": "lessthan",
           "pinId": "b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -49,14 +47,12 @@
           "unitId": "lessthan",
           "pinId": "a < b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
     "icon": "ruler",
-    "description": "check wether the length of `a` lesser than `b`",
-    "complexity": 8,
+    "description": "check whether the length of `a` lesser than `b`",
     "tags": ["core", "common"]
   },
   "id": "0e211b43-0d8d-44cb-b63f-79a1a02de614",

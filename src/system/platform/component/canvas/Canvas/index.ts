@@ -1,23 +1,26 @@
 import { ElementEE, Element_ } from '../../../../../Class/Element'
+import { draw } from '../../../../../client/canvas/draw'
 import { System } from '../../../../../system'
+import { Dict } from '../../../../../types/Dict'
 import { CA } from '../../../../../types/interface/CA'
-import { CSOpt } from '../../../../../types/interface/async/$CS'
 import { ID_CANVAS } from '../../../../_ids'
+import { firstGlobalComponentPromise } from '../../../../globalComponent'
 import { Style } from '../../../Style'
-import CanvasComp from './Component'
+import Canvas_, { clearCanvas } from './Component'
 
 export interface I {
   style?: Style
   width?: number
   height?: number
   d?: any[]
+  attr?: Dict<string>
 }
 
 export interface O {}
 
 export interface CanvasJ {}
 export interface CanvasEE extends ElementEE<{}> {}
-export interface CanvasC extends CanvasComp {}
+export interface CanvasC extends Canvas_ {}
 
 export default class Canvas
   extends Element_<I, O, CanvasJ, CanvasEE, CanvasC>
@@ -25,13 +28,13 @@ export default class Canvas
 {
   __ = ['U', 'C', 'V', 'J', 'CA', 'EE']
 
-  private _offscreen: OffscreenCanvas
-  private _offscreen_ctx: OffscreenCanvasRenderingContext2D
+  private _canvas: OffscreenCanvas
+  private _ctx: OffscreenCanvasRenderingContext2D
 
   constructor(system: System) {
     super(
       {
-        i: ['style', 'width', 'height', 'd'],
+        i: ['style', 'width', 'height', 'd', 'attr'],
         o: [],
       },
       {
@@ -41,20 +44,36 @@ export default class Canvas
       ID_CANVAS
     )
 
+    const {
+      api: {
+        window: { OffscreenCanvas },
+        document: {},
+      },
+    } = system
+
     this._state = {
       d: [],
     }
 
-    this._component = new CanvasComp({}, this.__system)
+    if (OffscreenCanvas) {
+      this._canvas = new OffscreenCanvas(200, 200)
 
-    this._offscreen = new OffscreenCanvas(1000, 1000)
-    this._offscreen_ctx = this._offscreen.getContext('2d', {
-      willReadFrequently: true,
+      this._ctx = this._canvas.getContext('2d')
+    }
+
+    this.addListener('reset', () => {
+      if (this._ctx) {
+        clearCanvas(this._ctx)
+      }
+
+      this._state.d = []
     })
   }
 
   async clear(): Promise<void> {
-    this._component.clear()
+    if (this._ctx) {
+      clearCanvas(this._ctx)
+    }
 
     this.set('d', [])
 
@@ -72,9 +91,9 @@ export default class Canvas
   ): Promise<void> {
     // console.log('drawImage', imageBitmap, x, y, width, height)
 
-    // this._component.drawImage(imageBitmap, x, y, width, height)
-
-    this._offscreen_ctx.drawImage(imageBitmap, x, y, width, height)
+    if (this._ctx) {
+      this._ctx.drawImage(imageBitmap, x, y, width, height)
+    }
 
     this.emit('call', {
       method: 'drawImage',
@@ -83,25 +102,33 @@ export default class Canvas
   }
 
   strokePath(d: string): void {
-    this._component.strokePath(d)
+    // if (this._ctx) {
+    //   this._ctx.strokePath(d)
+    // }
 
     this.emit('call', { method: 'strokePath', data: [d] })
   }
 
   fillPath(d: string, fillRule: CanvasFillRule): void {
-    this._component.fillPath(d, fillRule)
+    // if (this._ctx) {
+    //   this._ctx.fillPath(d, fillRule)
+    // }
 
     this.emit('call', { method: 'fillPath', data: [d, fillRule] })
   }
 
   scale(sx: number, sy: number): void {
-    this._component.scale(sx, sy)
+    if (this._ctx) {
+      this._ctx.scale(sx, sy)
+    }
 
     this.emit('call', { method: 'scale', data: [sx, sy] })
   }
 
   translate(x: number, y: number): void {
-    this._component.translate(x, y)
+    if (this._ctx) {
+      this._ctx.translate(x, y)
+    }
 
     this.emit('call', { method: 'translate', data: [x, y] })
   }
@@ -113,35 +140,57 @@ export default class Canvas
     this._input.d.pull()
     this._backwarding = false
 
-    this._component.draw(step)
+    if (this._ctx) {
+      draw(this._ctx, step)
+    }
 
     this.emit('call', { method: 'draw', data: [step] })
 
     return
   }
 
+  private async _local_component(): Promise<Canvas_> {
+    return firstGlobalComponentPromise(
+      this.__system,
+      this.__global_id
+    ) as Promise<Canvas_>
+  }
+
   async toBlob(type: string, quality: number): Promise<Blob> {
-    return new Promise((resolve, reject) => {
-      this._component.toBlob({ type, quality }, (blob) => {
-        if (blob) {
-          resolve(blob)
-        } else {
-          reject('cannot convert canvas to blob')
-        }
-      })
-    })
+    const component = await this._local_component()
+
+    return component.toBlob(type, quality)
   }
 
-  async captureStream({ frameRate }: CSOpt): Promise<MediaStream> {
-    return this._component.$element.captureStream(frameRate)
+  async toDataUrl(type: string, quality: number): Promise<string> {
+    const component = await this._local_component()
+
+    return component.toDataUrl(type, quality)
   }
 
-  getImageData(x: number, y: number, width: number, height: number): ImageData {
-    const imageData = this._offscreen_ctx.getImageData(x, y, width, height)
-    return imageData
+  async captureStream({
+    frameRate,
+  }: {
+    frameRate: number
+  }): Promise<MediaStream> {
+    const component = await this._local_component()
+
+    return component.captureStream({ frameRate })
   }
 
-  putImageData(
+  async getImageData(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    opt: any
+  ): Promise<ImageData> {
+    const component = await this._local_component()
+
+    return component.getImageData(x, y, width, height, opt)
+  }
+
+  async putImageData(
     image: ImageData,
     dx: number,
     dy: number,
@@ -149,10 +198,10 @@ export default class Canvas
     y: number,
     width: number,
     height: number
-  ): void {
-    // this._component.$element
-    //   .getContext('2d')
-    //   .putImageData(image, dx, dy, x, y, width, height)
+  ): Promise<void> {
+    if (this._ctx) {
+      this._ctx.putImageData(image, dx, dy, x, y, width, height)
+    }
 
     this.emit('call', {
       method: 'putImageData',
@@ -160,36 +209,24 @@ export default class Canvas
     })
   }
 
-  onDataInputData(name: string, data: any): void {
-    // console.log('Canvas', 'onDataInputData', name, data)
-
+  onDataInputData<K extends keyof I>(name: K, data: any): void {
     super.onDataInputData(name, data)
 
     switch (name) {
       case 'width':
-        // if (typeof data === 'string' && data.endsWith('vw')) {
-        //   data = 0
-        // }
-        try {
-          this._offscreen.width = data
-        } catch (err) {
-          // console.log(err)
-          //
+        if (typeof data === 'number') {
+          if (this._canvas) {
+            this._canvas.width = data
+          }
         }
-        // this._component.setProp('width', data)
 
         break
       case 'height':
-        // if (typeof data === 'string' && data.endsWith('vw')) {
-        //   data = 0
-        // }
-        try {
-          this._offscreen.height = data
-        } catch (err) {
-          // console.log(err)
-          //
+        if (typeof data === 'number') {
+          if (this._canvas) {
+            this._canvas.height = data
+          }
         }
-        // this._component.setProp('height', data)
 
         break
     }

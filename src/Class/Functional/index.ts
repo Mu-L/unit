@@ -1,3 +1,5 @@
+import { Pin } from '../../Pin'
+import { PinOpt } from '../../PinOpt'
 import { Primitive, PrimitiveEvents } from '../../Primitive'
 import { System } from '../../system'
 import forEachValueKey from '../../system/core/object/ForEachKeyValue/f'
@@ -18,13 +20,13 @@ export type Functional_S = {
 }
 
 export type FunctionalState<
-  T extends Omit<Dict<any>, keyof Functional_S> = {}
+  T extends Omit<Dict<any>, keyof Functional_S> = {},
 > = T & Functional_S
 
 export class Functional<
   I extends Dict<any> = {},
   O extends Dict<any> = {},
-  _EE extends FunctionalEvents<_EE> = FunctionalEvents<Functional_EE>
+  _EE extends FunctionalEvents<_EE> = FunctionalEvents<Functional_EE>,
 > extends Primitive<I, O, _EE> {
   private _looping: boolean = false
 
@@ -46,18 +48,27 @@ export class Functional<
         this._backward_if_ready()
       }
     })
+
+    this.addListener('reset', this._reset)
+    this.addListener('destroy', this.d)
   }
 
-  private _on_input_data(name: string): void {
-    if (this._i[name] !== undefined && this._active_i_count === this._i_count) {
+  private _reset() {
+    this._looping = false
+
+    this.d()
+  }
+
+  private _on_input_data<K extends keyof I>(name: K): void {
+    if (this._i[name] !== undefined && this._i_active.size === this._i_count) {
       this._looping = false
     }
 
     this._forward_if_ready()
   }
 
-  private _on_input_drop(name: string, data: any): void {
-    if (this._active_i_count === this._i_count - 1) {
+  private _on_input_drop(): void {
+    if (this._i_active.size === this._i_count - 1) {
       if (!this._backwarding && !this._forwarding_empty) {
         this._looping = false
         if (this._catchErr) {
@@ -65,39 +76,39 @@ export class Functional<
         } else {
           this.takeErr()
         }
-        this.d(name, data)
+        this.d()
         this._forward_all_empty()
       }
     }
   }
 
-  private _on_input_invalid(name: string): void {
-    if (this._i_invalid_count === 1) {
-      this.i(name)
+  private _on_input_invalid<K extends keyof I>(name: K): void {
+    if (this._i_invalid.size === 1) {
+      this.d()
       this._invalidate()
     }
   }
 
-  onDataInputData(name: string): void {
+  onDataInputData<K extends keyof I>(name: K): void {
     this._on_input_data(name)
   }
 
-  onDataInputDrop(name: string, data: any): void {
-    this._on_input_drop(name, data)
+  onDataInputDrop<K extends keyof I>(name: K, data: any): void {
+    this._on_input_drop()
   }
 
-  onDataInputStart(name: string): void {
-    if (this._i_start_count === this._i_count) {
+  onDataInputStart<K extends keyof I>(name: K): void {
+    if (this._i_start.size === this._i_count) {
       this._start()
     }
   }
 
-  onDataInputInvalid(name: string): void {
+  onDataInputInvalid<K extends keyof I>(name: K): void {
     this._on_input_invalid(name)
   }
 
   onDataInputEnd(name: string): void {
-    if (this._i_start_count === this._i_count - 1) {
+    if (this._i_start.size === this._i_count - 1) {
       this._end()
     }
   }
@@ -106,36 +117,52 @@ export class Functional<
     this._on_input_data(name)
   }
 
-  onRefInputDrop(name: string, data: any): void {
-    this._on_input_drop(name, data)
+  onRefInputDrop<K extends keyof I>(name: K, data: any): void {
+    this._on_input_drop()
   }
 
-  onRefInputInvalid(name: string): void {
+  onRefInputInvalid<K extends keyof I>(name: K): void {
     this._on_input_invalid(name)
   }
 
-  private _on_data_output_drop = (name: string): void => {
+  private _on_data_output_drop = <K extends keyof O>(name: K): void => {
     this._backward_if_ready()
     this._forward_if_ready()
   }
 
-  onDataOutputDrop(name: string) {
+  onDataOutputDrop<K extends keyof O>(name: K) {
     this._on_data_output_drop(name)
+  }
+
+  public onInputSet<K extends keyof I>(
+    name: K,
+    input: Pin<any>,
+    opt: PinOpt,
+    propagate: boolean
+  ): void {
+    super.onInputSet(name, input, opt, propagate)
+
+    this._invalidate()
   }
 
   f(i: Partial<I>, done: Done<O>) {}
 
-  i(name: string) {}
-
-  d(name: string, data: any) {}
+  d() {}
 
   private _backward_if_ready(): void {
+    const {
+      api: {
+        window: { setTimeout },
+      },
+    } = this.__system
+
     if (
       !this._forwarding_empty &&
       !this._forwarding &&
       !this._err &&
       !this._caughtErr &&
-      this._active_o_count === 0
+      this._i_count > 0 &&
+      this._o_active.size === 0
     ) {
       this._looping = false
 
@@ -150,11 +177,13 @@ export class Functional<
     }
   }
 
+  private _signal: Symbol
+
   private _forward_if_ready() {
     // console.log('Functional', '_forward_if_ready')
     while (
-      this._active_o_count - this._o_invalid_count === 0 &&
-      this._active_i_count - this._i_invalid_count === this._i_count &&
+      this._o_active.size - this._o_invalid.size === 0 &&
+      this._i_active.size - this._i_invalid.size === this._i_count &&
       !this._forwarding &&
       !this._backwarding &&
       !this._looping // prevent async infinite while loop
@@ -167,7 +196,17 @@ export class Functional<
         this._forwarding_empty = false
       }
 
-      this.f(this._i, this._done)
+      this._signal = Symbol()
+
+      const signal = this._signal
+
+      this.f(this._i, (...args) => {
+        if (signal !== this._signal) {
+          return
+        }
+
+        this._done(...args)
+      })
     }
   }
 
@@ -203,7 +242,7 @@ export class Functional<
   public snapshotSelf(): any {
     return {
       ...super.snapshotSelf(),
-      _looping: this._looping,
+      ...(this._looping ? { _looping: this._looping } : {}),
     }
   }
 

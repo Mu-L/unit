@@ -15,8 +15,7 @@
             "y": -40
           }
         }
-      },
-      "type": "string"
+      }
     },
     "id": {
       "plug": {
@@ -32,8 +31,7 @@
             "y": 39
           }
         }
-      },
-      "type": "string"
+      }
     },
     "graph": {
       "plug": {
@@ -50,8 +48,7 @@
             "y": -34
           }
         }
-      },
-      "type": "`U`"
+      }
     },
     "data": {
       "plug": {
@@ -67,8 +64,7 @@
             "y": 39
           }
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {},
@@ -124,7 +120,6 @@
   "metadata": {
     "icon": "circle",
     "description": "set `graph` `id` unit `name` output pin `data`",
-    "complexity": 5,
     "tags": ["core", "graph"]
   },
   "id": "18e8759a-aa11-11eb-984d-339712a7789d",

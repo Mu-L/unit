@@ -9,8 +9,7 @@
   "outputs": {},
   "metadata": {
     "icon": "speaker",
-    "description": "// TODO",
-    "complexity": 12,
+    "description": "end destination of an audio graph in a given context",
     "tags": ["platform", "api", "media", "audio"],
     "globals": ["AudioDestinationNode"]
   },

@@ -49,7 +49,6 @@
   "metadata": {
     "icon": "x",
     "description": "build new array by multiply arrays `a` and `b` element by element",
-    "complexity": 51,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -60,8 +59,7 @@
           "pinId": "b"
         }
       },
-      "functional": true,
-      "type": "any"
+      "functional": true
     },
     "a": {
       "plug": {
@@ -70,8 +68,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "number[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -81,8 +78,7 @@
           "unitId": "map2",
           "pinId": "c"
         }
-      },
-      "type": "number[]"
+      }
     }
   },
   "id": "2dbdf0a4-09c1-49af-b9f8-d51b5cbab5a2",

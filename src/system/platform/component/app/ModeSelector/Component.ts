@@ -1,12 +1,12 @@
 import { addListeners } from '../../../../../client/addListener'
-import classnames from '../../../../../client/classnames'
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { classnames } from '../../../../../client/classnames'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Context } from '../../../../../client/context'
 import { Element } from '../../../../../client/element'
 import { makeCustomListener } from '../../../../../client/event/custom'
 import { makeClickListener } from '../../../../../client/event/pointer/click'
 import { Mode, MODE_LIST } from '../../../../../client/mode'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { COLOR_NONE, getThemeModeColor } from '../../../../../client/theme'
 import { userSelect } from '../../../../../client/util/style/userSelect'
 import { System } from '../../../../../system'
@@ -116,9 +116,7 @@ export default class Modes extends Element<HTMLDivElement, Props> {
 
       const icon = MODE_ICON[mode]
       const shortcut = MODE_SHORTCUT[mode]
-      // AD HOC
-      // Safari will ignore flex gap if immediate child of `display: contents;` parent is svg
-      // surround SVG in a container due to Safari bug
+
       const mode_button_container = new Div(
         {
           style: {

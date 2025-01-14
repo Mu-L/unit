@@ -142,9 +142,8 @@
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "radius",
     "description": "get point in circle at angle `rad`",
-    "complexity": 33,
     "tags": ["platform", "core", "geometry", "trigonometry"]
   },
   "inputs": {
@@ -153,8 +152,7 @@
         "0": {
           "mergeId": "4"
         }
-      },
-      "type": "number"
+      }
     },
     "x": {
       "plug": {
@@ -163,8 +161,7 @@
           "pinId": "b"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "y": {
       "plug": {
@@ -173,16 +170,14 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "r": {
       "plug": {
         "0": {
           "mergeId": "7"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -192,8 +187,7 @@
           "unitId": "mergexy",
           "pinId": "{x,y}"
         }
-      },
-      "type": "{x:number,y:number}"
+      }
     }
   },
   "id": "af451707-9400-429f-bb3a-2670d4ce8821",

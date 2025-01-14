@@ -40,16 +40,14 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "number"
+      }
     },
     "b": {
       "plug": {
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -59,8 +57,7 @@
           "unitId": "lt",
           "pinId": "a < b"
         }
-      },
-      "type": "boolean"
+      }
     },
     "a ≥ b": {
       "plug": {
@@ -68,14 +65,12 @@
           "unitId": "gte",
           "pinId": "a ≥ b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
     "icon": "less-than",
     "description": "less than operator",
-    "complexity": 8,
     "tags": ["core", "common"]
   },
   "id": "568f2736-8734-464b-9bff-8e706e8d30ca",

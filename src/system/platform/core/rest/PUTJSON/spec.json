@@ -80,8 +80,7 @@
           "unitId": "stringify",
           "pinId": "json"
         }
-      },
-      "type": "<A>"
+      }
     },
     "url": {
       "plug": {
@@ -89,8 +88,7 @@
           "unitId": "fetch",
           "pinId": "url"
         }
-      },
-      "type": "string"
+      }
     },
     "opt": {
       "plug": {
@@ -98,8 +96,7 @@
           "unitId": "deepmerge",
           "pinId": "b"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -109,14 +106,12 @@
           "unitId": "fetch",
           "pinId": "response"
         }
-      },
-      "type": "{status:number,body:string}"
+      }
     }
   },
   "metadata": {
     "icon": "send",
     "description": "PUT JSON body",
-    "complexity": 14,
     "tags": ["platform", "core", "rest"]
   },
   "id": "3698d7af-8d4c-40f6-bcfa-222d9efb0940",

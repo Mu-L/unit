@@ -63,9 +63,8 @@
     }
   },
   "metadata": {
-    "icon": "brackets-curly",
+    "icon": "object-get",
     "description": "get x0, x1, y0 and y1 rect from object",
-    "complexity": 8,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -74,8 +73,7 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -85,8 +83,7 @@
           "unitId": "get0",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     },
     "y0": {
       "plug": {
@@ -94,8 +91,7 @@
           "unitId": "get1",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     },
     "x0": {
       "plug": {
@@ -103,8 +99,7 @@
           "unitId": "get",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     },
     "y1": {
       "plug": {
@@ -112,8 +107,7 @@
           "unitId": "get2",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "004058a4-3562-4427-a782-66f90bf336a3",

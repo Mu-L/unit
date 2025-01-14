@@ -67,16 +67,14 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "boolean"
+      }
     },
     "b": {
       "plug": {
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -86,14 +84,12 @@
           "unitId": "pick",
           "pinId": "a"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
     "icon": "scale",
     "description": "pick a or b, 50% chance",
-    "complexity": 24,
     "tags": ["core", "common"]
   },
   "id": "04bd8d41-7352-4609-b5af-603e4208775b",

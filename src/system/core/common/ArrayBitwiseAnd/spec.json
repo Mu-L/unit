@@ -115,8 +115,7 @@
           "pinId": "b[]"
         }
       },
-      "functional": true,
-      "type": "number[]"
+      "functional": true
     },
     "a[]": {
       "plug": {
@@ -125,8 +124,7 @@
           "pinId": "a[]"
         }
       },
-      "functional": true,
-      "type": "number[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -136,14 +134,12 @@
           "unitId": "narraybuilder",
           "pinId": "a[]"
         }
-      },
-      "type": "number[]"
+      }
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "array",
     "description": "build new array `a & b` by bitwise and arrays `a` and `b` element by element",
-    "complexity": 90,
     "tags": ["core", "common"]
   },
   "id": "36cca4eb-1d14-43bc-88da-5dbbd033e1aa",

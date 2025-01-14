@@ -1,45 +1,43 @@
+import { unitBundleSpec } from '../bundle'
 import { Unit } from '../Class/Unit'
 import { System } from '../system'
-import { Dict } from '../types/Dict'
+import { Specs } from '../types'
 import { UnitBundle } from '../types/UnitBundle'
 import { UnitBundleSpec } from '../types/UnitBundleSpec'
 import { UnitClass } from '../types/UnitClass'
-import { parseMemorySpec } from './evaluate/parseMemorySpec'
-
-const _temp_cache: Dict<any> = {}
+import { remapSpecs } from './remapBundle'
 
 export function bundleClass<T extends Unit = any>(
   Class: UnitClass<T>,
-  bundle: UnitBundleSpec
+  bundle: UnitBundleSpec,
+  specs: Specs
 ): UnitBundle<T> {
-  const {
-    unit: { id, memory },
-  } = bundle
+  const { unit } = bundle
 
-  const cacheKey = `${id}/${JSON.stringify(memory)}`
+  const { id, memory } = unit
 
-  if (_temp_cache[cacheKey]) {
-    return _temp_cache[cacheKey]
+  if (!bundle.specs) {
+    bundle = unitBundleSpec(unit, specs)
   }
 
   // @ts-ignore
   class Bundle extends Class {
     static __bundle = bundle
 
-    constructor(system: System) {
-      bundle.specs && system.injectSpecs(bundle.specs)
+    constructor(system: System, push: boolean) {
+      if (bundle.specs) {
+        const map = system.injectSpecs(bundle.specs)
 
-      super(system, id)
+        remapSpecs(bundle, map)
+      }
+
+      super(system, id, push)
 
       if (memory) {
-        const _memory = parseMemorySpec(memory, system.specs, system.classes)
-
-        this.restore(_memory)
+        this.restore(memory)
       }
     }
   }
-
-  _temp_cache[cacheKey] = Bundle
 
   // @ts-ignore
   return Bundle

@@ -2,6 +2,26 @@
 
 Following is a list of useful graph manipulation features.
 
+# Table of Contents
+
+1. [Search](#search)
+2. [Connect](#connect)
+3. [Create Data](#create-data)
+4. [Add Mode](#add-mode)
+5. [Info Mode](#info-mode)
+6. [Data Mode](#data-mode)
+7. [Remove Mode](#remove-mode)
+8. [Change Mode](#change-mode)
+9. [Graph | Tree View](#graph--tree-view)
+10. [Fullwindow](#fullwindow)
+11. [Unlock | Lock Component](#unlock--lock-component)
+12. [Minimap](#minimap)
+13. [Drawing](#drawing)
+14. [Composition](#composition)
+15. [Enter | Leave Graph](#enter--leave-graph)
+16. [Undo | Redo](#undo--redo)
+17. [Save | Load](#save--load)
+
 ## Search
 
 To start Search you can either focus on the Search Input or press key <kbd>;</kbd> (semicolon).
@@ -14,9 +34,17 @@ To add the selected unit either press on the green unit, or the selected search 
 
 ## Connect
 
-To connect (also merge) two compatible pins, click on a pin, then click on a compatible target pin. The compatible pins will be highlighted in green.
+To connect (also merge) two compatible pins, click on a pin, then click on a compatible target pin.
+
+The compatible pins will be highlighted in green.
+
+![](/public/gif/start/2.gif)
+
+Alternatively, you can also drag and drop a node onto a another compatible node.
 
 ![](/public/gif/start/17.gif)
+
+![](/public/gif/start/46.gif)
 
 ## Create Data
 
@@ -38,7 +66,7 @@ To enter Add Mode (also Green Mode) you can either click on the "plus sign" mode
 
 In Add Mode, it is possible to copy a unit (or the currently Selected Subgraph).
 
-A unit can be shallow clonned with a Green Drag and Drop:
+A unit can be shallow cloned with a Green Drag and Drop:
 
 ![](/public/gif/start/9.gif)
 
@@ -59,6 +87,8 @@ It will show you documentation about a unit, such as its type, pin types and des
 Info Click on an editable unit name to rename.
 
 ![](/public/gif/start/27.gif)
+
+If you "get inside" a graph on Info Mode, edits to the graph will be reflected on all instances of that class.
 
 ## Data Mode
 
@@ -96,7 +126,10 @@ In Change Mode, clicking on an input or output will set it to constant or not.
 
 ![](/public/gif/start/25.gif)
 
-## Graph or Tree View
+> [!NOTE]
+> When saving the current graph, only data in constant inputs will be persisted.
+
+## Graph | Tree View
 
 To switch between Graph View or Tree View, click on the "circle or square" toggle close to the Search.
 
@@ -150,7 +183,7 @@ The minimap is useful for navigating the entirety of the graph, especially on sm
 
 ## Drawing
 
-To start Drawing do a Click + Long Press (also known as Click and Hold).
+To start Drawing do a Click + Long Press (also known as Click and Hold) or press Alt.
 
 Draw a line from center to the outside to create an output plug. Inversely, draw a line from the outside to the center to create an input plug.
 
@@ -160,7 +193,7 @@ Draw a circle to create an empty unit. Draw a rectangle to create an empty unit 
 
 ![](/public/gif/start/33.gif)
 
-Drawing a contour around a group of nodes, will compose those nosdes.
+Drawing a contour around a group of nodes, will compose those nodes.
 
 ![](/public/gif/start/42.gif)
 
@@ -190,6 +223,14 @@ To undo last action, press <kbd>Ctrl + Z</kbd>. To redo, press <kbd>Ctrl + Shift
 
 ![](/public/gif/start/38.gif)
 
+## Transcend
+
+Pulling up the top "transcend" button will wrap the current graph in an editor.
+
+![](/public/gif/start/51.gif)
+
+This is useful for saving your current workspace as part of a new graph.
+
 ## Save | Load
 
 To save a graph, you can press <kbd>Ctrl + S</kbd> or open the "share" drawer and click on the "export" button.
@@ -203,3 +244,17 @@ To open a graph file, you can press <kbd>Ctrl + O</kbd> or press on the "import"
 You can also drag and drop a .unit file to the editor to open it.
 
 ![](/public/gif/start/45.gif)
+
+![](/public/gif/start/47.gif)
+
+The opened/dropped unit bundle will be injected into the system and will visible on Search.
+
+If all instances of an injected unit are deleted, the unit spec will be deleted from the system.
+
+## Drag and Drop Folder
+
+Drag and drop a folder into the editor to inject all the specs inside into the system.
+
+![](/public/gif/start/48.gif)
+
+The injected specs can't be deleted.

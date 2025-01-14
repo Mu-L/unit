@@ -1,5 +1,5 @@
 import { Element } from '../../../../../client/element'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { System } from '../../../../../system'
 import { Dict } from '../../../../../types/Dict'
 import Div from '../../../component/Div/Component'
@@ -53,6 +53,7 @@ export default class TextBox extends Element<HTMLDivElement, Props> {
     div.registerParentRoot(text)
 
     this.$element = $element
+    this.$unbundled = false
     this.$slot = {
       default: div,
     }
@@ -65,7 +66,7 @@ export default class TextBox extends Element<HTMLDivElement, Props> {
     this.registerRoot(div)
   }
 
-  private _prop_handler = {
+  private $propHandler = {
     style: (style: Dict<string> | undefined = {}) => {
       this._div.setProp('style', { ...DEFAULT_STYLE, ...style })
     },
@@ -83,7 +84,7 @@ export default class TextBox extends Element<HTMLDivElement, Props> {
     },
   }
 
-  onPropChanged(prop: string, current: any): void {
-    this._prop_handler[prop](current)
+  onPropChanged(prop: string, current: any, prev: any): void {
+    this.$propHandler[prop](current, prev)
   }
 }

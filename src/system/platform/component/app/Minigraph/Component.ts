@@ -1,8 +1,8 @@
 import { getSpecRadius } from '../../../../../client/complexity'
-import mergeProps from '../../../../../client/component/mergeProps'
+import { mergeProps } from '../../../../../client/component/mergeProps'
 import { Element } from '../../../../../client/element'
 import { getLinkId, segmentLinkId } from '../../../../../client/id'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { SimNode, Simulation } from '../../../../../client/simulation'
 import { getSpec, isComponentId } from '../../../../../client/spec'
 import { Shape, surfaceDistance } from '../../../../../client/util/geometry'
@@ -164,7 +164,7 @@ export default class Minigraph extends Element<HTMLDivElement, Props> {
   private _reset = (): void => {
     // console.log('Minigraph', '_reset')
 
-    const specs = this.$system.specs
+    const { specs, classes } = this.$system
 
     const { bundle } = this.$props
 
@@ -181,7 +181,7 @@ export default class Minigraph extends Element<HTMLDivElement, Props> {
 
       const { x, y } = position
 
-      const r = getSpecRadius(specs, id, true)
+      const r = getSpecRadius(specs, classes, id, true)
 
       let width = 2 * r
       let height = 2 * r

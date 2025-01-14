@@ -1,10 +1,17 @@
+import { $ } from '../../../../../Class/$'
 import { Element_ } from '../../../../../Class/Element'
+import { Component } from '../../../../../client/component'
 import { System } from '../../../../../system'
+import { A } from '../../../../../types/interface/A'
+import { F } from '../../../../../types/interface/F'
+import { wrapFileList } from '../../../../../wrap/FileList'
 import { ID_FILE_FIELD } from '../../../../_ids'
+import { listenGlobalComponent } from '../../../../globalComponent'
 
 export interface I {
+  value: string
   style: object
-  opt: {
+  attr: {
     multiple: boolean
     capture: string
     accept: string
@@ -12,14 +19,14 @@ export interface I {
 }
 
 export interface O {
-  files: any[]
+  files: A<F> & $
 }
 
 export default class FileField extends Element_<I, O> {
   constructor(system: System) {
     super(
       {
-        i: ['style', 'opt'],
+        i: ['value', 'style', 'attr'],
         o: ['files'],
       },
       {},
@@ -30,5 +37,24 @@ export default class FileField extends Element_<I, O> {
     this._defaultState = {
       value: '',
     }
+
+    this.register()
+
+    listenGlobalComponent(
+      system,
+      this.__global_id,
+      (component: Component<HTMLInputElement>) => {
+        component.$element.addEventListener(
+          '_change',
+          async (event: InputEvent) => {
+            const { files } = component.$element
+
+            const files_ = wrapFileList(files, this.__system)
+
+            this._output.files.push(files_)
+          }
+        )
+      }
+    )
   }
 }

@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "brackets",
     "description": "output a list with a single element `a`",
-    "complexity": 5,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "append",
           "pinId": "b"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "outputs": {
@@ -36,8 +34,7 @@
           "unitId": "append",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "id": "d2f8bb43-af44-4371-a32e-20b760695e13",

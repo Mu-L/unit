@@ -2,7 +2,8 @@
   "name": "state",
   "inputs": {
     "init": {
-      "type": "<T>"
+      "_type": "<T>",
+      "type": "any"
     },
     "done": {
       "type": "any",
@@ -14,13 +15,13 @@
     "data": {
       "type": "<T>&`V`",
       "optional": true,
-      "ref": true
+      "ref": true,
+      "icon": "triangle"
     }
   },
   "metadata": {
-    "icon": "triangle",
+    "icon": "circle",
     "description": "control a value in memory",
-    "complexity": 4,
     "tags": ["state"]
   },
   "id": "c899b675-c3c4-428e-b548-b228305c0302",

@@ -1,5 +1,5 @@
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { PositionObserver_ } from '../../../../../client/PositionObserver'
 import { Component } from '../../../../../client/component'
 import { System } from '../../../../../system'
@@ -18,7 +18,7 @@ export type O = {
   entry: { x: number; y: number }
 }
 
-export default class PositionObserver__ extends Semifunctional<I, O> {
+export default class PositionObserver__ extends Holder<I, O> {
   private _observer: PositionObserver_
 
   constructor(system: System) {
@@ -26,7 +26,7 @@ export default class PositionObserver__ extends Semifunctional<I, O> {
       {
         fi: ['component', 'opt'],
         fo: [],
-        i: ['done'],
+        i: [],
         o: ['entry'],
       },
       {
@@ -39,7 +39,9 @@ export default class PositionObserver__ extends Semifunctional<I, O> {
       system,
       ID_POSITION_OBSERVER
     )
+  }
 
+  async f({ component }: I, done: Done<O>) {
     const {
       api: {
         document: { PositionObserver },
@@ -56,14 +58,6 @@ export default class PositionObserver__ extends Semifunctional<I, O> {
     const observer = new PositionObserver(this.__system, observer_callback)
 
     this._observer = observer
-  }
-
-  async f({ component }: I, done: Done<O>) {
-    const {
-      api: {
-        document: { PositionObserver },
-      },
-    } = this.__system
 
     const globalId = component.getGlobalId()
 
@@ -78,14 +72,10 @@ export default class PositionObserver__ extends Semifunctional<I, O> {
   }
 
   d() {
-    // TODO
-  }
-
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
     if (this._observer) {
       this._observer.disconnect()
+
+      this._observer = undefined
     }
-    // }
   }
 }

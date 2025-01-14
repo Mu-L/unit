@@ -2,11 +2,12 @@ import * as assert from 'assert'
 import { Graph } from '../../Class/Graph'
 import { watchGraphAndLog, watchUnitAndLog } from '../../debug'
 import { ID_IDENTITY } from '../../system/_ids'
+import { Dict } from '../../types/Dict'
 import { system } from '../util/system'
 
 const spec = system.emptySpec()
 
-const composition0 = new Graph<{}, {}>(spec, {}, system)
+const composition0 = new Graph<Dict<any>, Dict<any>>(spec, {}, system)
 
 false && watchUnitAndLog(composition0)
 false && watchGraphAndLog(composition0)
@@ -35,8 +36,8 @@ composition0.addUnitSpecs({
   },
 })
 
-composition0.addMerges({
-  merge0: {
+composition0.addMerge(
+  {
     [id0]: {
       output: {
         a: true,
@@ -53,7 +54,10 @@ composition0.addMerges({
       },
     },
   },
-  merge1: {
+  'merge0'
+)
+composition0.addMerge(
+  {
     [id1]: {
       output: {
         a: true,
@@ -65,8 +69,8 @@ composition0.addMerges({
       },
     },
   },
-})
-
+  'merge1'
+)
 composition0.exposePinSet('output', 'a', { plug: { 0: { mergeId: 'merge0' } } })
 
 composition0.removeMerge('merge0')

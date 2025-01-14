@@ -24,9 +24,9 @@ export function bundleFromId<T extends Unit>(
 
   const Class: UnitClass = classFromId(id, specs, classes, branch)
 
-  const bundle = { unit: { id }, specs: {} } // TODO
+  const bundle = { unit: { id }, specs: {} }
 
-  const Bundle = bundleClass(Class, bundle)
+  const Bundle = bundleClass(Class, bundle, specs)
 
   return Bundle
 }
@@ -61,20 +61,21 @@ export function classFromId<T extends Unit>(
   return Class
 }
 
-export function unitFromId<T extends Unit>(
+export function unitFromId<I, O>(
   system: System,
   id: string,
   specs: Specs,
   classes: Classes,
-  branch: Dict<true> = {}
-): Unit<T> {
+  branch: Dict<true>,
+  push: boolean
+): Unit<I, O> {
   let spec: Spec = specs[id]
 
   if (!spec) {
     throw new SpecNotFoundError()
   }
 
-  let unit: Unit
+  let unit: Unit<I, O>
 
   let Class: UnitClass = classes[id]
 
@@ -86,10 +87,16 @@ export function unitFromId<T extends Unit>(
 
       unit = new Class(system, id)
     } else {
-      unit = graphFromSpec(system, spec, specs, {
-        ...branch,
-        [id]: true,
-      })
+      unit = graphFromSpec(
+        system,
+        spec,
+        specs,
+        {
+          ...branch,
+          [id]: true,
+        },
+        push
+      )
     }
   } else {
     unit = new Class(system, id)

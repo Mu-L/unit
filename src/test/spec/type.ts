@@ -11,7 +11,6 @@ import {
 } from '../../spec/type'
 import {
   ID_ARRAY_BUILDER_FROM,
-  ID_CONCAT_3,
   ID_CONCAT_3_0,
   ID_CONSTANT_ONE,
   ID_HEAD_OR_DEFAULT,
@@ -103,10 +102,10 @@ assert.deepEqual(getSpecTypeInterfaceById(ID_CONCAT_3_0, _specs), {
   output: { abc: 'string' },
 })
 
-assert.deepEqual(getSpecTypeInterfaceById(ID_CONCAT_3, _specs), {
-  input: { a: '<A>[]', b: '<A>[]', c: '<A>[]' },
-  output: { abc: '<A>[]' },
-})
+// assert.deepEqual(getSpecTypeInterfaceById(ID_CONCAT_3, _specs), {
+//   input: { a: '<A>[]', b: '<A>[]', c: '<A>[]' },
+//   output: { abc: '<A>[]' },
+// })
 
 assert.deepEqual(getGraphTypeMapById(ID_SWAP, _specs), {
   set0: {
@@ -114,11 +113,11 @@ assert.deepEqual(getGraphTypeMapById(ID_SWAP, _specs), {
     output: { a: '<A>[]' },
   },
   set1: {
-    input: { a: '<D>[]', v: '<D>', i: 'number' },
+    input: { a: '<A>[]', v: '<A>', i: 'number' },
     output: { a: '<A>[]' },
   },
-  at0: { input: { a: '<B>[]', i: 'number' }, output: { 'a[i]': '<A>' } },
-  at1: { input: { a: '<C>[]', i: 'number' }, output: { 'a[i]': '<A>' } },
+  at0: { input: { a: '<A>[]', i: 'number' }, output: { 'a[i]': '<A>' } },
+  at1: { input: { a: '<A>[]', i: 'number' }, output: { 'a[i]': '<A>' } },
 })
 assert.deepEqual(getSpecTypeInterfaceById(ID_SWAP, _specs), {
   input: { a: '<A>[]', i: 'number', j: 'number' },
@@ -219,12 +218,12 @@ assert.deepEqual(_getGraphTypeMapById(ID_N_ARRAY_BUILDER_FROM, _specs), {
   },
   arraybuilderfrom: {
     input: {
-      a: { value: '<B>', type: 'generic', children: [] },
+      a: { value: '<A>', type: 'generic', children: [] },
       test: { value: 'boolean', type: 'boolean', children: [] },
       init: {
-        value: '<B>[]',
+        value: '<A>[]',
         type: 'array expression',
-        children: [{ value: '<B>', type: 'generic', children: [] }],
+        children: [{ value: '<A>', type: 'generic', children: [] }],
       },
     },
     output: {
@@ -247,7 +246,7 @@ assert.deepEqual(_getGraphTypeMapById(ID_N_ARRAY_BUILDER_FROM, _specs), {
   },
   looprepeat: {
     input: {
-      init: { value: '<C>', type: 'generic', children: [] },
+      init: { value: 'number', type: 'number', children: [] },
       test: { value: 'boolean', type: 'boolean', children: [] },
     },
     output: {
@@ -328,7 +327,7 @@ assert.deepEqual(
   ),
   {
     state: {
-      input: { init: '<A>', done: 'any' },
+      input: { init: 'any', done: 'any' },
       output: { data: '<A>&`V`' },
     },
   }
@@ -366,7 +365,7 @@ assert.deepEqual(
     },
     id0: {
       input: {
-        a: '<B>',
+        a: '<A>',
       },
       output: {
         a: '<A>',

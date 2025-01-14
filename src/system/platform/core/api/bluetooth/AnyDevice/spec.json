@@ -7,8 +7,7 @@
           "unitId": "merge",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -19,7 +18,6 @@
           "pinId": "device"
         }
       },
-      "type": "`BD`",
       "ref": true
     }
   },
@@ -78,7 +76,6 @@
   "metadata": {
     "icon": "bluetooth",
     "description": "select one of all available bluetooth devices",
-    "complexity": 8,
     "tags": ["platform", "core", "api", "bluetooth"]
   },
   "type": "`U`&`G`",

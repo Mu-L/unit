@@ -1,4 +1,4 @@
-import classnames from '../../../../../client/classnames'
+import { classnames } from '../../../../../client/classnames'
 import {
   getLeafHeight,
   getLeafWidth,
@@ -7,7 +7,7 @@ import { DEFAULT_FONT_SIZE } from '../../../../../client/DEFAULT_FONT_SIZE'
 import { Element } from '../../../../../client/element'
 import { makeBlurListener } from '../../../../../client/event/focus/blur'
 import { makeFocusListener } from '../../../../../client/event/focus/focus'
-import IOFocusEvent from '../../../../../client/event/focus/FocusEvent'
+import { IOFocusEvent } from '../../../../../client/event/focus/FocusEvent'
 import { makeInputListener } from '../../../../../client/event/input'
 import {
   IOKeyboardEvent,
@@ -16,7 +16,7 @@ import {
 import { makePasteListener } from '../../../../../client/event/paste'
 import { UnitPointerEvent } from '../../../../../client/event/pointer'
 import { makePointerDownListener } from '../../../../../client/event/pointer/pointerdown'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { TreeNode } from '../../../../../spec/parser'
 import { System } from '../../../../../system'
 import { Dict } from '../../../../../types/Dict'
@@ -25,6 +25,7 @@ import TextField from '../../value/TextField/Component'
 export interface Props {
   className?: string
   style: Dict<string>
+  attr?: Dict<string>
   path: number[]
   value: string
   fontSize: number
@@ -37,16 +38,23 @@ export default class DataTreeLeaf extends Element<HTMLDivElement, Props> {
   constructor($props: Props, $system: System) {
     super($props, $system)
 
-    let { className, style, value, fontSize } = $props
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
+    let { className, style, value, fontSize, path = [], attr = {} } = $props
 
     const _value = this._parse_value()
 
-    const width = getLeafWidth(value, fontSize)
-    const height = getLeafHeight(value, fontSize)
+    const width = getLeafWidth(value, fontSize, measureText)
+    const height = getLeafHeight(value, fontSize, measureText)
 
     const input = new TextField(
       {
         className: classnames('data-tree-leaf', className),
+        attr,
         style: {
           position: 'relative',
           display: 'flex',
@@ -105,12 +113,18 @@ export default class DataTreeLeaf extends Element<HTMLDivElement, Props> {
   }
 
   private _refresh_size = () => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { fontSize = DEFAULT_FONT_SIZE } = this.$props
 
     const _value: string = this._parse_value()
 
-    const width = getLeafWidth(_value, fontSize)
-    const height = getLeafHeight(_value, fontSize)
+    const width = getLeafWidth(_value, fontSize, measureText)
+    const height = getLeafHeight(_value, fontSize, measureText)
 
     this._input.$element.style.width = `${width}px`
     this._input.$element.style.height = `${height}px`
@@ -129,9 +143,15 @@ export default class DataTreeLeaf extends Element<HTMLDivElement, Props> {
   }
 
   private _on_input = (value: string): void => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { path, fontSize } = this.$props
 
-    const width = getLeafWidth(value, fontSize)
+    const width = getLeafWidth(value, fontSize, measureText)
     // mergeStyle(this._input, {
     //   width: `${width}px`,
     // })

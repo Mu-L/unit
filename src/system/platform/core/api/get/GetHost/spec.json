@@ -46,8 +46,7 @@
           "unitId": "wait",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     },
     "obj": {
       "plug": {
@@ -56,8 +55,7 @@
           "pinId": "obj"
         }
       },
-      "ref": true,
-      "type": "`U`"
+      "ref": true
     }
   },
   "outputs": {
@@ -67,14 +65,12 @@
           "unitId": "get",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "metadata": {
-    "icon": "circle",
+    "icon": "object-get",
     "description": "get host `obj` property",
-    "complexity": 8,
     "tags": ["platform", "api", "read"]
   },
   "id": "38b257d7-fa9d-483f-b858-4a0e6cbf7f66",

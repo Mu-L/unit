@@ -4,13 +4,20 @@
     "style": {
       "type": "object",
       "optional": true
+    },
+    "attr": {
+      "type": "object",
+      "optional": true,
+      "defaultIgnored": true,
+      "metadata": {
+        "examples": ["{tabIndex:1}", "{title:'hello'}", "{draggable:true}"]
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "bold",
     "description": "HTML bold element",
-    "complexity": 43,
     "tags": ["platform", "component"]
   },
   "id": "cbf8f925-05df-4562-81ed-8cc1ddac6aac",

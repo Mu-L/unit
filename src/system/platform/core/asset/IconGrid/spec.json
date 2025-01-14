@@ -126,7 +126,7 @@
         "unit": {
           "ignored": false,
           "constant": true,
-          "data": "${unit:{id:'63a417e5-d354-4b39-9ebd-05f55e70de7b',input:{icon:{data:'\\'zoom-out\\''},style:{data:'{height:\\'24px\\',width:\\'24px\\'}'}}}}"
+          "data": "${unit:{id:'63a417e5-d354-4b39-9ebd-05f55e70de7b',input:{icon:{data:\"'zoom-out'\"},style:{data:\"{height:'24px',width:'24px'}\"}}}}"
         },
         "name": {
           "ignored": false,
@@ -225,8 +225,7 @@
   "outputs": {},
   "metadata": {
     "icon": "square",
-    "description": "grid showin",
-    "complexity": 113
+    "description": "grid showin"
   },
   "id": "8d3a4d38-3015-46f2-81d7-694644cec386",
   "system": true,

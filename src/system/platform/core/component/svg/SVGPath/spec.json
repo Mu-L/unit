@@ -73,9 +73,8 @@
   },
   "outputs": {},
   "metadata": {
-    "icon": "question",
-    "description": "SVG path",
-    "complexity": 88
+    "icon": "square",
+    "description": "SVG path"
   },
   "render": true,
   "component": {

@@ -1,4 +1,4 @@
-import assert from '../../../../util/assert'
+import { assert } from '../../../../util/assert'
 import { getDivTextSize } from '../../../../util/text/getDivTextSize'
 
 assert.deepEqual(getDivTextSize('', 12, 12), {
@@ -32,4 +32,12 @@ assert.deepEqual(getDivTextSize('012345678901234567890123456789', 12, 12), {
 assert.deepEqual(getDivTextSize('not logged in', 12, 18), {
   width: 78,
   height: 12,
+})
+assert.deepEqual(getDivTextSize('012345678901 ', 12, 12), {
+  width: 72,
+  height: 12,
+})
+assert.deepEqual(getDivTextSize('alphabet letter index ', 12, 18), {
+  width: 90,
+  height: 24,
 })

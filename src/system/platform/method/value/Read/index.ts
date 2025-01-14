@@ -5,8 +5,8 @@ import { V } from '../../../../../types/interface/V'
 import { ID_READ } from '../../../../_ids'
 
 export interface I<T> {
-  value: V
-  any: string
+  value: V<T>
+  any: any
 }
 
 export interface O<T> {
@@ -32,17 +32,15 @@ export default class Read<T> extends Functional<I<T>, O<T>> {
     )
   }
 
-  async f({ value, any }: I<T>, done: Done<O<T>>) {
-    let data: any
+  f({ value, any }: I<T>, done: Done<O<T>>) {
+    value.read((data, err) => {
+      if (err) {
+        done(undefined, err)
 
-    try {
-      data = await value.read()
-    } catch (err) {
-      done(undefined, err.message)
+        return
+      }
 
-      return
-    }
-
-    done({ data })
+      done({ data })
+    })
   }
 }

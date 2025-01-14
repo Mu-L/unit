@@ -57,9 +57,8 @@
   },
   "outputs": {},
   "metadata": {
-    "icon": "question",
-    "description": "text paragraph",
-    "complexity": 87
+    "icon": "type",
+    "description": "text paragraph"
   },
   "render": true,
   "component": {

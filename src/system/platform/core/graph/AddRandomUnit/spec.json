@@ -8,8 +8,7 @@
           "pinId": "graph"
         }
       },
-      "ref": true,
-      "type": "`U`"
+      "ref": true
     },
     "any": {
       "plug": {
@@ -179,10 +178,9 @@
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "shapes",
     "description": "add random unit to `graph`",
-    "tags": ["platform", "core", "graph"],
-    "complexity": 65
+    "tags": ["platform", "core", "graph"]
   },
   "id": "ca6c1e54-b482-4fa1-aba9-04568fb59958",
   "type": "`U`&`G`",

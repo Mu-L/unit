@@ -5,8 +5,7 @@
     "setscalex": {
       "id": "cea694c2-9c36-4655-85b6-9b33425a5c33",
       "input": {
-        "obj": {},
-        "sx": {}
+        "obj": {}
       },
       "output": {}
     },
@@ -56,8 +55,7 @@
   "outputs": {},
   "metadata": {
     "icon": "object-set",
-    "description": "set scale `sx` and `sy` of `obj`",
-    "complexity": 10
+    "description": "set scale `sx` and `sy` of `obj`"
   },
   "system": true,
   "id": "33a97304-0832-40d9-b013-de0ddf0688af"

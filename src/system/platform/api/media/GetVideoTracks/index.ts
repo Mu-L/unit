@@ -1,6 +1,6 @@
 import { $ } from '../../../../../Class/$'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { MethodNotImplementedError } from '../../../../../exception/MethodNotImplementedError'
 import { System } from '../../../../../system'
 import { A } from '../../../../../types/interface/A'
@@ -19,13 +19,13 @@ export type O = {
   tracks: A
 }
 
-export default class GetVideoTracks extends Semifunctional<I, O> {
+export default class GetVideoTracks extends Holder<I, O> {
   constructor(system: System) {
     super(
       {
         fi: ['stream', 'init'],
         fo: ['tracks'],
-        i: ['done'],
+        i: [],
         o: [],
       },
       {
@@ -43,8 +43,6 @@ export default class GetVideoTracks extends Semifunctional<I, O> {
       system,
       ID_GET_VIDEO_TRACKS
     )
-
-    this.addListener('destroy', () => {})
   }
 
   async f({ stream }: I, done: Done<O>) {
@@ -82,18 +80,16 @@ export default class GetVideoTracks extends Semifunctional<I, O> {
       async indexOf(a: MST): Promise<number> {
         throw new MethodNotImplementedError()
       }
+
+      async pop(): Promise<MST> {
+        throw new MethodNotImplementedError()
+      }
+
+      async shift(): Promise<MST> {
+        throw new MethodNotImplementedError()
+      }
     })(this.__system)
 
     done({ tracks })
-  }
-
-  onIterDataInputData(name: string): void {
-    // if (name === 'done') {
-    this._forward_all_empty()
-
-    this._backward_all()
-
-    this._backward('done')
-    // }
   }
 }

@@ -67,7 +67,6 @@
   "metadata": {
     "icon": "array",
     "description": "build a list of size n",
-    "complexity": 24,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -77,8 +76,7 @@
           "unitId": "arraybuilderfrom",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     },
     "from": {
       "plug": {
@@ -87,8 +85,7 @@
           "pinId": "init"
         }
       },
-      "functional": true,
-      "type": "<A>[]"
+      "functional": true
     },
     "n": {
       "plug": {
@@ -97,8 +94,7 @@
           "pinId": "init"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     }
   },
   "outputs": {
@@ -108,8 +104,7 @@
           "unitId": "arraybuilderfrom",
           "pinId": "a[]"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "test": {
       "plug": {
@@ -117,7 +112,6 @@
           "mergeId": "2"
         }
       },
-      "type": "boolean",
       "defaultIgnored": true
     },
     "acc": {
@@ -127,7 +121,6 @@
           "pinId": "acc"
         }
       },
-      "type": "<A>[]",
       "defaultIgnored": true
     }
   },

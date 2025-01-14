@@ -1,9 +1,9 @@
 import { DEFAULT_FONT_SIZE } from '../../../../../client/DEFAULT_FONT_SIZE'
 import { Element } from '../../../../../client/element'
 import { makeCustomListener } from '../../../../../client/event/custom'
-import IOFocusEvent from '../../../../../client/event/focus/FocusEvent'
+import { IOFocusEvent } from '../../../../../client/event/focus/FocusEvent'
 import { IOKeyboardEvent } from '../../../../../client/event/keyboard'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { parseFontSize } from '../../../../../client/util/style/getFontSize'
 import { _evaluate } from '../../../../../spec/evaluate'
 import {
@@ -21,7 +21,7 @@ import { stringify } from '../../../../../spec/stringify'
 import { System } from '../../../../../system'
 import { Dict } from '../../../../../types/Dict'
 import { _keyUpdateTree } from '../../../../../util/keyUpdateTree'
-import isEqual from '../../../../f/comparisson/Equals/f'
+import isEqual from '../../../../f/comparison/Equals/f'
 import DataTree from '../DataTree/Component'
 
 export interface Props {
@@ -36,8 +36,8 @@ export interface _Props {
 }
 
 export class Datum extends Element<HTMLDivElement, Props> {
-  private _data_tree: DataTree
-  private _root: TreeNode
+  public _data_tree: DataTree
+  public _root: TreeNode
 
   private _ignore_blur: boolean = false
 
@@ -313,7 +313,8 @@ export class Datum extends Element<HTMLDivElement, Props> {
   }) => {
     // console.log('Datum', '_onLeafInput')
     const leaf = this._data_tree.getChildAtPath(path)!
-    const { start: selectionStart } = leaf.getSelectionRange()
+    const { start: selectionStart, end: selectionEnd } =
+      leaf.getSelectionRange()
     const parent = _getParent(this._root, path)
     const ignoreKeyword = !!(
       parent &&
@@ -324,7 +325,7 @@ export class Datum extends Element<HTMLDivElement, Props> {
     let nextRoot = _updateNodeAt(this._root, path, tree)
     let nextPath: number[] = path
 
-    this._onChange(nextRoot, nextPath, selectionStart, selectionStart)
+    this._onChange(nextRoot, nextPath, selectionStart, selectionEnd)
   }
 
   private _onChange = (

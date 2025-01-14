@@ -1,10 +1,11 @@
 import { Style } from '../system/platform/Style'
 import { Dict } from '../types/Dict'
-import applyAttr from './applyAttr'
+import { identity } from '../util/identity'
+import { applyAttr } from './attr'
 import { Component } from './component'
 import { applyDynamicStyle, applyStyle } from './style'
 
-export type Handler = (value: any) => void
+export type Handler = (value: any, previous: any) => void
 
 export type PropHandler = Dict<Handler>
 
@@ -21,37 +22,61 @@ export function makeAttrHandler(
   }
 }
 
-export function elementPropHandler(
-  component: Component<HTMLElement> | Component<SVGSVGElement>,
-  element: HTMLElement | SVGSVGElement,
-  DEFAULT_STYLE: Style
+export function elementPropHandler<T extends HTMLElement | SVGElement>(
+  component: Component<T>,
+  element: T,
+  DEFAULT_STYLE: Style,
+  DEFAULT_ATTR: Dict<any>,
+  CONTROLLED_ATTR_SET: Set<string>
 ): PropHandler {
   return {
-    ...basePropHandler(component, element, DEFAULT_STYLE),
+    ...basePropHandler(
+      component,
+      element,
+      DEFAULT_STYLE,
+      DEFAULT_ATTR,
+      CONTROLLED_ATTR_SET
+    ),
     ...stylePropHandler(component, element, DEFAULT_STYLE),
   }
 }
 
-export function htmlPropHandler(
-  component: Component<HTMLElement>,
-  element: HTMLElement,
-  DEFAULT_STYLE: Style
+export function htmlPropHandler<T extends HTMLElement>(
+  component: Component<T>,
+  element: T,
+  DEFAULT_STYLE: Style,
+  DEFAULT_ATTR: Dict<any>,
+  CONTROLLED_ATTR_SET: Set<string>
 ): PropHandler {
   return {
-    ...elementPropHandler(component, element, DEFAULT_STYLE),
+    ...elementPropHandler(
+      component,
+      element,
+      DEFAULT_STYLE,
+      DEFAULT_ATTR,
+      CONTROLLED_ATTR_SET
+    ),
     innerText: (innerText: string | undefined) => {
       element.innerText = innerText || ''
     },
   }
 }
 
-export function svgPropHandler(
-  component: Component<SVGElement>,
+export function svgPropHandler<P extends Dict<any> = any>(
+  component: Component<SVGElement, P>,
   element: SVGElement,
-  DEFAULT_STYLE: Style
+  DEFAULT_STYLE: Style,
+  DEFAULT_ATTR: Dict<any>,
+  CONTROLLED_ATTR_SET: Set<string>
 ): PropHandler {
   return {
-    ...basePropHandler(component, element, DEFAULT_STYLE),
+    ...basePropHandler(
+      component,
+      element,
+      DEFAULT_STYLE,
+      DEFAULT_ATTR,
+      CONTROLLED_ATTR_SET
+    ),
     ...stylePropHandler(component, element, DEFAULT_STYLE),
   }
 }
@@ -59,15 +84,23 @@ export function svgPropHandler(
 export function basePropHandler(
   component: Component,
   element: HTMLElement | SVGElement,
-  DEFAULT_STYLE: Style
+  DEFAULT_STYLE: Style,
+  DEFAULT_ATTR: Dict<any>,
+  CONTROLLED_ATTR_SET: Set<string>
 ): PropHandler {
   return {
-    attr: (attr) => {
-      applyAttr(element, attr)
+    attr: (attr, prev) => {
+      applyAttr(
+        element,
+        { ...DEFAULT_ATTR, ...attr },
+        prev,
+        CONTROLLED_ATTR_SET
+      )
     },
     style: (style: Dict<string> | undefined = {}) => {
       applyStyle(element, { ...DEFAULT_STYLE, ...style })
     },
+    name: makeAttrHandler(element, 'name'),
     className: makeAttrHandler(element, 'className'),
     id: makeAttrHandler(element, 'id'),
     tabIndex: makeAttrHandler(element, 'tabIndex'),
@@ -91,11 +124,14 @@ export function stylePropHandler(
 export function inputPropHandler(
   element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
   VALUE_NAME: string,
-  DEFAULT_VALUE: any
+  DEFAULT_VALUE: any,
+  parseValue: (value: string) => string = identity
 ): PropHandler {
   return {
     value: (value: any | undefined) => {
-      element[VALUE_NAME] = value || DEFAULT_VALUE
+      const value_ = parseValue(value)
+
+      element[VALUE_NAME] = value_ || DEFAULT_VALUE
     },
     placeholder: (placeholder: string | undefined) => {
       // @ts-ignore

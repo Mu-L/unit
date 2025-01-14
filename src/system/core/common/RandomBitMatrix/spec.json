@@ -75,8 +75,7 @@
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -86,14 +85,12 @@
           "unitId": "narraybuilder",
           "pinId": "a[]"
         }
-      },
-      "type": "number[][]"
+      }
     }
   },
   "metadata": {
     "icon": "binary",
     "description": "output a random bit matrix",
-    "complexity": 79,
     "tags": ["core", "common"]
   },
   "id": "be4600af-eb6b-417f-9bb6-88760afbbcba",

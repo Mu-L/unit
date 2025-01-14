@@ -46,15 +46,13 @@
           "unitId": "mergedefault",
           "pinId": "a"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "square",
     "description": "column flexbox",
-    "complexity": 53,
     "tags": ["platform", "core", "component"]
   },
   "component": {

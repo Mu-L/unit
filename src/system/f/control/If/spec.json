@@ -15,8 +15,7 @@
   },
   "metadata": {
     "icon": "filter",
-    "description": "conditional filter",
-    "complexity": 3,
+    "description": "consume `a` and `b` if `b` is false, output pass `a` otherwise",
     "tags": ["f", "control"]
   },
   "id": "06bc3983-44b0-43d6-b041-2e9218ea89c8",

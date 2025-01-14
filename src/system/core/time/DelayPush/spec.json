@@ -47,7 +47,6 @@
           "pinId": "ms"
         }
       },
-      "type": "number",
       "metadata": {
         "examples": ["1000", "100"]
       }
@@ -58,8 +57,7 @@
           "unitId": "delay",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "outputs": {
@@ -69,14 +67,12 @@
           "unitId": "push",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "metadata": {
     "icon": "alarm-clock",
     "description": "delay + memory",
-    "complexity": 13,
     "tags": ["core", "time"]
   },
   "id": "8cd6c706-d1d4-11ea-92e1-47577abb9ccf",

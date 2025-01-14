@@ -16,6 +16,7 @@ import { watchRefInput } from './watchRefInput'
 import { watchRefOutput } from './watchRefOutput'
 import { watchUnitErr } from './watchUnitErr'
 import {
+  watchComponentAppendChildrenEvent,
   watchComponentAppendEvent,
   watchComponentRemoveEvent,
   watchUnitRenamePinEvent,
@@ -105,20 +106,34 @@ export function watchUnitIO<T extends Unit>(
 
   if (watch_data_input || watch_ref_input) {
     all.push(
-      unit.addListener('set_input', (pinId, pin, { ref }) => {
+      unit.addListener('set_input', (pinId: string, pin, { ref }) => {
         listenPin('input', pinId)
       })
     )
   }
 
   all.push(
-    unit.addListener('rename_input', (name, newName) => {
+    unit.addListener('remove_input', (pinId: string, pin) => {
+      const unlisten = pin_listener_map.input[pinId]
+
+      if (unlisten) {
+        unlisten()
+
+        remove(all, unlisten)
+
+        delete pin_listener_map.output[pinId]
+      }
+    })
+  )
+
+  all.push(
+    unit.addListener('rename_input', (name: string, newName: string) => {
       unlistenPin('input', name)
       listenPin('input', newName)
     })
   )
   all.push(
-    unit.addListener('rename_output', (name, newName) => {
+    unit.addListener('rename_output', (name: string, newName: string) => {
       unlistenPin('output', name)
       listenPin('output', newName)
     })
@@ -129,7 +144,7 @@ export function watchUnitIO<T extends Unit>(
   }
 
   all.push(
-    unit.addListener('remove_output', (pinId, pin) => {
+    unit.addListener('remove_output', (pinId: string, pin) => {
       const unlisten = pin_listener_map.output[pinId]
       if (unlisten) {
         unlisten()
@@ -151,7 +166,7 @@ export function watchUnitIO<T extends Unit>(
 
   if (watch_data_output || watch_ref_output) {
     all.push(
-      unit.addListener('set_output', (pinId, pin, { ref }) => {
+      unit.addListener('set_output', (pinId: string, pin, { ref }) => {
         if (ref && watch_ref_output) {
           watchPin('ref', 'output', pinId, pin)
         } else if (!ref && watch_data_output) {
@@ -169,6 +184,13 @@ export function watchUnitIO<T extends Unit>(
     if (events.includes('append_child')) {
       // @ts-ignore
       all.push(watchComponentAppendEvent('append_child', unit, callback))
+    }
+
+    if (events.includes('append_children')) {
+      all.push(
+        // @ts-ignore
+        watchComponentAppendChildrenEvent('append_children', unit, callback)
+      )
     }
 
     if (events.includes('remove_child')) {

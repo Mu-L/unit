@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "check-circle",
     "description": "output true",
-    "complexity": 5,
     "tags": ["core", "value"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "wait",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -36,8 +34,7 @@
           "unitId": "wait",
           "pinId": "a"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "id": "984c4a44-86c7-464c-ad48-4759598c3be3",

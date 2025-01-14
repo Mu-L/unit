@@ -23,8 +23,7 @@
           "unitId": "identity",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -34,14 +33,12 @@
           "unitId": "identity",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
-    "icon": "output 0",
+    "icon": "zero",
     "description": "output 0",
-    "complexity": 5,
     "tags": ["core", "common"]
   },
   "id": "618898d6-1167-11eb-bef9-cb053e09c21b",

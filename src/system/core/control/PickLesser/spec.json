@@ -49,7 +49,6 @@
   "metadata": {
     "icon": "pointer",
     "description": "pick the smalest from `a` and `b`",
-    "complexity": 16,
     "tags": ["core", "control"]
   },
   "inputs": {
@@ -59,8 +58,7 @@
           "mergeId": "0"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "b": {
       "plug": {
@@ -68,8 +66,7 @@
           "mergeId": "1"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     }
   },
   "outputs": {
@@ -79,16 +76,14 @@
           "unitId": "pick",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     },
     "a < b": {
       "plug": {
         "0": {
           "mergeId": "2"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "id": "f805b3c6-6c0e-4215-b3d6-91b93dc8a938",

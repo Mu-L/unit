@@ -20,8 +20,7 @@
   },
   "metadata": {
     "icon": "server",
-    "description": "share a graph localy",
-    "complexity": 22,
+    "description": "share a graph locally",
     "tags": ["platform", "method", "process", "share", "local"]
   },
   "id": "259ba71c-6315-4324-a32c-fc2277200a40",

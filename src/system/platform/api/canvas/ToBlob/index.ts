@@ -1,9 +1,9 @@
-import { $ } from '../../../../../Class/$'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
 import { B } from '../../../../../types/interface/B'
 import { CA } from '../../../../../types/interface/CA'
+import { wrapBlob } from '../../../../../wrap/Blob'
 import { ID_TO_BLOB } from '../../../../_ids'
 
 export interface I<T> {
@@ -17,13 +17,14 @@ export interface O<T> {
   blob: B
 }
 
-export default class ToBlob<T> extends Semifunctional<I<T>, O<T>> {
+export default class ToBlob<T> extends Holder<I<T>, O<T>> {
   constructor(system: System) {
     super(
       {
         fi: ['canvas', 'quality', 'type'],
         fo: ['blob'],
-        i: ['done'],
+        i: [],
+        o: [],
       },
       {
         input: {
@@ -53,32 +54,10 @@ export default class ToBlob<T> extends Semifunctional<I<T>, O<T>> {
       return
     }
 
-    const blob = new (class _Blob extends $ implements B {
-      __: string[] = ['B', 'IM', 'BO']
-
-      async image(): Promise<any> {
-        return _blob
-      }
-
-      async blob(): Promise<Blob> {
-        return _blob
-      }
-
-      async raw() {
-        return _blob
-      }
-    })(this.__system)
+    const blob = wrapBlob(_blob, this.__system)
 
     done({
       blob,
     })
-  }
-
-  onIterDataInputData(name: string) {
-    // if (name === 'done') {
-    this._forward_empty('blob')
-
-    this._backward('done')
-    // }
   }
 }

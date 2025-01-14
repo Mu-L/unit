@@ -35,16 +35,16 @@ export const COLOR_LINK_BLUE = '#1d62c9'
 export const COLOR_CHARTREUSE = '#dfff00'
 export const COLOR_LINK_CHARTREUSE = '#cddd00'
 
-export const COLOR_DARK_CHARTREUSE = '#d84315' // orange
-export const COLOR_DARK_LINK_CHARTREUSE = '#bf360c'
+export const COLOR_DARK_CHARTREUSE = '#4cccf6' // aquamarine
+export const COLOR_DARK_LINK_CHARTREUSE = '#3aabd4'
 
 export const COLOR_WHITE = '#ffffff'
 
 export const COLOR_YELLOW = '#ffcc00'
 export const COLOR_LINK_YELLOW = '#ffbb00'
 
-export const COLOR_DARK_YELLOW = '#ef6c00' // orange
-export const COLOR_DARK_LINK_YELLOW = '#e65100'
+export const COLOR_DARK_YELLOW = '#2299ff' // lightblue
+export const COLOR_DARK_LINK_YELLOW = '#1177dd'
 
 export const COLOR_NONE = '#00000000'
 
@@ -90,8 +90,8 @@ export const LIGHT_LINK_MODE_COLOR: Dict<string> = {
   data: COLOR_DARK_LINK_CHARTREUSE,
 }
 
-export const getActiveColor = ($theme: Theme): string => {
-  if ($theme === 'dark') {
+export const getActiveColor = (theme: Theme): string => {
+  if (theme === 'dark') {
     return COLOR_YELLOW
   } else {
     return COLOR_DARK_YELLOW
@@ -118,12 +118,19 @@ export const getThemeLinkModeColor = (theme: string, mode: Mode): string => {
   }
 }
 
-export const themeBackgroundColor = ($theme: Theme): string => {
-  return $theme === 'dark' ? '#1f1f1f' : '#d1d1d1'
+const DARK_DEFAULT_COLOR = '#f1f1f1'
+const LIGHT_DEFAULT_COLOR = '#1f1f1f'
+
+export const themeColor = (theme: Theme): string => {
+  return theme === 'dark' ? DARK_DEFAULT_COLOR : LIGHT_DEFAULT_COLOR
 }
 
-export const oppositeTheme = ($theme: Theme): Theme => {
-  return $theme === 'dark' ? 'light' : 'dark'
+export const themeBackgroundColor = (theme: Theme): string => {
+  return theme === 'dark' ? LIGHT_DEFAULT_COLOR : DARK_DEFAULT_COLOR
+}
+
+export const oppositeTheme = (theme: Theme): Theme => {
+  return theme === 'dark' ? 'light' : 'dark'
 }
 
 export function applyTheme(
@@ -142,6 +149,6 @@ export function defaultThemeColor(theme: Theme): string {
   if (theme === 'dark') {
     return COLOR_GRAYSCALE_BASE00
   } else {
-    return COLOR_GRAYSCALE_BASE11
+    return COLOR_GRAYSCALE_BASE09
   }
 }

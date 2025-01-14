@@ -1,5 +1,5 @@
 import { addListeners } from '../../../../client/addListener'
-import { Component } from '../../../../client/component'
+import { Component, defaultFocusLookup } from '../../../../client/component'
 import {
   Context,
   disableContext,
@@ -10,10 +10,9 @@ import {
   setTheme,
   unmount,
 } from '../../../../client/context'
-import { Element } from '../../../../client/element'
 import { makeCustomListener } from '../../../../client/event/custom'
+import HTMLElement_ from '../../../../client/html'
 import { renderFrame } from '../../../../client/renderFrame'
-import { applyDynamicStyle } from '../../../../client/style'
 import { Theme } from '../../../../client/theme'
 import { System } from '../../../../system'
 import { Dict } from '../../../../types/Dict'
@@ -22,10 +21,10 @@ import { Unlisten } from '../../../../types/Unlisten'
 export interface Props {
   className?: string
   style?: Dict<any>
+  attr?: Dict<any>
   disabled?: boolean
   color?: string
   theme?: Theme
-  tabIndex?: number
 }
 
 export const DEFAULT_STYLE = {
@@ -36,29 +35,72 @@ export const DEFAULT_STYLE = {
   zIndex: '0',
 }
 
-export default class Frame extends Element<HTMLDivElement, Props> {
+export default class Frame extends HTMLElement_<HTMLDivElement, Props> {
   public $$context: Context
 
   private _context_unlisten: Unlisten
 
   constructor($props: Props, $system: System) {
-    super($props, $system)
+    super(
+      $props,
+      $system,
+      $system.api.document.createElement('div'),
+      DEFAULT_STYLE,
+      {},
+      {
+        disabled: (disabled: boolean) => {
+          this._refresh_sub_context_disabled()
+        },
+        theme: (theme: Theme) => {
+          this._refresh_sub_context_color()
+        },
+        color: (color: string) => {
+          this._refresh_sub_context_color()
+        },
+      }
+    )
 
-    const { className, style = {}, color, tabIndex, theme, disabled } = $props
+    const { className, color } = $props
 
-    const $element = this.$system.api.document.createElement('div')
+    this.$element.classList.add('frame')
 
-    $element.classList.add('frame')
+    this.$element.addEventListener('keydown', (event: KeyboardEvent) => {
+      const {
+        api: {
+          document: { getSelection, createRange, canSelectShadowDom },
+        },
+      } = this.$system
+
+      if (event.metaKey && event.key.toLowerCase() === 'a') {
+        // Selection doesn't work on Safari (2024) inside
+        // shadowRoot; if this can be detected, accept the
+        // default browser behavior
+        if (!canSelectShadowDom()) {
+          return
+        }
+
+        event.preventDefault()
+
+        const range = createRange()
+
+        range.selectNodeContents(this.$element)
+
+        const selection = getSelection()
+
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        event.stopPropagation()
+      }
+    })
+
+    this.$element.addEventListener('focus', () => {
+      defaultFocusLookup(this)
+    })
 
     if (className !== undefined) {
-      $element.classList.add(className)
+      this.$element.classList.add(className)
     }
-
-    if (tabIndex !== undefined) {
-      $element.tabIndex = tabIndex
-    }
-
-    this.$element = $element
 
     const $$init: Partial<Context> = {
       $disabled: true,
@@ -68,30 +110,12 @@ export default class Frame extends Element<HTMLDivElement, Props> {
       $$init.$color = color
     }
 
-    applyDynamicStyle(this, this.$element, { ...DEFAULT_STYLE, ...style })
-
-    this.$$context = renderFrame(this.$system, null, $element, $$init)
-  }
-
-  private _prop_handler = {
-    style: (style: Dict<string> = {}) => {
-      applyDynamicStyle(this, this.$element, { ...DEFAULT_STYLE, ...style })
-
-      this._refresh_sub_context_color()
-    },
-    disabled: (disabled: boolean) => {
-      this._refresh_sub_context_disabled()
-    },
-    theme: (theme: Theme) => {
-      this._refresh_sub_context_color()
-    },
-    color: (color: string) => {
-      this._refresh_sub_context_color()
-    },
-  }
-
-  onPropChanged(prop: string, current: any): void {
-    this._prop_handler[prop](current)
+    this.$$context = renderFrame(
+      this.$system,
+      this.$context,
+      this.$element,
+      $$init
+    )
   }
 
   mountChild(child: Component, commit: boolean = true): void {
@@ -103,14 +127,9 @@ export default class Frame extends Element<HTMLDivElement, Props> {
   onMount() {
     // console.log('Frame', 'onMount')
 
-    setParent(this.$$context, this.$parent)
+    setParent(this.$$context, this.$context)
 
     mount(this.$$context)
-
-    // AD HOC
-    if (this._context_unlisten) {
-      this._context_unlisten()
-    }
 
     this._context_unlisten = addListeners(this.$context, [
       makeCustomListener('enabled', this._on_context_enabled),

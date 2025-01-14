@@ -45,8 +45,7 @@
           "unitId": "pick",
           "pinId": "c"
         }
-      },
-      "type": "boolean"
+      }
     },
     "b": {
       "plug": {
@@ -54,8 +53,7 @@
           "unitId": "pick",
           "pinId": "b"
         }
-      },
-      "type": "<A>"
+      }
     },
     "a": {
       "plug": {
@@ -63,8 +61,7 @@
           "unitId": "pick",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     },
     "key": {
       "plug": {
@@ -72,8 +69,7 @@
           "unitId": "set",
           "pinId": "key"
         }
-      },
-      "type": "string"
+      }
     },
     "obj": {
       "plug": {
@@ -81,8 +77,7 @@
           "unitId": "set",
           "pinId": "obj"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -92,14 +87,12 @@
           "unitId": "set",
           "pinId": "obj"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "metadata": {
     "icon": "brackets-curly",
     "description": "conditionally set `obj` property `key` to `a` or `b` based on `test`",
-    "complexity": 16,
     "tags": ["core", "common"]
   },
   "id": "9a85acf3-c40b-4e82-b04c-68c3dd1b0d4b",

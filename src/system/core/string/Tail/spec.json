@@ -14,7 +14,6 @@
   "metadata": {
     "icon": "axe",
     "description": "output `tail` of string `a`",
-    "complexity": 5,
     "tags": ["core", "string"]
   },
   "inputs": {
@@ -24,8 +23,7 @@
           "unitId": "behead",
           "pinId": "a"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {
@@ -35,8 +33,7 @@
           "unitId": "behead",
           "pinId": "tail"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "id": "5c9f4a0a-e675-48db-b6c0-5ac6914cdae0",

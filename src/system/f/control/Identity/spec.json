@@ -11,9 +11,8 @@
     }
   },
   "metadata": {
-    "icon": "unit",
+    "icon": "circle",
     "description": "output `a`",
-    "complexity": 3,
     "tags": ["f", "control"]
   },
   "id": "260d774e-bc89-4027-aa92-cb1985fb312b",

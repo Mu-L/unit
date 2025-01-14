@@ -1,5 +1,6 @@
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
+import { apiNotSupportedError } from '../../../../../exception/APINotImplementedError'
 import { System } from '../../../../../system'
 import { IC } from '../../../../../types/interface/IC'
 import { MST } from '../../../../../types/interface/MST'
@@ -16,13 +17,13 @@ export type O = {
   camera: IC
 }
 
-export default class ImageCapture_ extends Semifunctional<I, O> {
+export default class ImageCapture_ extends Holder<I, O> {
   constructor(system: System) {
     super(
       {
         fi: ['init', 'track'],
         fo: ['camera'],
-        i: ['done'],
+        i: [],
         o: [],
       },
       {
@@ -40,8 +41,6 @@ export default class ImageCapture_ extends Semifunctional<I, O> {
       system,
       ID_IMAGE_CAPTURE
     )
-
-    this.addListener('destroy', () => {})
   }
 
   async f({ init, track }: I, done: Done<O>) {
@@ -52,7 +51,7 @@ export default class ImageCapture_ extends Semifunctional<I, O> {
     } = this.__system
 
     if (!ImageCapture) {
-      done(undefined, 'ImageCapture API is not supported')
+      done(undefined, apiNotSupportedError('Image Capture'))
 
       return
     }
@@ -77,15 +76,5 @@ export default class ImageCapture_ extends Semifunctional<I, O> {
     const camera = wrapImageCapture(imageCapture, this.__system)
 
     done({ camera })
-  }
-
-  onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
-    this._forward_all_empty()
-
-    this._backward_all()
-
-    this._backward('done')
-    // }
   }
 }

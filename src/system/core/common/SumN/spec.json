@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "plus",
     "description": "sum the next `n` `a`",
-    "complexity": 42,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "sumnfrom",
           "pinId": "n"
         }
-      },
-      "type": "number"
+      }
     },
     "a": {
       "plug": {
@@ -34,8 +32,7 @@
           "unitId": "sumnfrom",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -45,8 +42,7 @@
           "unitId": "sumnfrom",
           "pinId": "sum"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "74edae3f-87de-455c-a65a-e458334d2c47",

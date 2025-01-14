@@ -50,9 +50,8 @@
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "brackets-curly",
     "description": "create object `ab` with values `a` and `b`",
-    "complexity": 11,
     "tags": ["core", "util"]
   },
   "inputs": {
@@ -62,8 +61,7 @@
           "unitId": "tag1",
           "pinId": "v"
         }
-      },
-      "type": "any"
+      }
     },
     "b": {
       "plug": {
@@ -71,8 +69,7 @@
           "unitId": "tag0",
           "pinId": "v"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -82,8 +79,7 @@
           "unitId": "deepmerge",
           "pinId": "ab"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "4e54703e-08bc-4537-ba5d-5e697a02be1f",

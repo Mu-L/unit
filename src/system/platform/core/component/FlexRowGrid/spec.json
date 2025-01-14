@@ -6,8 +6,8 @@
       "input": {},
       "metadata": {
         "component": {
-          "width": 120,
-          "height": 210
+          "width": 240,
+          "height": 240
         }
       }
     },
@@ -17,7 +17,7 @@
         "a": {},
         "default": {
           "constant": true,
-          "data": "{display:'flex',flexDirection:'row',flexWrap:'wrap',alignContent:'start'}"
+          "data": "{display:'flex',flexDirection:'row',flexWrap:'wrap',alignContent:'start',height:'100%'}"
         }
       },
       "output": {
@@ -46,15 +46,13 @@
           "unitId": "mergedefault",
           "pinId": "a"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "square",
     "description": "grid flexbox",
-    "complexity": 53,
     "tags": ["platform", "core", "component"]
   },
   "component": {

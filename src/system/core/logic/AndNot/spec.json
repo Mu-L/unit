@@ -29,8 +29,7 @@
           "unitId": "not",
           "pinId": "a"
         }
-      },
-      "type": "boolean"
+      }
     },
     "a": {
       "plug": {
@@ -38,8 +37,7 @@
           "unitId": "and",
           "pinId": "a"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -49,14 +47,12 @@
           "unitId": "and",
           "pinId": "a and b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "ampersand",
     "description": "AND NOT logical operator",
-    "complexity": 8,
     "tags": ["core", "logic"]
   },
   "id": "c059a789-b57c-4c2e-976b-fdbbe8f9993a",

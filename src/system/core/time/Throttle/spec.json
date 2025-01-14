@@ -60,7 +60,6 @@
   "metadata": {
     "icon": "alarm-clock",
     "description": "output element from stream every `ms` milliseconds",
-    "complexity": 12,
     "tags": ["core", "time"]
   },
   "inputs": {
@@ -70,8 +69,7 @@
           "unitId": "memory",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     },
     "ms": {
       "plug": {
@@ -79,8 +77,7 @@
           "unitId": "interval",
           "pinId": "ms"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -90,8 +87,7 @@
           "unitId": "memory0",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "id": "2c3c4a2c-7300-4050-a017-ba25e42497b5",

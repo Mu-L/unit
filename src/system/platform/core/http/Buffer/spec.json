@@ -1,0 +1,572 @@
+{
+  "type": "`U`&`G`",
+  "name": "buffer",
+  "units": {
+    "append": {
+      "id": "cf4db91a-f8b2-454f-a763-12005d71cb9d",
+      "input": {
+        "a[]": {},
+        "a": {
+          "metadata": {
+            "position": {
+              "x": -267,
+              "y": 48
+            }
+          }
+        }
+      },
+      "output": {},
+      "metadata": {
+        "position": {
+          "x": -220,
+          "y": 36
+        }
+      }
+    },
+    "state": {
+      "id": "c899b675-c3c4-428e-b548-b228305c0302",
+      "input": {
+        "init": {
+          "metadata": {
+            "position": {
+              "x": -258,
+              "y": -38
+            }
+          }
+        },
+        "done": {
+          "ignored": true,
+          "metadata": {
+            "position": {
+              "x": -261,
+              "y": -13
+            }
+          }
+        }
+      },
+      "output": {
+        "data": {
+          "metadata": {
+            "position": {
+              "x": -168,
+              "y": 11
+            }
+          }
+        }
+      },
+      "metadata": {
+        "position": {
+          "x": -212,
+          "y": -23
+        }
+      }
+    },
+    "debounce": {
+      "id": "e55c58b3-8653-4481-b5c9-2a75fce6365a",
+      "input": {
+        "ms": {
+          "constant": true,
+          "data": {
+            "ref": [],
+            "data": 0
+          },
+          "metadata": {
+            "position": {
+              "x": -108,
+              "y": 133
+            },
+            "data": {
+              "position": {
+                "x": -129,
+                "y": 153
+              }
+            }
+          }
+        },
+        "a": {}
+      },
+      "output": {
+        "a": {}
+      },
+      "metadata": {
+        "position": {
+          "x": -64,
+          "y": 111
+        }
+      }
+    },
+    "ifnot": {
+      "id": "439c6b56-a0b6-4b76-9131-c6dc23375fda",
+      "input": {
+        "a": {
+          "metadata": {
+            "position": {
+              "x": 100,
+              "y": 213
+            }
+          }
+        },
+        "b": {}
+      },
+      "output": {
+        "a if not b": {}
+      },
+      "metadata": {
+        "position": {
+          "x": 136,
+          "y": 183
+        }
+      }
+    },
+    "true": {
+      "id": "984c4a44-86c7-464c-ad48-4759598c3be3",
+      "input": {
+        "any": {}
+      },
+      "output": {
+        "true": {}
+      },
+      "metadata": {
+        "position": {
+          "x": 124,
+          "y": 110
+        }
+      }
+    },
+    "iterate0": {
+      "id": "8a2b756a-25e4-11eb-860d-1f34c850b992",
+      "input": {
+        "next": {
+          "metadata": {
+            "position": {
+              "x": -51,
+              "y": 47
+            }
+          }
+        },
+        "init": {
+          "constant": true,
+          "data": {
+            "ref": [],
+            "data": false
+          },
+          "metadata": {
+            "position": {
+              "x": 256,
+              "y": 59
+            },
+            "data": {
+              "position": {
+                "x": 294,
+                "y": 41
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "current": {},
+        "local": {
+          "ignored": true,
+          "metadata": {
+            "position": {
+              "x": 262,
+              "y": 81
+            }
+          }
+        }
+      },
+      "metadata": {
+        "position": {
+          "x": 209,
+          "y": 75
+        }
+      }
+    },
+    "constant1": {
+      "id": "ff976ac8-c54f-4d37-8c7d-089c271cb433",
+      "input": {
+        "a": {}
+      },
+      "output": {
+        "a": {
+          "metadata": {
+            "position": {
+              "x": -248,
+              "y": 67
+            }
+          }
+        }
+      },
+      "metadata": {
+        "position": {
+          "x": 236,
+          "y": 159
+        }
+      }
+    },
+    "identity": {
+      "id": "260d774e-bc89-4027-aa92-cb1985fb312b",
+      "input": {
+        "a": {}
+      },
+      "output": {
+        "a": {}
+      },
+      "metadata": {
+        "position": {
+          "x": 38,
+          "y": 140
+        }
+      }
+    },
+    "false": {
+      "id": "b4d20f6f-32dc-4d04-97d6-69518976bdea",
+      "input": {
+        "any": {}
+      },
+      "output": {
+        "false": {}
+      },
+      "metadata": {
+        "position": {
+          "x": 105,
+          "y": 43
+        }
+      }
+    },
+    "pop": {
+      "id": "dff853f8-7bb4-48dc-a792-5efdead94640",
+      "input": {
+        "a": {},
+        "any": {}
+      },
+      "output": {
+        "last": {}
+      },
+      "metadata": {
+        "position": {
+          "x": -108,
+          "y": 23
+        }
+      }
+    },
+    "plan": {
+      "id": "36329d25-218d-48a5-a06c-1e0525da504f",
+      "input": {
+        "a": {}
+      },
+      "output": {
+        "0": {
+          "metadata": {
+            "position": {
+              "x": 34,
+              "y": -27
+            }
+          }
+        },
+        "1": {}
+      },
+      "metadata": {
+        "position": {
+          "x": 0,
+          "y": 4
+        }
+      }
+    },
+    "identity0": {
+      "id": "260d774e-bc89-4027-aa92-cb1985fb312b",
+      "input": {
+        "a": {}
+      },
+      "output": {
+        "a": {}
+      },
+      "metadata": {
+        "position": {
+          "x": 18,
+          "y": 73
+        }
+      }
+    }
+  },
+  "merges": {
+    "0": {
+      "append": {
+        "input": {
+          "a[]": true
+        }
+      },
+      "pop": {
+        "input": {
+          "a": true
+        }
+      },
+      "state": {
+        "output": {
+          "data": true
+        }
+      }
+    },
+    "2": {
+      "true": {
+        "output": {
+          "true": true
+        }
+      },
+      "iterate0": {
+        "input": {
+          "next": true
+        }
+      },
+      "false": {
+        "output": {
+          "false": true
+        }
+      }
+    },
+    "3": {
+      "identity": {
+        "output": {
+          "a": true
+        }
+      },
+      "debounce": {
+        "input": {
+          "a": true
+        }
+      },
+      "identity0": {
+        "output": {
+          "a": true
+        }
+      }
+    },
+    "4": {
+      "false": {
+        "input": {
+          "any": true
+        }
+      },
+      "plan": {
+        "output": {
+          "1": true
+        }
+      },
+      "identity0": {
+        "input": {
+          "a": true
+        }
+      }
+    },
+    "5": {
+      "plan": {
+        "input": {
+          "a": true
+        }
+      },
+      "pop": {
+        "output": {
+          "last": true
+        }
+      }
+    },
+    "7": {
+      "debounce": {
+        "output": {
+          "a": true
+        }
+      },
+      "pop": {
+        "input": {
+          "any": true
+        }
+      }
+    },
+    "16": {
+      "iterate0": {
+        "output": {
+          "current": true
+        }
+      },
+      "constant1": {
+        "input": {
+          "a": true
+        }
+      }
+    },
+    "17": {
+      "ifnot": {
+        "input": {
+          "b": true
+        }
+      },
+      "constant1": {
+        "output": {
+          "a": true
+        }
+      }
+    },
+    "19": {
+      "ifnot": {
+        "output": {
+          "a if not b": true
+        }
+      },
+      "identity": {
+        "input": {
+          "a": true
+        }
+      },
+      "true": {
+        "input": {
+          "any": true
+        }
+      }
+    }
+  },
+  "inputs": {
+    "a": {
+      "plug": {
+        "0": {
+          "unitId": "append",
+          "pinId": "a",
+          "kind": "input"
+        },
+        "1": {
+          "unitId": "ifnot",
+          "pinId": "a",
+          "kind": "input"
+        }
+      },
+      "metadata": {
+        "position": {
+          "0": {
+            "ext": {
+              "x": -285,
+              "y": 63
+            }
+          },
+          "1": {
+            "ext": {
+              "x": 92,
+              "y": 236
+            }
+          }
+        }
+      }
+    },
+    "init": {
+      "plug": {
+        "0": {
+          "unitId": "state",
+          "pinId": "init",
+          "kind": "input"
+        }
+      },
+      "ref": false,
+      "metadata": {
+        "position": {
+          "0": {
+            "ext": {
+              "x": -274,
+              "y": -55
+            }
+          }
+        }
+      }
+    }
+  },
+  "outputs": {
+    "a": {
+      "plug": {
+        "0": {
+          "unitId": "plan",
+          "pinId": "0",
+          "kind": "output"
+        }
+      },
+      "metadata": {
+        "position": {
+          "0": {
+            "ext": {
+              "x": 41,
+              "y": -50
+            }
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "icon": "array",
+    "description": "general purpose buffer",
+    "position": {
+      "merge": {
+        "2": {
+          "x": 154,
+          "y": 69
+        },
+        "3": {
+          "x": -9,
+          "y": 115
+        },
+        "4": {
+          "x": 49,
+          "y": 34
+        },
+        "5": {
+          "x": -55,
+          "y": 7
+        },
+        "7": {
+          "x": -96,
+          "y": 70
+        },
+        "11": {
+          "x": -124,
+          "y": -42
+        },
+        "12": {
+          "x": -220,
+          "y": -13
+        },
+        "13": {
+          "x": -227,
+          "y": -41
+        },
+        "14": {
+          "x": -313,
+          "y": -21
+        },
+        "15": {
+          "x": -250,
+          "y": 42
+        },
+        "16": {
+          "x": 243,
+          "y": 113
+        },
+        "17": {
+          "x": 190,
+          "y": 181
+        },
+        "19": {
+          "x": 92,
+          "y": 150
+        },
+        "22": {
+          "x": 3,
+          "y": -64
+        }
+      },
+      "data": {
+        "x": 77,
+        "y": -121
+      }
+    },
+    "tags": ["platform", "core", "http"]
+  },
+  "id": "84b00637-b2bf-4b99-92eb-bf54f7f88ad0",
+  "system": true
+}

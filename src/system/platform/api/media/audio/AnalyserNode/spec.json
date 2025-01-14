@@ -15,13 +15,13 @@
   "outputs": {
     "node": {
       "type": "`AAN`&`AN`",
-      "ref": true
+      "ref": true,
+      "icon": "square-activity"
     }
   },
   "metadata": {
     "icon": "activity",
     "description": "provide real-time frequency and time-domain analysis information from input `node`",
-    "complexity": 12,
     "tags": ["platform", "api", "media", "audio"],
     "globals": ["AudioAnalyser"]
   },

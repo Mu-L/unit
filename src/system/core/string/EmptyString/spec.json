@@ -25,7 +25,6 @@
   "metadata": {
     "icon": "string",
     "description": "output an empty string",
-    "complexity": 5,
     "tags": ["core", "object"]
   },
   "inputs": {
@@ -35,8 +34,7 @@
           "unitId": "wait",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -46,8 +44,7 @@
           "unitId": "wait",
           "pinId": "a"
         }
-      },
-      "type": "\"\""
+      }
     }
   },
   "id": "7c8e8a47-2225-4716-986e-1cb2af3ed3b3",

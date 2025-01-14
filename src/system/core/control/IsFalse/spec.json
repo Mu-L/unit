@@ -19,8 +19,7 @@
           "unitId": "ifnot",
           "pinId": "b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -30,14 +29,12 @@
           "unitId": "ifnot",
           "pinId": "a if not b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
     "icon": "question",
     "description": "true if `a` is false, false otherwise",
-    "complexity": 10,
     "tags": ["core", "control"]
   },
   "id": "b5f8a6bc-4fab-4905-a479-cf94e6e92448",

@@ -2,7 +2,7 @@
   "name": "from char code",
   "inputs": {
     "code": {
-      "type": "number"
+      "type": "number[]"
     }
   },
   "outputs": {
@@ -11,9 +11,8 @@
     }
   },
   "metadata": {
-    "icon": "axe",
+    "icon": "info",
     "description": "output string created from the specified sequence of UTF-16 code",
-    "complexity": 3,
     "tags": ["f", "string"]
   },
   "id": "25d0e003-f002-45ae-a50c-6fa3bffee4eb",

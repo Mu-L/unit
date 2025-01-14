@@ -42,9 +42,8 @@
   },
   "outputs": {},
   "metadata": {
-    "icon": "question",
-    "description": "text button",
-    "complexity": 87
+    "icon": "square",
+    "description": "text button"
   },
   "render": true,
   "component": {

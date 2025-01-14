@@ -52,8 +52,7 @@
           "unitId": "loop",
           "pinId": "init"
         }
-      },
-      "type": "<A>"
+      }
     },
     "test": {
       "plug": {
@@ -61,8 +60,7 @@
           "unitId": "loop",
           "pinId": "test"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -72,16 +70,14 @@
           "unitId": "loop",
           "pinId": "local"
         }
-      },
-      "type": "<A>"
+      }
     },
     "current": {
       "plug": {
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "<A>"
+      }
     },
     "final": {
       "plug": {
@@ -90,14 +86,12 @@
           "pinId": "final"
         }
       },
-      "defaultIgnored": true,
-      "type": "<A>"
+      "defaultIgnored": true
     }
   },
   "metadata": {
     "icon": "repeat",
     "description": "repeats `a` while `next` is true",
-    "complexity": 8,
     "tags": ["core", "common"]
   },
   "id": "ba8d655b-6014-4eae-bce1-fb8fef9ee535",

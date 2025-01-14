@@ -118,8 +118,7 @@
         "0": {
           "mergeId": "2"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "outputs": {
@@ -129,14 +128,12 @@
           "unitId": "at",
           "pinId": "a[i]"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "metadata": {
     "icon": "array",
     "description": "output every element `a[i]` of `a` in decreasing order",
-    "complexity": 30,
     "tags": ["core", "common"]
   },
   "id": "dd7ae700-3016-4aba-a45f-5fa2c21cb00f",

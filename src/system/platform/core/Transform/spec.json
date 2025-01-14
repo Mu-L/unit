@@ -100,7 +100,7 @@
   },
   "metadata": {
     "icon": "brackets-curly",
-    "complexity": 8,
+    "description": "get element then set element after going through a function",
     "tags": ["platform", "core"]
   },
   "type": "`U`&`G`",

@@ -48,7 +48,7 @@
           "pinId": "start"
         }
       },
-      "type": "number"
+      "functional": true
     },
     "a": {
       "plug": {
@@ -57,7 +57,7 @@
           "pinId": "a"
         }
       },
-      "type": "<A>[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -67,8 +67,7 @@
           "unitId": "remove",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "a[i]": {
       "plug": {
@@ -76,14 +75,12 @@
           "unitId": "first",
           "pinId": "a[0]"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "metadata": {
     "icon": "scissors",
     "description": "remove `a` element at position `i`",
-    "complexity": 10,
     "tags": ["core", "array"]
   },
   "id": "55d4bc9e-a4a2-44ed-8b35-c9ae64b5d0e3",

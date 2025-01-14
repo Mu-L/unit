@@ -1,6 +1,6 @@
 import { $ } from '../../../../../../Class/$'
 import { Done } from '../../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../../Class/Holder'
 import { System } from '../../../../../../system'
 import { A } from '../../../../../../types/interface/A'
 import { AAN } from '../../../../../../types/interface/AAN'
@@ -10,21 +10,20 @@ import { ID_GET_BYTE_FREQUENCY_DATA } from '../../../../../_ids'
 export type I = {
   node: AAN & $
   opt: {}
+  done: any
 }
 
 export type O = {
   data: A & $
 }
 
-export default class GetByteFrequencyData extends Semifunctional<I, O> {
-  private _data: Uint8Array
-
+export default class GetByteFrequencyData extends Holder<I, O> {
   constructor(system: System) {
     super(
       {
         fi: ['node', 'opt'],
         fo: ['data'],
-        i: ['done'],
+        i: [],
       },
       {
         input: {
@@ -46,30 +45,14 @@ export default class GetByteFrequencyData extends Semifunctional<I, O> {
   f({ node, opt }: I, done: Done<O>) {
     const fftSize = node.getFFTSize()
 
-    this._data = new Uint8Array(fftSize)
+    const _data = new Uint8Array(fftSize)
 
-    node.getByteFrequencyData(this._data)
+    node.getByteFrequencyData(_data)
 
-    const data = wrapUint8Array(this._data, this.__system)
+    const data = wrapUint8Array(_data, this.__system)
 
     done({
       data,
     })
-  }
-
-  d() {
-    //
-  }
-
-  private _reset = () => {
-    this._data = undefined
-
-    this._backward_all()
-  }
-
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
-    this._reset()
-    // }
   }
 }

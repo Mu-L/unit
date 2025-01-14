@@ -41,7 +41,6 @@
           "mergeId": "0"
         }
       },
-      "type": "<A>[]",
       "metadata": {
         "examples": ["[0,1,2,3,4]"]
       }
@@ -54,14 +53,12 @@
           "unitId": "at",
           "pinId": "a[i]"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "metadata": {
     "icon": "random",
     "description": "random element of the array",
-    "complexity": 21,
     "tags": ["core", "common"]
   },
   "id": "5b99b930-92c9-4fbe-be37-8c72a8e1c70b",

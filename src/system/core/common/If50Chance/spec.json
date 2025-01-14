@@ -40,8 +40,7 @@
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -51,14 +50,12 @@
           "unitId": "if",
           "pinId": "a if b"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "metadata": {
     "icon": "filter",
     "description": "50% chance of passing",
-    "complexity": 13,
     "tags": ["core", "common"]
   },
   "id": "bacfa026-d96f-4ea1-8430-86bb02d69a53",

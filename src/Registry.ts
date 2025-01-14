@@ -1,21 +1,32 @@
 import { Object_ } from './Object'
-import { emptySpec, isSystemSpecId, newSpecId } from './client/spec'
+import { emptySpec, isSystemSpecId, sameSpec } from './client/spec'
+import { evaluateDataValue } from './spec/evaluateDataValue'
+import { remapSpec } from './spec/remapSpec'
 import { Spec, Specs } from './types'
 import { Dict } from './types/Dict'
 import { GraphSpec } from './types/GraphSpec'
 import { GraphSpecs } from './types/GraphSpecs'
 import { R } from './types/interface/R'
+import { clone } from './util/clone'
 import { uuidNotIn } from './util/id'
-import { clone } from './util/object'
+import { deepGet } from './util/object'
+import { weakMerge } from './weakMerge'
 
 export class Registry implements R {
   specs: Specs
   specs_: Object_<Specs>
-  specsCount: Dict<number> = {}
+  specsCount: Dict<number>
+  lock: Dict<boolean>
 
-  constructor(specs: Specs) {
+  constructor(
+    specs: Specs,
+    specs_?: Object_<Specs>,
+    specsCount?: Dict<number>
+  ) {
     this.specs = specs
-    this.specs_ = new Object_(specs)
+    this.specs_ = specs_ ?? new Object_(specs)
+    this.specsCount = specsCount ?? {}
+    this.lock = {}
   }
 
   newSpecId(): string {
@@ -26,10 +37,10 @@ export class Registry implements R {
     return !!this.specs[id]
   }
 
-  emptySpec() {
-    const id = newSpecId(this.specs)
+  emptySpec(partial: Partial<GraphSpec> = {}) {
+    const id = partial.id ?? this.newSpecId()
 
-    const spec = emptySpec({ id })
+    const spec = emptySpec({ ...partial, id })
 
     this.newSpec(spec)
 
@@ -39,7 +50,7 @@ export class Registry implements R {
   newSpec(spec: GraphSpec, specId?: string) {
     // console.log('newSpec', spec, specId)
 
-    specId = specId ?? newSpecId(this.specs)
+    specId = specId ?? this.newSpecId()
 
     spec.id = specId
 
@@ -61,16 +72,77 @@ export class Registry implements R {
   injectSpecs(newSpecs: GraphSpecs): Dict<string> {
     // console.log('injectSpecs', newSpecs)
 
-    const mapSpecId: Dict<string> = {}
+    const specIdMap: Dict<string> = {}
+    const nextSpecs = {}
 
     const visited: Set<string> = new Set()
 
-    const _set = (specId, spec) => {
+    const setSpec = (
+      specId: string,
+      spec: GraphSpec,
+      visited: Set<string> = new Set()
+    ) => {
+      const { units } = spec
+
       if (visited.has(specId)) {
         return
       }
 
-      if (mapSpecId[specId]) {
+      visited.add(specId)
+
+      for (const unitId in units) {
+        const unit = units[unitId]
+
+        if (this.hasSpec(unit.id)) {
+          //
+        } else {
+          const spec = nextSpecs[unit.id]
+
+          if (spec) {
+            setSpec(unit.id, spec, visited)
+          } else {
+            //
+          }
+        }
+
+        const { input = {} } = unit
+
+        for (const name in input) {
+          const { data } = input[name]
+
+          if (data !== undefined) {
+            const dataRef = evaluateDataValue(
+              data,
+              weakMerge(this.specs, nextSpecs),
+              {}
+            )
+
+            for (const path of dataRef.ref ?? []) {
+              const bundle = deepGet(dataRef.data, path)
+
+              const spec = nextSpecs[bundle.unit.id]
+
+              if (spec) {
+                setSpec(spec.id, spec, visited)
+              } else {
+                //
+              }
+            }
+          }
+        }
+      }
+
+      this.specs_.set(specId, spec)
+    }
+
+    for (const specId in newSpecs) {
+      const spec = newSpecs[specId]
+
+      if (visited.has(specId)) {
+        return
+      }
+
+      if (specIdMap[specId]) {
         return
       }
 
@@ -84,44 +156,41 @@ export class Registry implements R {
       }
 
       visited.add(specId)
-      const { units } = spec
-
-      for (const unitId in units) {
-        const unit = units[unitId]
-
-        if (this.hasSpec(unit.id)) {
-          //
-        } else {
-          const spec = newSpecs[unit.id]
-
-          _set(unit.id, spec)
-        }
-      }
 
       if (hasSpec) {
-        // TODO spec equality
-        if (JSON.stringify(spec) === JSON.stringify(this.getSpec(specId))) {
+        if (sameSpec(spec, this.getSpec(specId) as GraphSpec)) {
           //
         } else {
-          // TODO
-          mapSpecId[specId] = nextSpecId
-
-          this.specs_.set(specId, spec)
+          specIdMap[specId] = nextSpecId
         }
-      } else {
-        this.specs_.set(specId, spec)
       }
-
-      // this.specs_.set(nextSpecId, spec) // TODO
     }
+
+    const specSet = new Set<string>()
 
     for (const specId in newSpecs) {
       const spec = newSpecs[specId]
 
-      _set(specId, spec)
+      const id = remapSpec(spec, specIdMap)
+
+      if (this.hasSpec(id)) {
+        if (JSON.stringify(spec) === JSON.stringify(this.getSpec(specId))) {
+          //
+        } else {
+          nextSpecs[id] = spec
+        }
+      } else {
+        nextSpecs[id] = spec
+      }
     }
 
-    return mapSpecId
+    for (const specId in nextSpecs) {
+      const spec = nextSpecs[specId]
+
+      setSpec(specId, spec, specSet)
+    }
+
+    return specIdMap
   }
 
   shouldFork(id: string): boolean {
@@ -158,8 +227,7 @@ export class Registry implements R {
     // console.log('unregisterUnit', { id })
 
     if (!this.specsCount[id]) {
-      return
-      // throw new Error(`cannot unregister unit: no spec with id ${id}`)
+      throw new Error(`cannot unregister unit: no spec with id ${id}`)
     }
 
     this.specsCount[id] -= 1
@@ -167,7 +235,7 @@ export class Registry implements R {
     if (this.specsCount[id] === 0) {
       delete this.specsCount[id]
 
-      if (!isSystemSpecId(this.specs, id)) {
+      if (!isSystemSpecId(this.specs, id) && !this.lock[id]) {
         this.deleteSpec(id)
       }
     }
@@ -177,5 +245,13 @@ export class Registry implements R {
     // console.log('deleteSpec', id)
 
     this.specs_.delete(id)
+  }
+
+  lockSpec(id: string): void {
+    this.lock[id] = true
+  }
+
+  unlockSpec(id: string): void {
+    delete this.lock[id]
   }
 }

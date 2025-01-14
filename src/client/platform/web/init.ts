@@ -4,7 +4,7 @@ import { isSupportedKeyboardEvent } from '../../event/keyboard'
 import { showNotification } from '../../showNotification'
 import { COLOR_RED } from '../../theme'
 
-export default function webInit(
+export function webInit(
   system: System,
   window: Window,
   root: HTMLElement
@@ -12,7 +12,6 @@ export default function webInit(
   const { document } = window
 
   const blurListener = () => {
-    // TODO
     // when window is blurred by a popup/alert as a result
     // of a "keydown", "keyup" will not be fired
     system.input.keyboard.pressed = []
@@ -29,23 +28,18 @@ export default function webInit(
       return
     }
 
-    const { metaKey, keyCode, key, repeat } = event
+    const { metaKey, key, repeat } = event
 
-    // ignore all key events when meta key is pressed
     if (metaKey) {
       return
     }
 
-    if (key === 'Tab') {
-      event.preventDefault()
-    }
-
-    const index = system.input.keyboard.pressed.indexOf(keyCode)
+    const index = system.input.keyboard.pressed.indexOf(key)
 
     system.input.keyboard.repeat = repeat
 
     if (index === -1) {
-      system.input.keyboard.pressed.push(keyCode)
+      system.input.keyboard.pressed.push(key)
     }
   }
 
@@ -54,13 +48,13 @@ export default function webInit(
       return
     }
 
-    const { metaKey, keyCode, key } = event
+    const { metaKey, key } = event
 
     if (metaKey) {
       return
     }
 
-    const index = system.input.keyboard.pressed.indexOf(keyCode)
+    const index = system.input.keyboard.pressed.indexOf(key)
 
     system.input.keyboard.pressed.splice(index, 1)
   }
@@ -70,6 +64,7 @@ export default function webInit(
   const wheelListener = (event: MouseEvent) => {
     if (window.visualViewport) {
       const scale = window.visualViewport.scale || 1
+
       if (scale > 1) {
         event.stopPropagation()
       }
@@ -82,14 +77,6 @@ export default function webInit(
       document.documentElement.scrollTop = 0
 
       event.preventDefault()
-    }
-  }
-
-  // TODO
-  const touchListener = (event: TouchEvent) => {
-    const { touches } = event
-    for (let i = 0; i < touches.length; i++) {
-      const touch = touches.item(i)!
     }
   }
 
@@ -122,7 +109,6 @@ export default function webInit(
     capture: true,
     passive: true,
   })
-  root.addEventListener('touchmove', touchListener)
   root.addEventListener('dblclick', dbClickListener)
   root.addEventListener('dragover', dragOverListener)
   root.addEventListener('drop', dropListener)
@@ -136,7 +122,6 @@ export default function webInit(
     root.removeEventListener('wheel', wheelListener, {
       capture: true,
     })
-    root.removeEventListener('touchmove', touchListener)
     root.removeEventListener('dblclick', dbClickListener)
     root.removeEventListener('dragover', dragOverListener)
     root.removeEventListener('drop', dropListener)

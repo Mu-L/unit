@@ -29,8 +29,7 @@
           "unitId": "or",
           "pinId": "a"
         }
-      },
-      "type": "boolean"
+      }
     },
     "b": {
       "plug": {
@@ -38,8 +37,7 @@
           "unitId": "or",
           "pinId": "b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -49,14 +47,12 @@
           "unitId": "not",
           "pinId": "!a"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "question",
     "description": "NOT logic operator",
-    "complexity": 8,
     "tags": ["core", "common"]
   },
   "id": "561db4ce-1631-4d66-a047-140fb6e814a6",

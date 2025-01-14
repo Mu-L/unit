@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "tag",
     "description": "{event: `event`}",
-    "complexity": 7,
     "tags": ["platform", "core", "api", "event"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "tag",
           "pinId": "v"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {
@@ -36,8 +34,7 @@
           "unitId": "tag",
           "pinId": "kv"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "5fe94b90-2618-11eb-b06a-5fc0ce62fd27",

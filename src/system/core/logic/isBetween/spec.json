@@ -9,7 +9,7 @@
         }
       }
     },
-    "a": {
+    "b": {
       "plug": {
         "0": {
           "unitId": "greaterthanequal",
@@ -17,7 +17,7 @@
         }
       }
     },
-    "b": {
+    "a": {
       "plug": {
         "0": {
           "mergeId": "0"
@@ -32,8 +32,7 @@
           "unitId": "and",
           "pinId": "a and b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "units": {
@@ -125,7 +124,8 @@
     }
   },
   "metadata": {
-    "complexity": 11
+    "icon": "question",
+    "description": "check whether `a` is between `b` and `c`"
   },
   "id": "f022d16a-7a47-47c8-8d9b-3278df13bcc5",
   "system": true,

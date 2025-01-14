@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "send",
     "description": "build HTTP token auth value",
-    "complexity": 5,
     "tags": ["platform", "core", "rest"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "concat",
           "pinId": "b"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {
@@ -36,8 +34,7 @@
           "unitId": "concat",
           "pinId": "ab"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "id": "522a9858-02c2-487a-ac04-27d2f5ebe7c3",
