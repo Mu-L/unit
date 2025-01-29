@@ -8,7 +8,6 @@
         }
       },
       "functional": true,
-      "type": "number",
       "metadata": {
         "position": {
           "0": {
@@ -26,7 +25,6 @@
           "mergeId": "1"
         }
       },
-      "type": "boolean",
       "metadata": {
         "position": {
           "0": {
@@ -234,7 +232,6 @@
   "metadata": {
     "icon": "skip-forward",
     "description": "output true `n` times then false",
-    "complexity": 24,
     "tags": ["core", "common"],
     "position": {
       "merge": {
@@ -262,6 +259,5 @@
     }
   },
   "id": "85b8586a-0295-44fd-b3d2-24a048552700",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

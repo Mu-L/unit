@@ -6,7 +6,7 @@
       "ref": true
     },
     "opt": {
-      "type": "{snapshot?:boolean}",
+      "type": "{deep?:boolean,system?:boolean,state?:boolean}",
       "medatata": {
         "examples": ["{}"]
       }
@@ -20,11 +20,9 @@
   "metadata": {
     "icon": "circle",
     "description": "get `graph` `bundle`",
-    "complexity": 3,
     "tags": ["f", "meta"]
   },
   "id": "13d738b9-401d-43c9-852f-e9611545f5bc",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

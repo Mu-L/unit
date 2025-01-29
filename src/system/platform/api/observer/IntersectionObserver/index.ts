@@ -1,7 +1,8 @@
 import { $ } from '../../../../../Class/$'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { Component } from '../../../../../client/component'
+import { LayoutBase } from '../../../../../client/layout'
 import { System } from '../../../../../system'
 import { Callback } from '../../../../../types/Callback'
 import { Unlisten } from '../../../../../types/Unlisten'
@@ -10,7 +11,6 @@ import { OB } from '../../../../../types/interface/OB'
 import { remove } from '../../../../../util/array'
 import { ID_INTERSECTION_OBSERVER } from '../../../../_ids'
 import { firstGlobalComponentPromise } from '../../../../globalComponent'
-import { LayoutBase } from '../../../component/app/Editor/layout'
 
 export type I = {
   root: Component_
@@ -22,13 +22,15 @@ export type O = {
   observer: OB
 }
 
-export default class IntersectionObserver_ extends Semifunctional<I, O> {
+export default class IntersectionObserver_ extends Holder<I, O> {
+  private _observer: IntersectionObserver
+
   constructor(system: System) {
     super(
       {
         fi: ['root', 'opt'],
         fo: ['observer'],
-        i: ['done'],
+        i: [],
         o: [],
       },
       {
@@ -99,6 +101,8 @@ export default class IntersectionObserver_ extends Semifunctional<I, O> {
       threshold: 0.1,
     })
 
+    this._observer = _observer
+
     const callbacks: Callback[] = []
 
     const observer = new (class IntersectionObserver_ extends $ implements OB {
@@ -121,6 +125,10 @@ export default class IntersectionObserver_ extends Semifunctional<I, O> {
   }
 
   d() {
-    // TODO
+    if (this._observer) {
+      this._observer.disconnect()
+
+      this._observer = undefined
+    }
   }
 }

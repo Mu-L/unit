@@ -1,8 +1,8 @@
 import { keys } from '../../../system/f/object/Keys/f'
-import { MODE_TO_KEY } from '../../../system/platform/component/app/Editor/MODE_TO_KEY'
 import { Dict } from '../../../types/Dict'
 import { Unlisten } from '../../../types/Unlisten'
 import { Component } from '../../component'
+import { MODE_TO_KEY } from '../../component/app/graph/MODE_TO_KEY'
 import {
   IOKeyboardEvent,
   isKeyPressed,
@@ -17,7 +17,7 @@ export const enableModeKeyboard = (
   callback: (mode: string) => void
 ): Unlisten => {
   const { $system } = component
-  // console.log('enableModeKeyboard')
+
   const _mode_keydown: Dict<boolean> = {}
 
   const shortcuts: Shortcut[] = []
@@ -34,7 +34,7 @@ export const enableModeKeyboard = (
     shortcuts.push({
       combo: mode_key,
       strict: false,
-      multiple: true,
+      multiple: false,
       keydown: (key: string, event: IOKeyboardEvent) => {
         const { ctrlKey } = event
 
@@ -42,21 +42,16 @@ export const enableModeKeyboard = (
           return
         }
 
-        if (mode_key === key) {
+        if (mode_key.toLowerCase() === key.toLowerCase()) {
           _mode_keydown[key] = true
 
           callback(mode as Mode)
         }
       },
       keyup: (key: string) => {
-        // console.log('keyup', key)
-        // AD HOC
-        // this might come from a "focusout" event,
-        // resultant of search being shown
-        // setTimeout(() => {
         delete _mode_keydown[key]
 
-        if (key === MODE_TO_KEY[mode]) {
+        if (key.toLowerCase() === MODE_TO_KEY[mode].toLowerCase()) {
           const mode_keydown = keys(_mode_keydown)
 
           const mode_keydown_count = mode_keydown.length
@@ -67,7 +62,6 @@ export const enableModeKeyboard = (
             callback('none')
           }
         }
-        // }, 0)
       },
     })
   }

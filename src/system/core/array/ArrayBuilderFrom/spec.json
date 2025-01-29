@@ -42,7 +42,6 @@
   "metadata": {
     "icon": "array",
     "description": "build a list starting `from`",
-    "complexity": 8,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -52,8 +51,7 @@
           "unitId": "append",
           "pinId": "b"
         }
-      },
-      "type": "<A>"
+      }
     },
     "test": {
       "plug": {
@@ -61,8 +59,7 @@
           "unitId": "loop",
           "pinId": "test"
         }
-      },
-      "type": "boolean"
+      }
     },
     "init": {
       "plug": {
@@ -70,8 +67,7 @@
           "unitId": "loop",
           "pinId": "init"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "outputs": {
@@ -80,8 +76,7 @@
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "a[]": {
       "plug": {
@@ -89,8 +84,7 @@
           "unitId": "loop",
           "pinId": "final"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "local": {
       "plug": {
@@ -98,11 +92,9 @@
           "unitId": "loop",
           "pinId": "local"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "id": "6db1905f-2343-4c63-97d3-07f4d946ef58",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -7,8 +7,7 @@
           "unitId": "text",
           "pinId": "value"
         }
-      },
-      "type": "string"
+      }
     },
     "style": {
       "plug": {
@@ -16,8 +15,7 @@
           "unitId": "fit-content",
           "pinId": "style"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -80,11 +78,11 @@
     "defaultHeight": 120
   },
   "metadata": {
-    "complexity": 97,
+    "icon": "square",
+    "description": "text box fit content",
     "tags": ["platform", "component", "app"]
   },
   "id": "b12c858a-26ea-42a7-a435-0ee50ac34fbf",
   "type": "`U`&`G`&`C`",
-  "system": true,
   "render": true
 }

@@ -22,15 +22,17 @@ export interface SFIO {
 }
 
 export class Semifunctional<
-  I = {},
-  O = {},
-  _EE extends SemifunctionalEvents<_EE> = SemifunctionalEvents<Semifunctional_EE>
-> extends Primitive<I, O, _EE> {
-  private _f_i: Set<string>
-  private _f_o: Set<string>
+  I extends Dict<any> = any,
+  O extends Dict<any> = any,
+  EE extends SemifunctionalEvents<
+    Dict<any>
+  > = SemifunctionalEvents<Semifunctional_EE>,
+> extends Primitive<I, O, EE> {
+  protected _f_i: Set<string>
+  protected _f_o: Set<string>
 
   protected _functional: Functional<any, any>
-  protected _primitive: Primitive
+  protected _primitive: Primitive<I, O>
 
   constructor(
     { fi = [], fo = [], i = [], o = [] }: SFIO,
@@ -63,8 +65,8 @@ export class Semifunctional<
         self.d()
       }
 
-      i() {
-        self.i()
+      b() {
+        self.b()
       }
     })(this.__system)
 
@@ -85,35 +87,35 @@ export class Semifunctional<
         )
       }
 
-      onDataInputData(name: string, data: any) {
+      onDataInputData<K extends keyof I>(name: K, data) {
         self.onIterDataInputData(name, data)
       }
 
-      onRefInputData(name: string, data: any) {
+      onRefInputData<K extends keyof I>(name: K, data) {
         self.onIterRefInputData(name, data)
       }
 
-      onDataInputDrop(name: string): void {
+      onDataInputDrop<K extends keyof I>(name: K): void {
         self.onIterDataInputDrop(name)
       }
 
-      onRefInputDrop(name: string): void {
+      onRefInputDrop<K extends keyof I>(name: K): void {
         self.onIterRefInputDrop(name)
       }
 
-      onDataOutputDrop(name: string): void {
+      onDataOutputDrop<K extends keyof O>(name: K): void {
         self.onIterDataOutputDrop(name)
       }
 
-      onRefOutputDrop(name: string): void {
+      onRefOutputDrop<K extends keyof O>(name: K): void {
         self.onIterRefOutputDrop(name)
       }
 
-      onDataInputInvalid(name: string) {
+      onDataInputInvalid<K extends keyof I>(name: K) {
         self.onIterDataInputInvalid(name)
       }
 
-      onRefInputInvalid(name: string) {
+      onRefInputInvalid<K extends keyof I>(name: K) {
         self.onIterRefInputInvalid(name)
       }
     })(this.__system)
@@ -141,7 +143,7 @@ export class Semifunctional<
     for (const name of i) {
       primitive.setInput(
         name as keyof I,
-        this.getInput(name),
+        this.getInput(name as keyof I),
         this.getInputOpt(name)
       )
     }
@@ -191,51 +193,52 @@ export class Semifunctional<
         functional.addOutput(name, pin, opt)
       }
     )
-    // TODO
-    // this.addListener('remove_input', this._onInputRemoved)
-    // this.addListener('remove_output', this._onOutputRemoved)
-    // this.addListener('rename_input', this._onInputRenamed)
-    // this.addListener('rename_output', this._onOutputRenamed)
   }
 
   f(i: Partial<I>, done: Done<O>) {}
 
-  d() {
-    this.fd()
-  }
+  d() {}
 
-  fd() {}
-
-  i() {
-    this.fi()
-  }
-
-  fi() {}
+  b() {}
 
   protected _done: Done<O> = (data, err = null) => {
     this._functional._done(data, err)
   }
 
-  public onIterDataInputData(name: string, data: any): void {}
+  public onIterDataInputData<K extends keyof I>(name: K, data: any): void {}
 
-  public onIterRefInputData(name, data: any): void {}
+  public onIterRefInputData<K extends keyof I>(name: K, data: any): void {}
 
-  public onIterDataInputDrop(name: string): void {}
+  public onIterDataInputDrop<K extends keyof I>(name: K): void {}
 
-  public onIterRefInputDrop(name: string): void {}
+  public onIterRefInputDrop<K extends keyof I>(name: K): void {}
 
-  public onIterDataOutputDrop(name: string): void {}
+  public onIterDataOutputDrop<K extends keyof O>(name: K): void {}
 
-  public onIterRefOutputDrop(name: string): void {}
+  public onIterRefOutputDrop<K extends keyof O>(name: K): void {}
 
-  public onIterDataInputInvalid(name: string) {}
+  public onIterDataInputInvalid<K extends keyof I>(name: K) {}
 
-  public onIterRefInputInvalid(name: string) {}
+  public onIterRefInputInvalid<K extends keyof I>(name: K) {}
 
   public destroy(): void {
     this._functional.destroy()
     this._primitive.destroy()
 
     super.destroy()
+  }
+
+  protected _backward_f(): void {
+    for (const fi of this._f_i) {
+      if (!this._ref_input[fi]) {
+        this._backward(fi)
+      }
+    }
+  }
+
+  protected _forward_empty_f(): void {
+    for (const fo of this._f_o) {
+      this._forward_empty(fo)
+    }
   }
 }

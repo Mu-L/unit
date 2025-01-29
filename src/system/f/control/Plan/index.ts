@@ -7,8 +7,8 @@ export interface I<T> {
 }
 
 export interface O<T> {
-  0: T
-  1: T
+  '0': T
+  '1': T
 }
 
 export default class Plan<T> extends Primitive<I<T>, O<T>> {
@@ -25,10 +25,18 @@ export default class Plan<T> extends Primitive<I<T>, O<T>> {
       system,
       ID_PLAN
     )
+
+    this.addListener('reset', this._reset)
+  }
+
+  private _reset() {
+    this._current = undefined
+    this._looping = false
   }
 
   onDataInputData(name: string, data: any) {
     this._current = data
+
     this._forward_if_ready()
   }
 
@@ -38,7 +46,7 @@ export default class Plan<T> extends Primitive<I<T>, O<T>> {
       !this._backwarding &&
       !this._looping &&
       this._current !== undefined &&
-      this._i_invalid_count === 0
+      this._i_invalid.size === 0
     ) {
       this._looping = true
       this._forwarding = true
@@ -93,8 +101,8 @@ export default class Plan<T> extends Primitive<I<T>, O<T>> {
   public snapshotSelf() {
     return {
       ...super.snapshotSelf(),
-      _looping: this._looping,
-      _current: this._current,
+      ...(this._looping ? { _looping: true } : {}),
+      ...(this._current !== undefined ? { _current: this._current } : {}),
     }
   }
 

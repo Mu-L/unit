@@ -1,10 +1,11 @@
 import { MethodNotImplementedError } from '../exception/MethodNotImplementedError'
-import { INHERITANCE } from '../interface'
+import { INHERITANCE } from '../inheritance'
 import { keys } from '../system/f/object/Keys/f'
 import { PinsSpecBase, Specs } from '../types'
+import { Dict } from '../types/Dict'
 import { UnitBundleSpec } from '../types/UnitBundleSpec'
 import { matchAllExc } from '../util/array'
-import { clone } from '../util/object'
+import { clone } from '../util/clone'
 import { removeWhiteSpace } from '../util/string'
 import { weakMerge } from '../weakMerge'
 import { evaluateBundleStr, idFromUnitValue } from './idFromUnitValue'
@@ -43,15 +44,18 @@ export enum TreeNodeType {
   Unit = 'unit',
   Any = 'any',
   PropExpression = 'prop expression',
+  Placeholder = 'placeholder',
   ArithmeticExpression = 'arithmetic expression',
   Url = 'url',
 }
 
-export type TreeNode = {
-  value: string
+export type TreeNode<T = string> = {
+  value: T
   type: TreeNodeType
-  children: TreeNode[]
+  children: TreeNode<T>[]
 }
+
+export type RawTreeNode = TreeNode<any>
 
 export const COMMA = ','
 export const DOUBLE_QUOTE = '"'
@@ -60,27 +64,30 @@ export const OBJECT_OPEN = '{'
 export const OBJECT_CLOSE = '}'
 export const ARRAY_OPEN = '['
 export const ARRAY_CLOSE = ']'
+export const PARENTHESIS_OPEN = '('
+export const PARENTHESIS_CLOSE = ')'
 
 function trimSides(str: string): string {
   return str.substring(1, str.length - 1)
 }
 
-function _traverse(
+export function traverseTree(
   root: TreeNode,
   callback: (node: TreeNode, path: number[]) => void,
   path: number[] = []
 ): void {
   callback(root, path)
+
   root.children.forEach((child: TreeNode, index: number) =>
-    _traverse(child, callback, [...path, index])
+    traverseTree(child, callback, [...path, index])
   )
 }
 
 function _printTree(tree: TreeNode): void {
   // console.log(JSON.stringify(tree, null, 2))
-  _traverse(tree, (node: TreeNode, path: number[]) =>
+  traverseTree(tree, (node: TreeNode, path: number[]) =>
     // eslint-disable-next-line no-console
-    console.log(path, node.value)
+    console.log(path, node.value, node.type)
   )
 }
 
@@ -260,6 +267,24 @@ const TYPE_TO_LITERAL: { [type: string]: TreeNodeType } = {
   [TreeNodeType.Date]: TreeNodeType.DateLiteral,
 }
 
+export function parseClassValue(tree: TreeNode): {
+  base: string
+  placeholder: TreeNode
+} {
+  const child = tree.children[0] ?? getTree('<any>')
+
+  const diamond = child.value
+
+  const placeholder =
+    child.type === TreeNodeType.Generic
+      ? child
+      : getTree(child.value.slice(1, -1))
+
+  const base = tree.value.replace(diamond, '').slice(1, -1)
+
+  return { base, placeholder }
+}
+
 export function getLiteralType(type: TreeNodeType): TreeNodeType {
   return TYPE_TO_LITERAL[type]
 }
@@ -366,12 +391,20 @@ export function _isTypeMatch(
       )
     case TreeNodeType.Class:
       if (source.type === TreeNodeType.Class) {
-        const sourceClass = source.value.slice(1, -1)
-        const targetClass = target.value.slice(1, -1)
+        const { base: sourceClass, placeholder: sourcePlaceholder } =
+          parseClassValue(source)
+        const { base: targetClass, placeholder: targetPlaceholder } =
+          parseClassValue(target)
 
         const match = checkClassInheritance(sourceClass, targetClass)
 
-        return match
+        if (match) {
+          if (_isTypeMatch(specs, sourcePlaceholder, targetPlaceholder)) {
+            return true
+          }
+        }
+
+        return false
       } else if (source.type === TreeNodeType.Unit) {
         const bundle = evaluateBundleStr(
           source.value,
@@ -474,10 +507,20 @@ export function _isTypeMatch(
           _isTypeMatch(specs, source.children[0], target.children[0])) ||
         (source.type === TreeNodeType.ObjectLiteral &&
           (source.children.length === 0 ||
-            !source.children.some(
-              (keyValue) =>
-                !_isTypeMatch(specs, keyValue.children[1], target.children[0])
-            )))
+            !source.children.some((line) => {
+              if (line.type === TreeNodeType.KeyValue) {
+                return !_isTypeMatch(
+                  specs,
+                  line.children[1],
+                  target.children[0]
+                )
+              } else if (
+                line.type === TreeNodeType.String ||
+                line.type === TreeNodeType.Identifier
+              ) {
+                return false
+              }
+            })))
       )
   }
 
@@ -505,7 +548,14 @@ export function isValidTree(value: string): boolean {
   return _isValidType(tree) || _isValidValue(tree)
 }
 
-export function _isValidValue(tree: TreeNode): boolean {
+export function _isValidValue(
+  tree: TreeNode,
+  _getTree: (
+    value: string,
+    keyValue?: boolean,
+    ignoreKeyword?: boolean
+  ) => TreeNode = _getValueTree
+): boolean {
   switch (tree.type) {
     case TreeNodeType.Invalid:
     case TreeNodeType.Generic:
@@ -550,7 +600,7 @@ export function _isValidValue(tree: TreeNode): boolean {
             return true
           }
 
-          if (value_tree.value !== '' && !_isValidValue(value_tree)) {
+          if (value_tree.value !== '' && !_isValidValue(value_tree, _getTree)) {
             return true
           }
 
@@ -566,7 +616,7 @@ export function _isValidValue(tree: TreeNode): boolean {
     case TreeNodeType.ArrayLiteral:
       return !tree.children.some((element, index) => {
         if (
-          !_isValidValue(element) &&
+          !_isValidValue(element, _getTree) &&
           (element.value !== '' || index !== tree.children.length - 1)
         ) {
           return true
@@ -755,20 +805,54 @@ export function _getTypeTree(
 
   const expressionTest = /^\((.+)\)$/.exec(value)
   if (expressionTest) {
-    const children = [getTree(expressionTest[1])]
-    return {
-      value,
-      type: TreeNodeType.Expression,
-      children,
+    const body = expressionTest[1]
+
+    let open = 0
+    let valid = true
+
+    for (let i = 0; i < body.length; i++) {
+      const char = body[i]
+
+      if (char === '(') {
+        open++
+      } else if (char === ')') {
+        open--
+      }
+
+      if (open < 0) {
+        valid = false
+
+        break
+      }
+    }
+
+    if (valid) {
+      const children = [getTree(body)]
+
+      return {
+        value,
+        type: TreeNodeType.Expression,
+        children,
+      }
     }
   }
 
-  const genericTest = /^<[^]*>$/.exec(value)
+  const genericTest = /^<[A-Z]+>$/.exec(value)
   if (genericTest) {
     return {
       value,
       type: TreeNodeType.Generic,
       children: [],
+    }
+  }
+
+  const placeholderTest = /^<([^ <>]+)>$/.exec(value)
+  if (placeholderTest) {
+    const children = [getTree(placeholderTest[1])]
+    return {
+      value,
+      type: TreeNodeType.Placeholder,
+      children,
     }
   }
 
@@ -821,8 +905,13 @@ export function _getTypeTree(
   if (arrayExpressionTest) {
     const child = getTree(arrayExpressionTest[1])
 
-    if (child.type !== TreeNodeType.Invalid) {
+    if (
+      child.type !== TreeNodeType.Invalid &&
+      child.type !== TreeNodeType.Or &&
+      child.type !== TreeNodeType.And
+    ) {
       const children = [child]
+
       return {
         value,
         type: TreeNodeType.ArrayExpression,
@@ -903,8 +992,8 @@ function execComposed(
   if (str[0] === open_delimiter && str[l - 1] === close_delimiter) {
     let sq_open = false
     let dq_open = false
+
     let open = 0
-    let q_open = 0
 
     for (let i = 1; i < l - 1; i++) {
       const c = str[i]
@@ -913,18 +1002,10 @@ function execComposed(
       if (c === "'" && pc !== '\\') {
         if (!dq_open) {
           sq_open = !sq_open
-
-          if (!sq_open) {
-            open += q_open
-          }
         }
       } else if (c === '"' && pc !== '\\') {
         if (!sq_open) {
           dq_open = !dq_open
-
-          if (!dq_open) {
-            open += q_open
-          }
         }
       } else {
         if (!sq_open && !dq_open) {
@@ -936,12 +1017,6 @@ function execComposed(
             if (open === -1) {
               return null
             }
-          }
-        } else {
-          if (c === open_delimiter) {
-            q_open++
-          } else if (c === close_delimiter) {
-            q_open--
           }
         }
       }
@@ -1008,7 +1083,15 @@ function _getValueTree(
 
     let valid = true
 
+    let escaping = false
+
     for (let i = 1; i < value.length - 1; i++) {
+      if (value[i] === '\\') {
+        escaping = !escaping
+      } else {
+        escaping = false
+      }
+
       if (value[i] === startChar && value[i - 1] !== '\\') {
         valid = false
 
@@ -1016,7 +1099,7 @@ function _getValueTree(
       }
     }
 
-    if (valid) {
+    if (valid && !escaping) {
       return {
         value,
         type: TreeNodeType.StringLiteral,
@@ -1082,14 +1165,6 @@ function _getValueTree(
     if (keyValueTest) {
       let k = _getTree(keyValueTest[1], false, true)
 
-      if (!_isValidObjKeyType(k)) {
-        return {
-          value,
-          type: TreeNodeType.Invalid,
-          children: [],
-        }
-      }
-
       const value_value = keyValueTest[2]
 
       const v = _getTree(value_value) || {
@@ -1104,12 +1179,6 @@ function _getValueTree(
         value,
         type: TreeNodeType.KeyValue,
         children,
-      }
-    } else {
-      return {
-        value,
-        type: TreeNodeType.Invalid,
-        children: [],
       }
     }
   }
@@ -1162,12 +1231,8 @@ export function _extractGenerics(
   specs: Specs,
   value: TreeNode,
   type: TreeNode
-): {
-  [name: string]: string
-} {
-  let generics: {
-    [name: string]: string
-  } = {}
+): Dict<string> {
+  let generics: Dict<string> = {}
 
   switch (type.type) {
     case TreeNodeType.Generic: {
@@ -1330,16 +1395,35 @@ export function _getValueType(specs: Specs, tree: TreeNode): TreeNode {
       }
     }
     case TreeNodeType.ArrayLiteral: {
-      const type =
+      const childrenTypes = tree.children.map((c) => _getValueType(specs, c))
+
+      const childrenTypeSet = new Set()
+
+      const childrenTypes_ = childrenTypes
+        .map((c) => c.value)
+        .filter((value) => {
+          if (childrenTypeSet.has(value)) {
+            return false
+          } else {
+            childrenTypeSet.add(value)
+
+            return true
+          }
+        })
+
+      const childType =
         tree.children.length > 0
-          ? _getValueType(specs, tree.children[0]) // AD HOC should consider all children
+          ? getTree(
+              childrenTypes.length > 1
+                ? `(${childrenTypes_.join('|')})`
+                : childrenTypes_[0]
+            )
           : getTree('<T>')
 
-      // : getTree('any')
       return {
-        value: `${type.value}[]`,
+        value: `${childType.value}[]`,
         type: TreeNodeType.ArrayExpression,
-        children: [type],
+        children: [childType],
       }
     }
     case TreeNodeType.ObjectLiteral:
@@ -1423,7 +1507,7 @@ export function _stringify(tree: TreeNode): string {
       // TODO
       return ''
     case TreeNodeType.KeyValue:
-      return `${_stringify(tree.children[0])}${
+      return `${(tree.children[0] && _stringify(tree.children[0])) || ''}${
         (!!tree.children[1] && `:${_stringify(tree.children[1])}`) || ''
       }`
     default:
@@ -1431,27 +1515,56 @@ export function _stringify(tree: TreeNode): string {
   }
 }
 
-export function _filterEmptyNodes(tree: TreeNode): TreeNode {
+export function _filterEmptyNodes(
+  tree: TreeNode,
+  _getTree: (
+    value: string,
+    keyValue?: boolean,
+    ignoreKeyword?: boolean
+  ) => TreeNode = getTree
+): [TreeNode, number] {
   if (isCompositeType(tree.type)) {
-    const children = tree.children.map(_filterEmptyNodes)
+    let totalCount = 0
 
-    const filteredTree = getTree(
-      _stringify({
-        ...tree,
-        children: children.filter((c) => !!c.value),
-      })
-    )
+    const children = tree.children.map((child) => {
+      const [childTree, childCount] = _filterEmptyNodes(child, _getTree)
 
-    return filteredTree
+      totalCount += childCount
+
+      return childTree
+    })
+
+    const children_ = children.filter((c) => {
+      if (c.value) {
+        return true
+      } else {
+        totalCount++
+
+        return false
+      }
+    })
+
+    if (totalCount === 0) {
+      return [tree, 0]
+    }
+
+    const value = _stringify({
+      ...tree,
+      children: children_,
+    })
+
+    const filteredTree = _getTree(value, true)
+
+    return [filteredTree, totalCount]
   } else {
-    return tree
+    return [tree, 0]
   }
 }
 
 export function filterEmptyNodes(value: string): TreeNode {
-  const tree = getTree(value)
+  const tree = getTree(value, true)
 
-  return _filterEmptyNodes(tree)
+  return _filterEmptyNodes(tree)[0]
 }
 
 export function findGenerics(value: string): Set<string> {
@@ -1531,15 +1644,22 @@ export function _applyGenerics(
       }
     }
     case TreeNodeType.Class: {
-      const children = tree.children.map((child) => _applyGenerics(child, map))
+      const children = tree.children.map((child) =>
+        child.type === TreeNodeType.Generic ? _applyGenerics(child, map) : child
+      )
       const value = tree.children.reduce((acc, child, i) => {
-        const _child = children[i]
-        return acc.replace(
-          trimSides(child.value),
-          _child.type === TreeNodeType.Generic
-            ? trimSides(_child.value)
-            : _child.value
-        )
+        const child_ = children[i]
+
+        if (child.type === TreeNodeType.Generic) {
+          return acc.replace(
+            trimSides(child.value),
+            child_.type === TreeNodeType.Generic
+              ? trimSides(child_.value)
+              : child_.value
+          )
+        } else {
+          return tree.value
+        }
       }, tree.value)
       return {
         ...tree,
@@ -1562,7 +1682,7 @@ export function applyGenerics(
   return value
 }
 
-function _isEmtpyString(str: string): boolean {
+function _isEmptyString(str: string): boolean {
   return !!/^ *$/.exec(str)
 }
 
@@ -1581,6 +1701,7 @@ function _getDelimiterSeparated(
 
   let objectOpenCount = 0
   let arrayOpenCount = 0
+  let parenthesisOpenCount = 0
   let singleQuoteOpen = false
   let doubleQuoteOpen = false
   let pos = 0
@@ -1590,6 +1711,8 @@ function _getDelimiterSeparated(
   const children: TreeNode[] = []
 
   let prevChar: string | undefined = undefined
+
+  let escaping = false
 
   while (pos < value.length) {
     const char = value[pos]
@@ -1606,34 +1729,44 @@ function _getDelimiterSeparated(
       } else if (char === ARRAY_CLOSE) {
         arrayOpenCount--
       }
+
+      if (char === PARENTHESIS_OPEN) {
+        parenthesisOpenCount++
+      } else if (char === PARENTHESIS_CLOSE) {
+        parenthesisOpenCount--
+      }
     }
 
-    if (!singleQuoteOpen) {
-      if (char === DOUBLE_QUOTE && prevChar !== '\\') {
+    if (char === '\\') {
+      escaping = !escaping
+    }
+
+    if (!escaping) {
+      if (!singleQuoteOpen && char === DOUBLE_QUOTE) {
         doubleQuoteOpen = !doubleQuoteOpen
       }
-    }
-
-    if (!doubleQuoteOpen) {
-      if (char === SINGLE_QUOTE && prevChar !== '\\') {
+      if (!doubleQuoteOpen && char === SINGLE_QUOTE) {
         singleQuoteOpen = !singleQuoteOpen
       }
+    }
+
+    if (char !== '\\') {
+      escaping = false
     }
 
     if (
       char === delimiter &&
       objectOpenCount === 0 &&
       arrayOpenCount === 0 &&
+      parenthesisOpenCount === 0 &&
       !singleQuoteOpen &&
       !doubleQuoteOpen
     ) {
       const childString = value.substring(lastStop, pos)
 
-      // if (_isEmtpyString(childString)) {
-      //   break
-      // }
+      const tree = _getTree(childString, keyValue, ignoreKeyword)
 
-      children.push(_getTree(childString, keyValue, ignoreKeyword))
+      children.push(tree)
 
       lastStop = pos + 1
       pushNext = true
@@ -1647,7 +1780,7 @@ function _getDelimiterSeparated(
   // push last element
   const lastChildString = value.substring(lastStop, value.length)
 
-  if (!_isEmtpyString(lastChildString) || pushNext) {
+  if (!_isEmptyString(lastChildString) || pushNext) {
     children.push(_getTree(lastChildString, keyValue, ignoreKeyword))
   }
 
@@ -1709,7 +1842,7 @@ export function getNextNode(
 
 function _getNodePaths(root: TreeNode): number[][] {
   const paths: number[][] = []
-  _traverse(root, (node, path) => {
+  traverseTree(root, (node, path) => {
     paths.push(path)
   })
   return paths
@@ -1723,7 +1856,7 @@ function _getNodesAndPaths(root: TreeNode): {
     node: TreeNode
     path: number[]
   }[] = []
-  _traverse(root, (node, path) => {
+  traverseTree(root, (node, path) => {
     paths.push({ node, path })
   })
   return paths
@@ -1741,19 +1874,6 @@ function _pathEqual(a: number[], b: number[]): boolean {
   }
 
   return true
-}
-
-// TODO
-// f([], []) === 0
-// f([], [0]) === 1
-// f([], [0]) === 1
-// f([], [1]) === 2
-// f([0], [1]) === 1
-// f([1], [1]) === 0
-// f([1], [1, 0]) === 1 (?)
-// f([1], [1, 0, 0]) === 1 (?)
-function pathDistance(a: number[], b: number[]): number {
-  return 0
 }
 
 // Given a path and a direction, return the next path in preorder order traversal
@@ -1819,7 +1939,6 @@ export function getNextLeafPath(
   return _getNextLeafPath(tree, path, direction)
 }
 
-// TODO
 export function _getNextSiblingPath(
   tree: TreeNode,
   path: number[],
@@ -1827,11 +1946,6 @@ export function _getNextSiblingPath(
 ): number[] {
   return _getNextLeafPath(tree, path, direction)
 }
-
-// Here is an idea for the mechanics:
-// 1) Arrow key right or left -> go right or left
-// 2) Arrow down -> go lower level
-// 3) Arrow up -> go uper level
 
 export function getNextSiblingPath(
   value: string,
@@ -2024,3 +2138,77 @@ export function matchAllExcTypes(
 ): [number, number][][] {
   return matchAllExc(a, b, (a, b) => isTypeMatch(specs, a, b))
 }
+
+function isUnitNodePredicate(node: TreeNode, path: number[]) {
+  return node.type === TreeNodeType.Unit
+}
+
+export function findAllUnitNodes(tree: TreeNode): number[][] {
+  return findAllNodes(tree, isUnitNodePredicate)
+}
+
+export function findAndReplaceUnitNodes_(
+  tree: TreeNode
+): [number[][], TreeNode] {
+  const paths = []
+
+  let newTree = clone(tree)
+
+  traverseTree(tree, (node, path) => {
+    if (isUnitNodePredicate(node, path)) {
+      const str = node.value.substring(1)
+
+      const [ref, replacedTree] = findAndReplaceUnitNodes_(getTree(str))
+
+      paths.push(path)
+
+      for (const r in ref) {
+        paths.push([...path, ...r])
+      }
+
+      newTree = _updateNodeAt(newTree, path, replacedTree)
+    }
+  })
+
+  return [paths, newTree]
+}
+
+export function findAndReplaceUnitNodes(value: string): [number[][], TreeNode] {
+  const tree = getTree(value)
+
+  return findAndReplaceUnitNodes_(tree)
+}
+
+export function findAllNodes(
+  tree: TreeNode,
+  predicate: (node: TreeNode, path: number[]) => boolean
+): number[][] {
+  const paths = []
+
+  traverseTree(tree, (node, path) => {
+    if (predicate(node, path)) {
+      paths.push(path)
+    }
+  })
+
+  return paths
+}
+
+// export function getTreeFromRawData(data: any): TreeNode {
+//   const t = typeof data
+
+//   switch (t) {
+//     case 'string':
+//       return {
+//         value: `"${escape(data)}"`,
+//         children: [],
+//         type: TreeNodeType.BooleanLiteral,
+//       }
+//     case 'boolean':
+//       return {
+//         value: `${data}`,
+//         children: [],
+//         type: TreeNodeType.BooleanLiteral,
+//       }
+//   }
+// }

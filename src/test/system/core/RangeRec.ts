@@ -6,10 +6,16 @@ import {
 } from '../../../debug'
 import { fromSpec } from '../../../spec/fromSpec'
 import _specs from '../../../system/_specs'
+import { GraphSpec } from '../../../types/GraphSpec'
 import { system } from '../../util/system'
 
-const spec = require('../../../system/core/loop/RangeRec/spec.json')
-const Range = fromSpec<{ any: any }, { bit: number }>(spec, _specs, {})
+const spec = require('./RangeRec.json') as GraphSpec
+
+const Range = fromSpec<{ a: number; b: number }, { i: number }>(
+  spec,
+  _specs,
+  {}
+)
 
 const range = new Range(system)
 

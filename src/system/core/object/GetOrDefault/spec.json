@@ -80,7 +80,6 @@
   "metadata": {
     "icon": "object-get",
     "description": "if `key` in `obj`, get correspondent value, `default` otherwise",
-    "complexity": 18,
     "tags": ["core", "object"]
   },
   "inputs": {
@@ -95,8 +94,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "string"
+      "functional": true
     },
     "obj": {
       "plug": {
@@ -109,8 +107,7 @@
           "pinId": "obj"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     },
     "default": {
       "plug": {
@@ -119,8 +116,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "<A>"
+      "functional": true
     }
   },
   "outputs": {
@@ -129,11 +125,9 @@
         "0": {
           "mergeId": "3"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "aeac1075-e01f-4d22-b01b-9a77cbba504b",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

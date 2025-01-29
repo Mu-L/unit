@@ -2,6 +2,8 @@ import { IO } from '../../types/IO'
 
 export type UnitGetGlobalIdData = {}
 
+export type UnitDestroyData = {}
+
 export type UnitPlayData = {}
 
 export type UnitPauseData = {}
@@ -19,6 +21,14 @@ export type UnitTakeInputData = {
   pinId: string
 }
 
+export type UnitTakeErrData = {}
+
+export type UnitSetPinIgnoredData = {
+  pinId: string
+  type: IO
+  ignored: boolean
+}
+
 export type UnitSetPinDataData = {
   pinId: string
   type: IO
@@ -30,11 +40,16 @@ export type UnitRemovePinDataData = {
   pinId: string
 }
 
-export type UnitGetPinDataData = {}
+export type UnitGetPinDataData = {
+  pinId: string
+  type: IO
+}
 
-export type UnitGetInputDataData = {}
+export type UnitGetAllPinDataData = {}
 
-export type UnitGetRefInputDataData = {}
+export type UnitGetAllInputDataData = {}
+
+export type UnitGetAllRefInputDataData = {}
 
 export type UnitGetUnitBundleSpecData = {
   deep?: boolean

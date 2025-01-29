@@ -1,8 +1,9 @@
 import * as fuzzy from 'fuzzy'
 import { Registry } from '../../../../../Registry'
-import classnames from '../../../../../client/classnames'
+import { getActiveElement } from '../../../../../client/activeElement'
+import { classnames } from '../../../../../client/classnames'
+import { debounce } from '../../../../../client/debounce'
 import { Element } from '../../../../../client/element'
-import { makeCustomListener } from '../../../../../client/event/custom'
 import { makeFocusInListener } from '../../../../../client/event/focus/focusin'
 import { makeFocusOutListener } from '../../../../../client/event/focus/focusout'
 import { makeInputListener } from '../../../../../client/event/input'
@@ -12,6 +13,10 @@ import {
   makeKeyupListener,
   makeShortcutListener,
 } from '../../../../../client/event/keyboard'
+import {
+  writeToContentEditable,
+  writeToTextField,
+} from '../../../../../client/event/keyboard/write'
 import { UnitPointerEvent } from '../../../../../client/event/pointer'
 import { makeClickListener } from '../../../../../client/event/pointer/click'
 import { makePointerEnterListener } from '../../../../../client/event/pointer/pointerenter'
@@ -19,7 +24,9 @@ import {
   IOScrollEvent,
   makeScrollListener,
 } from '../../../../../client/event/scroll'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { isContentEditable } from '../../../../../client/isContentEditable'
+import { isTextField } from '../../../../../client/isTextField'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { compareByComplexity } from '../../../../../client/search'
 import {
   getSpec,
@@ -32,12 +39,13 @@ import { Shape } from '../../../../../client/util/geometry'
 import { userSelect } from '../../../../../client/util/style/userSelect'
 import { UNTITLED } from '../../../../../constant/STRING'
 import { System } from '../../../../../system'
-import { Spec, Specs } from '../../../../../types'
+import { Spec } from '../../../../../types'
 import { Dict } from '../../../../../types/Dict'
 import { GraphSpec } from '../../../../../types/GraphSpec'
 import { Unlisten } from '../../../../../types/Unlisten'
 import { pull } from '../../../../../util/array'
-import { clone } from '../../../../../util/object'
+import { clone } from '../../../../../util/clone'
+import { specNameGrammar } from '../../../../../util/grammar'
 import { binaryFindIndex } from '../../../../../util/sort'
 import { removeWhiteSpace } from '../../../../../util/string'
 import { clamp } from '../../../../core/relation/Clamp/f'
@@ -55,6 +63,7 @@ export interface Props {
   style?: Dict<string>
   selected?: string
   selectedColor?: string
+  shape?: Shape
   filter?: (u: string) => boolean
   registry?: Registry
 }
@@ -89,18 +98,6 @@ const DEFAULT_STYLE = {
 export const SHAPE_TO_ICON = {
   rect: 'square',
   circle: 'circle',
-}
-
-export function isSpecVisible(specs: Specs, id: string): boolean {
-  const spec = getSpec(specs, id)
-
-  const { private: _private } = spec
-
-  if (_private) {
-    return false
-  } else {
-    return true
-  }
 }
 
 export function isSpecFuzzyMatch(str: string, pattern: string) {
@@ -147,8 +144,6 @@ export default class Search extends Element<HTMLDivElement, Props> {
 
   private _registry: Registry
 
-  public _disable_registry: boolean = false
-
   constructor($props: Props, $system: System) {
     super($props, $system)
 
@@ -161,11 +156,11 @@ export default class Search extends Element<HTMLDivElement, Props> {
         className: 'search-list',
         style: {
           position: 'relative',
-          maxHeight: `${4 * SEARCH_ITEM_HEIGHT - 2}px`,
+          maxHeight: `${4 * SEARCH_ITEM_HEIGHT - 1}px`,
           overflowY: 'auto',
           overflowX: 'hidden',
           display: this._list_hidden ? 'none' : 'block',
-          width: 'calc(100% + 3px)',
+          width: 'calc(100% + 13px)',
           height: '100%',
           boxSizing: 'content-box',
           scrollSnapType: 'y mandatory',
@@ -192,20 +187,24 @@ export default class Search extends Element<HTMLDivElement, Props> {
     input.addEventListener(
       makeShortcutListener([
         {
-          combo: 'ArrowDown',
+          combo: ['ArrowDown', 'Shift + ArrowDown'],
           keydown: this._on_arrow_down_keydown,
           multiple: true,
         },
         {
-          combo: 'ArrowUp',
+          combo: ['ArrowUp', 'Shift + ArrowUp'],
           keydown: this._on_arrow_up_keydown,
           multiple: true,
         },
-        { combo: 'Escape', keydown: this._on_escape_keydown },
         {
-          // combo: 'Ctrl + p',
-          combo: ['Ctrl + ;', ';'],
-          // combo: 'Ctrl + /',
+          combo: 'Escape',
+          keydown: this._on_escape_keydown,
+          stopPropagation: true,
+        },
+        {
+          // combo: 'Control + p',
+          combo: ['Control + ;', ';'],
+          // combo: 'Control + /',
           keydown: this._on_ctrl_p_keydown,
           strict: false,
         },
@@ -227,6 +226,12 @@ export default class Search extends Element<HTMLDivElement, Props> {
     )
     this._input = input
 
+    const {
+      api: {
+        speech: { SpeechGrammarList },
+      },
+    } = this.$system
+
     const microphone = new MicrophoneButton(
       {
         style: {
@@ -237,12 +242,21 @@ export default class Search extends Element<HTMLDivElement, Props> {
           height: '18px',
           padding: '11px 9px 10px 11px',
         },
+        opt: {
+          grammars: SpeechGrammarList
+            ? specNameGrammar(this.$system)
+            : undefined,
+          lang: 'en-us',
+          maxAlternatives: 1,
+          continuous: false,
+          interimResults: true,
+        },
       },
       this.$system
     )
-    microphone.addEventListener(
-      makeCustomListener('transcript', this._on_microphone_transcript)
-    )
+    // microphone.addEventListener(
+    //   makeCustomListener('text', this._on_microphone_transcript)
+    // )
     microphone.preventDefault('mousedown')
     microphone.preventDefault('touchdown')
     this._microphone = microphone
@@ -344,20 +358,6 @@ export default class Search extends Element<HTMLDivElement, Props> {
     this._listen_registry()
   }
 
-  public disable_regsitry = () => {
-    this._disable_registry = true
-
-    this._unlisten_registry()
-  }
-
-  public enable_registry = () => {
-    this._disable_registry = false
-
-    this._listen_registry()
-
-    this._reset()
-  }
-
   private _reset = () => {
     // console.log('Search', '_reset')
 
@@ -382,18 +382,26 @@ export default class Search extends Element<HTMLDivElement, Props> {
   }
 
   private _refresh_ordered_list = () => {
+    const { classes } = this.$system
+
     const { specs } = this._registry
 
     const id_list = keys(specs)
 
-    const visible_id_list = id_list.filter((id) => isSpecVisible(specs, id))
-
-    const ordered_id_list = visible_id_list.sort((a, b) => {
-      return compareByComplexity(specs, a, b)
+    const ordered_id_list = id_list.sort((a, b) => {
+      return compareByComplexity(specs, classes, a, b)
     })
 
     this._ordered_id_list = ordered_id_list
     this._filtered_id_list = clone(ordered_id_list)
+
+    const ordered_id_set = new Set(ordered_id_list)
+
+    for (const spec_id in this._item) {
+      if (!ordered_id_set.has(spec_id)) {
+        this.__remove_list_item(spec_id)
+      }
+    }
   }
 
   private _set_list_item_color = (id: string, color: string) => {
@@ -431,7 +439,7 @@ export default class Search extends Element<HTMLDivElement, Props> {
         this._set_selected_item_id(selected)
       }
     } else if (prop === 'filter') {
-      this._filter_list()
+      this._filter_list(true)
     } else if (prop === 'registry') {
       if (this._registry === current) {
         return
@@ -441,21 +449,67 @@ export default class Search extends Element<HTMLDivElement, Props> {
 
       this._unlisten_registry()
       this._listen_registry()
+
+      this._refresh_list()
+    } else if (prop === 'shape') {
+      this._setShape(current ?? 'circle')
     }
   }
 
   private _registry_unlisten: Unlisten
 
+  private _refresh_list = (preserve_selected?: boolean) => {
+    this._refresh_ordered_list()
+    this._filter_list(preserve_selected)
+  }
+
   private _find_new_item_index = (spec: GraphSpec, list: string[]): number => {
+    const { classes } = this.$system
+
     const { specs } = this._registry
 
+    if (list.length === 0) {
+      return 0
+    }
+
     const index = binaryFindIndex(list, (current_spec_id) => {
-      const current_score = compareByComplexity(specs, spec.id, current_spec_id)
+      const current_score = compareByComplexity(
+        specs,
+        classes,
+        spec.id,
+        current_spec_id
+      )
 
       return current_score
     })
 
     return index
+  }
+
+  private _insert_list_item = (spec: GraphSpec) => {
+    const new_ordered_index = this._find_new_item_index(
+      spec,
+      this._ordered_id_list
+    )
+
+    this._ordered_id_list.splice(new_ordered_index, 0, spec.id)
+
+    const match = fuzzy.match(this._input_value, spec.name ?? '')
+
+    if (match) {
+      const new_filtered_index = this._find_new_item_index(
+        spec,
+        this._filtered_id_list
+      )
+
+      this._filtered_id_list.splice(new_filtered_index, 0, spec.id)
+    }
+
+    this._add_list_item(
+      spec.id,
+      new_ordered_index,
+      this._ordered_id_list.length
+    )
   }
 
   private _listen_registry = () => {
@@ -465,38 +519,20 @@ export default class Search extends Element<HTMLDivElement, Props> {
       (type, path, key, data) => {
         const { specs } = this._registry
 
-        const specId = key
         const spec = data
 
         if (path.length === 0) {
           if (type === 'set') {
-            if (isSpecVisible(specs, spec.id)) {
-              if (this._item[specId]) {
-                this._refresh_list_item(specId)
+            if (this._item[spec.id]) {
+              this._refresh_list_item(spec.id)
+              this._refresh_last_list_item_border()
+            } else {
+              this._insert_list_item(spec)
+
+              if (!this._list_hidden) {
+                this._filter_list(true)
               } else {
-                const new_ordered_index = this._find_new_item_index(
-                  spec,
-                  this._ordered_id_list
-                )
-
-                this._ordered_id_list.splice(new_ordered_index, 0, specId)
-
-                const match = fuzzy.match(this._input_value, spec.name)
-
-                if (match) {
-                  const new_filtered_index = this._find_new_item_index(
-                    spec,
-                    this._filtered_id_list
-                  )
-
-                  this._filtered_id_list.splice(new_filtered_index, 0, specId)
-                }
-
-                this._add_list_item(
-                  specId,
-                  new_ordered_index,
-                  this._ordered_id_list.length
-                )
+                this._to_be_filtered = true
               }
             }
           } else if (type === 'delete') {
@@ -511,11 +547,12 @@ export default class Search extends Element<HTMLDivElement, Props> {
 
             const selected_item_id = this._selected_id
 
-            this._refresh_ordered_list()
-            this._filter_list(true)
+            if (this._list_hidden) {
+              this._debounced_refresh_list()
+            } else {
+              this._refresh_list(true)
 
-            if (selected_item_id === specId) {
-              if (!this._list_hidden) {
+              if (selected_item_id === specId) {
                 this._select_first_list_item()
               }
             }
@@ -577,6 +614,7 @@ export default class Search extends Element<HTMLDivElement, Props> {
           width: 'fit-content',
           height: '12px',
           marginBottom: '1px',
+          ...userSelect('none'),
         },
         value: tagsStr,
       },
@@ -625,12 +663,9 @@ export default class Search extends Element<HTMLDivElement, Props> {
         style: {
           borderBottom: list_item_div_border_bottom,
           boxSizing: 'border-box',
-          width: `${309 - 1}px`,
+          width: `${309}px`,
           height: '100%',
           scrollSnapAlign: 'start',
-        },
-        data: {
-          id,
         },
       },
       this.$system
@@ -656,8 +691,19 @@ export default class Search extends Element<HTMLDivElement, Props> {
   }
 
   private _remove_list_item = (id: string): void => {
-    // console.log('Search', 'removeItem', id)
+    // console.log('Search', '_remove_list_item', id)
 
+    const list_item_div = this._list_item_div[id]
+
+    if (list_item_div) {
+      this.__remove_list_item(id)
+
+      pull(this._filtered_id_list, id)
+      pull(this._ordered_id_list, id)
+    }
+  }
+
+  private __remove_list_item = (id: string): void => {
     const list_item_div = this._list_item_div[id]
 
     if (list_item_div) {
@@ -667,14 +713,11 @@ export default class Search extends Element<HTMLDivElement, Props> {
       delete this._item[id]
       delete this._list_item_name[id]
       delete this._list_item_content[id]
-
-      pull(this._filtered_id_list, id)
-      pull(this._ordered_id_list, id)
     }
   }
 
   private _refresh_list_item = (id: string) => {
-    // console.log('Graph', '_refresh_list_item', id)
+    // console.log('Search', '_refresh_list_item', id)
 
     const list_item_div = this._list_item_div[id]
     const list_item_name = this._list_item_name[id]
@@ -709,40 +752,85 @@ export default class Search extends Element<HTMLDivElement, Props> {
   private _on_microphone_transcript = throttle(
     this.$system,
     (transcript: string) => {
-      // console.log('Search', '_on_microphone_transcript', transcript)
       const value = transcript.toLowerCase().substr(0, 30)
 
-      this._input.setProp('value', value)
+      const activeElement = getActiveElement(this.$system)
 
-      this._input_value = value
+      const writeToSearch = () => {
+        this._input.setProp('value', value)
 
-      this._filter_list()
+        this._input_value = value
 
-      this._input.focus()
+        this._filter_list()
+
+        this._input.focus()
+      }
+
+      if (activeElement) {
+        if (isTextField(activeElement as HTMLInputElement)) {
+          writeToTextField(
+            this.$system,
+            activeElement as HTMLInputElement,
+            value
+          )
+        } else if (isContentEditable(activeElement as HTMLDivElement)) {
+          writeToContentEditable(
+            this.$system,
+            activeElement as HTMLInputElement,
+            value
+          )
+        } else {
+          writeToSearch()
+        }
+      } else {
+        writeToSearch()
+      }
     },
     100
   )
 
+  public start_microphone = () => {
+    this._start_microphone()
+  }
+
+  public stop_microphone = () => {
+    this._stop_microphone()
+  }
+
+  private _start_microphone = () => {
+    this._microphone.$unit.$setPinData({
+      pinId: 'start',
+      type: 'input',
+      data: 'true',
+    })
+  }
+
+  private _stop_microphone = () => {
+    this._microphone.$unit.$setPinData({
+      pinId: 'stop',
+      type: 'input',
+      data: 'true',
+    })
+  }
+
   private _on_input_keydown = (
-    { keyCode, repeat, key }: IOKeyboardEvent,
+    { repeat, key }: IOKeyboardEvent,
     _event: KeyboardEvent
   ) => {
-    // console.log('Search', '_on_input_keydown', keyCode, repeat)
-    // prevent arrow up/down default
-    if (keyCode === 38 || keyCode === 40 || keyCode === 186) {
+    if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'F27') {
       _event.preventDefault()
     }
 
     if (key === '\\') {
-      if (!this._microphone.recording()) {
-        this._microphone.start()
+      if (!this._microphone.$output.recording) {
+        this._start_microphone()
 
         _event.preventDefault()
       }
     }
 
     if (repeat) {
-      if (keyCode === 8) {
+      if (key === 'Backspace') {
         //
       } else {
         _event.preventDefault()
@@ -754,8 +842,8 @@ export default class Search extends Element<HTMLDivElement, Props> {
     // console.log('Search', '_on_input_keyup')
 
     if (key === '\\') {
-      if (this._microphone.recording()) {
-        this._microphone.stop()
+      if (this._microphone.$output.recording) {
+        this._stop_microphone()
       }
     }
   }
@@ -784,10 +872,19 @@ export default class Search extends Element<HTMLDivElement, Props> {
     this._hide_list()
   }
 
+  private _to_be_filtered: boolean = false
+
   private _show_list = () => {
     // console.log('Search', '_show_list')
+
     const { style = {} } = this.$props
     const { color = 'currentColor' } = style
+
+    if (this._to_be_filtered) {
+      this._filter_list()
+
+      this._to_be_filtered = false
+    }
 
     this._list_hidden = false
 
@@ -801,10 +898,7 @@ export default class Search extends Element<HTMLDivElement, Props> {
     this._input._input.$element.style.borderTopWidth = empty ? '0px' : '1px'
 
     if (!empty) {
-      const last_list_item_id = this._filtered_id_list[filtered_total - 1]
-      const last_list_item_div = this._list_item_div[last_list_item_id]
-
-      last_list_item_div.$element.style.borderBottom = color
+      this._refresh_last_list_item_border()
 
       if (this._selected_id) {
         this._scroll_into_item_if_needed(this._selected_id, false)
@@ -816,6 +910,19 @@ export default class Search extends Element<HTMLDivElement, Props> {
     if (this._selected_id) {
       this._dispatch_item_selected(this._selected_id)
     }
+  }
+
+  private _refresh_last_list_item_border = () => {
+    const filtered_total = this._filtered_id_list.length
+
+    if (!filtered_total) {
+      return
+    }
+
+    const last_list_item_id = this._filtered_id_list[filtered_total - 1]
+    const last_list_item_div = this._list_item_div[last_list_item_id]
+
+    last_list_item_div.$element.style.borderBottom = ``
   }
 
   private _dispatch_item_selected = (id: string): void => {
@@ -948,7 +1055,7 @@ export default class Search extends Element<HTMLDivElement, Props> {
     ) {
       const list_item = this._list_item_div[id]
 
-      list_item.$element.scrollIntoView({ behavior: 'auto', block: 'start' })
+      list_item.$element.scrollIntoView({ behavior: 'auto', block: 'nearest' })
 
       this._top_element_index = selected_id_index
       // this._list.$element.scrollTop = selected_id_index * SEARCH_ITEM_HEIGHT
@@ -959,6 +1066,14 @@ export default class Search extends Element<HTMLDivElement, Props> {
     }
   }
 
+  private _debounced_refresh_list = debounce(
+    this.$system,
+    (preserve_selected: boolean = false) => {
+      this._refresh_list(preserve_selected)
+    },
+    0
+  )
+
   private _filter_list = (preserve_selected: boolean = false) => {
     // console.log('Search', '_filter_list')
 
@@ -967,19 +1082,6 @@ export default class Search extends Element<HTMLDivElement, Props> {
     const { style = {}, filter = () => true } = this.$props
 
     const { color = 'currentColor' } = style
-
-    const prev_selected_id = this._selected_id
-
-    if (this._filtered_id_list.length > 0) {
-      const last_list_item_id =
-        this._filtered_id_list[this._filtered_id_list.length - 1]
-      const last_list_item_div = this._list_item_div[last_list_item_id]
-
-      if (last_list_item_div) {
-        last_list_item_div.$element.style.borderBottom =
-          '1px solid currentColor'
-      }
-    }
 
     let filtered_id_list: string[] = []
 
@@ -992,11 +1094,12 @@ export default class Search extends Element<HTMLDivElement, Props> {
       .join(' ')
 
     for (const id of this._ordered_id_list) {
-      if (!this._item[id]) {
-        // console.warn('Search', '_filter_list', 'missing item', id)
+      if (this._list_item_div[id]) {
+        this._refresh_list_item(id)
+      } else {
+        const spec = specs[id] as GraphSpec
 
-        // AD HOC not sure how a spec was added to the registry unnoticed
-        continue
+        this._insert_list_item(spec)
       }
 
       const { fuzzyName } = this._item[id]
@@ -1048,10 +1151,7 @@ export default class Search extends Element<HTMLDivElement, Props> {
       }
 
       if (!this._list_hidden) {
-        const last_list_item_id = filtered_id_list[filtered_total - 1]
-        const last_list_item_div = this._list_item_div[last_list_item_id]
-
-        last_list_item_div.$element.style.borderBottom = color
+        this._refresh_last_list_item_border()
 
         this._input._input.$element.style.borderRadius = '0'
         this._input._input.$element.style.borderTopWidth = '1px'
@@ -1082,6 +1182,10 @@ export default class Search extends Element<HTMLDivElement, Props> {
 
       this._selected_id = null
       this._dispatch_list_empty()
+    }
+
+    if (this._filtered_id_list.length > 0) {
+      this._refresh_last_list_item_border()
     }
   }
 
@@ -1125,6 +1229,12 @@ export default class Search extends Element<HTMLDivElement, Props> {
   }
 
   private _on_ctrl_p_keydown = () => {
+    const {
+      api: {
+        window: { setTimeout },
+      },
+    } = this.$system
+
     // console.log('Search', 'on_ctrl_p_keydown')
     setTimeout(() => {
       this._hide_list()
@@ -1132,6 +1242,12 @@ export default class Search extends Element<HTMLDivElement, Props> {
   }
 
   private _on_escape_keydown = () => {
+    const {
+      api: {
+        window: { setTimeout },
+      },
+    } = this.$system
+
     // console.log('Search', '_on_escape_keydown')
     setTimeout(() => {
       this._hide_list()
@@ -1139,11 +1255,17 @@ export default class Search extends Element<HTMLDivElement, Props> {
   }
 
   private _on_enter_keydown = (): void => {
+    const {
+      api: {
+        window: { setTimeout },
+      },
+    } = this.$system
+
     if (!this._list_hidden && this._selected_id) {
       setTimeout(() => {
         if (this._selected_id) {
-          // AD HOC
-          // on Safari apparently selecting the input might inadvertedly refocus it,
+          // Safari
+          // apparently selecting the input might inadvertently refocus it,
           // which is certainly unexpected, so this call must absolutely
           // come before dispatching a (possibly side-effecting) event
           this._select_all()
@@ -1169,7 +1291,7 @@ export default class Search extends Element<HTMLDivElement, Props> {
     // console.log('Search', 'setValue', value)
 
     this._setValue(value)
-    this._filter_list()
+    this._filter_list(true)
   }
 
   public _setValue = (value: string): void => {
@@ -1184,12 +1306,17 @@ export default class Search extends Element<HTMLDivElement, Props> {
   }
 
   public setShape = (shape: 'rect' | 'circle') => {
+    this._setShape(shape)
+
+    this._dispatch_shape()
+  }
+
+  private _setShape = (shape: 'rect' | 'circle', emit?: boolean) => {
     if (this._shape !== shape) {
       this._shape = shape
 
       this._shape_button.setProp('icon', SHAPE_TO_ICON[shape])
 
-      this._dispatch_shape()
       this._filter_list()
     }
   }

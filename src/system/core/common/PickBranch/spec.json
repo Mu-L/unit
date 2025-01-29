@@ -36,9 +36,8 @@
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "pointer",
     "description": "filter `a` or `b` based on `test`",
-    "complexity": 17,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -47,8 +46,7 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "boolean"
+      }
     },
     "a": {
       "plug": {
@@ -56,8 +54,7 @@
           "unitId": "pick",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     },
     "b": {
       "plug": {
@@ -65,8 +62,7 @@
           "unitId": "pick",
           "pinId": "b"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "outputs": {
@@ -76,8 +72,7 @@
           "unitId": "ifelse",
           "pinId": "if"
         }
-      },
-      "type": "<A>"
+      }
     },
     "b": {
       "plug": {
@@ -85,11 +80,9 @@
           "unitId": "ifelse",
           "pinId": "else"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "id": "ea1389f2-3a83-44e5-ad8c-b29e03ab77d1",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

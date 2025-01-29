@@ -15,8 +15,7 @@
             "y": 216
           }
         }
-      },
-      "type": "object"
+      }
     },
     "pathStyle": {
       "plug": {
@@ -32,8 +31,7 @@
             "y": -26
           }
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {},
@@ -174,8 +172,9 @@
     "defaultHeight": 120
   },
   "metadata": {
-    "complexity": 96,
+    "icon": "square",
     "tags": ["platform", "core", "component"],
+    "description": "Unit logo in SVG",
     "position": {
       "merge": {
         "0": {
@@ -186,7 +185,6 @@
     }
   },
   "id": "8aee8e9f-a132-46de-a0c7-17f8035b1898",
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

@@ -12,60 +12,49 @@ export interface Props {
   disabled?: boolean
 }
 
-export const DEFAULT_STYLE = {
-  height: 'fit-content',
-  width: '100%',
-  color: 'inherit',
-  backgroundColor: '#00000000',
-  textAlign: 'center',
-  padding: '0',
-  fontSize: '18px',
-  // outline: 'none',
-  border: 'none',
-  borderRadius: '0',
-}
-
 export default class NumberField extends Field<HTMLInputElement, Props> {
   constructor($props: Props, $system: System) {
+    const {
+      flags: { defaultInputModeNone },
+    } = $system
+
+    const defaultStyle = $system.style['numberfield']
+
     super($props, $system, $system.api.document.createElement('input'), {
       valueKey: 'value',
-      defaultStyle: DEFAULT_STYLE,
+      defaultStyle,
       defaultValue: '0',
+      defaultAttr: {
+        type: 'number',
+        // Chrome inputmode 'none' not working on mobile for input type number
+        inputmode: defaultInputModeNone ? 'none' : 'number',
+      },
       processValue: processNumberValue,
+      propHandlers: {
+        min: (min: number | undefined) => {
+          if (min === undefined) {
+            this.$element.removeAttribute('min')
+          } else {
+            this.$element.min = `${min}`
+          }
+        },
+        max: (max: number | undefined) => {
+          if (max === undefined) {
+            this.$element.removeAttribute('max')
+          } else {
+            this.$element.max = `${max}`
+          }
+        },
+      },
     })
 
     const { min, max } = $props
 
-    this.$element.type = 'number'
-    // BUG
-    // Chrome
-    // inputMode 'none' not working on mobile for input type number
-    this.$element.inputMode = 'none'
-
     if (min !== undefined) {
       this.$element.min = `${min}`
     }
-
     if (max !== undefined) {
       this.$element.max = `${max}`
-    }
-  }
-
-  onPropChanged(prop: string, current: any): void {
-    super.onPropChanged(prop, current)
-
-    if (prop === 'min') {
-      if (current === undefined) {
-        this.$element.removeAttribute('min')
-      } else {
-        this.$element.min = `${current}`
-      }
-    } else if (prop === 'max') {
-      if (current === undefined) {
-        this.$element.removeAttribute('max')
-      } else {
-        this.$element.max = `${current}`
-      }
     }
   }
 

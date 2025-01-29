@@ -10,7 +10,6 @@ import { attachGesture } from '../../render/attachGesture'
 import { attachHTML } from '../../render/attachHTML'
 import { attachLayout } from '../../render/attachLayout'
 import { attachLongPress } from '../../render/attachLongPress'
-import { attachSprite } from '../../render/attachSprite'
 import { attachStyle } from '../../render/attachStyle'
 import { attachSVG } from '../../render/attachSVG'
 import { attachVoid } from '../../render/attachVoid'
@@ -18,8 +17,8 @@ import { SYSTEM_ROOT_ID } from '../../SYSTEM_ROOT_ID'
 import { webAlert } from './api/alert'
 import { webAnimation } from './api/animation'
 import { webBluetooth } from './api/bluetooth'
-import { webChannel } from './api/channel'
 import { webClipboard } from './api/clipboard'
+import { webCrypto } from './api/crypto'
 import { webDB } from './api/db'
 import { webDevice } from './api/device'
 import { webDocument } from './api/document'
@@ -36,7 +35,6 @@ import { webQuerystring } from './api/querystring'
 import { webScreen } from './api/screen'
 import { webSelection } from './api/selection'
 import { webSpeech } from './api/speech'
-import { webStorage } from './api/storage'
 import { webText } from './api/text'
 import { webTheme } from './api/theme'
 import { webURI } from './api/uri'
@@ -44,7 +42,7 @@ import { webURL } from './api/url'
 import { webWindow } from './api/window'
 import { webWorker } from './api/worker'
 
-export default function defaultWebBoot(opt?: BootOpt): [System, Unlisten] {
+export function defaultWebBoot(opt?: BootOpt): [System, Unlisten] {
   const root = document.getElementById(SYSTEM_ROOT_ID)
 
   return webBoot(window, root, opt)
@@ -59,16 +57,9 @@ export function webBoot(
     components: _components,
   }
 ): [System, Unlisten] {
-  const _root = window.document.createElement('div')
-
-  _root.style.width = '100%'
-  _root.style.height = '100%'
-  _root.style.overflow = 'hidden'
-
-  _root.attachShadow({ mode: 'open' })
+  root.attachShadow({ mode: 'open' })
 
   const http = webHTTP(window, opt)
-  const channel = webChannel(window, opt)
   const file = webFile(window, opt)
   const screen = webScreen(window, opt)
   const device = webDevice(window, opt)
@@ -77,9 +68,8 @@ export function webBoot(
   const media = webMedia(window, opt)
   const clipboard = webClipboard(window, opt)
   const selection = webSelection(window, opt)
-  const storage = webStorage(window, opt)
   const animation = webAnimation(window, opt)
-  const document = webDocument(window, _root, opt)
+  const document = webDocument(window, root, opt)
   const querystring = webQuerystring(window, opt)
   const bluetooth = webBluetooth(window, opt)
   const text = webText(window, opt)
@@ -94,11 +84,11 @@ export function webBoot(
   const _window = webWindow(window, opt)
   const navigator = webNavigator(window, opt)
   const layout = webLayout(window, opt)
-  const theme = webTheme(window, _root, opt)
+  const theme = webTheme(window, root, opt)
+  const crypto = webCrypto(window, opt)
 
   const api: API = {
     alert,
-    storage,
     selection,
     file,
     animation,
@@ -107,13 +97,13 @@ export function webBoot(
     screen,
     bluetooth,
     clipboard,
+    crypto,
     location,
     history,
     geolocation,
     layout,
     media,
     http,
-    channel,
     input,
     speech,
     document,
@@ -129,13 +119,10 @@ export function webBoot(
 
   const system = boot(null, api, opt)
 
-  root.appendChild(_root)
+  root.style.fontFamily = "'Inconsolata', monospace"
 
-  _root.style.fontFamily = "'Inconsolata', monospace"
+  system.root = root
 
-  system.root = _root
-
-  attachSprite(system)
   attachStyle(system)
   attachApp(system)
   attachSVG(system)
@@ -146,11 +133,7 @@ export function webBoot(
   attachVoid(system)
   // attachFocus(system)
 
-  const unlisten = () => {
-    root.removeChild(_root)
-
-    system.destroy()
-  }
+  const unlisten = () => {}
 
   return [system, unlisten]
 }

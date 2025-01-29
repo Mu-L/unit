@@ -6,48 +6,39 @@ export interface Props {
   className?: string
   style?: Dict<any>
   value?: string
-  disabled?: boolean
-  maxLength?: number
-  tabIndex?: number
-}
-
-export const DEFAULT_STYLE = {
-  height: '100%',
-  width: '100%',
-  color: 'inherit',
-  backgroundColor: '#00000000',
-  padding: '0',
-  fontSize: '18px',
-  // outlineColor: '#00000000',
-  border: 'none',
-  borderRadius: '0',
 }
 
 export default class FileField extends Field<HTMLInputElement, Props> {
   constructor($props: Props, $system: System) {
+    const defaultStyle = $system.style['filefield']
+
     super($props, $system, $system.api.document.createElement('input'), {
       valueKey: 'value',
-      defaultStyle: DEFAULT_STYLE,
+      eventKey: 'files',
+      emit: false,
+      defaultStyle,
       defaultValue: '',
+      defaultAttr: {
+        type: 'file',
+        multiple: 'true',
+      },
+      processValue: (files: FileList) => {
+        const names: {
+          lastModified: number
+          name: string
+          size: number
+          type: string
+        }[] = []
+
+        for (const file of files) {
+          const { lastModified, name, size, type } = file
+
+          names.push({ lastModified, name, size, type })
+        }
+
+        return names
+      },
     })
-
-    const { maxLength, tabIndex } = $props
-
-    this.$element.type = 'file'
-    this.$element.spellcheck = false
-    this.$element.autocomplete = 'off'
-    // this.$element.autocomplete = 'disabled'
-    // this.$element.autocorrect = 'off'
-    this.$element.autocapitalize = 'off'
-    this.$element.inputMode = 'none'
-    // this.$element.inputMode = 'text'
-
-    if (maxLength !== undefined) {
-      this.$element.maxLength = maxLength
-    }
-    if (tabIndex !== undefined) {
-      this.$element.tabIndex = tabIndex
-    }
   }
 
   setSelectionRange(

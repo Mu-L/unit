@@ -64,8 +64,7 @@
           "unitId": "mergexy",
           "pinId": "y"
         }
-      },
-      "type": "number"
+      }
     },
     "x": {
       "plug": {
@@ -73,8 +72,7 @@
           "unitId": "mergexy",
           "pinId": "x"
         }
-      },
-      "type": "number"
+      }
     },
     "r": {
       "plug": {
@@ -82,8 +80,7 @@
           "unitId": "tagr",
           "pinId": "r"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -93,17 +90,14 @@
           "unitId": "merge",
           "pinId": "ab"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "metadata": {
     "icon": "brackets-curly",
     "description": "create object with values `x`, `y` and `r`",
-    "complexity": 23,
     "tags": ["platform", "core", "canvas"]
   },
   "id": "4617df3b-4ca5-42c1-bcda-4a3833c645da",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

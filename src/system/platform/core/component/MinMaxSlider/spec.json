@@ -14,7 +14,6 @@
           "mergeId": "7"
         }
       },
-      "type": "number",
       "metadata": {
         "position": {
           "0": {
@@ -45,7 +44,6 @@
           "mergeId": "9"
         }
       },
-      "type": "number",
       "metadata": {
         "position": {
           "0": {
@@ -74,7 +72,6 @@
           "pinId": "value"
         }
       },
-      "type": "number",
       "metadata": {
         "position": {
           "0": {
@@ -603,8 +600,8 @@
   },
   "metadata": {
     "icon": "sliders",
-    "complexity": 163,
     "tags": ["platform", "core", "component"],
+    "description": "slider + fields for adjusting min max",
     "position": {
       "merge": {
         "2": {
@@ -636,6 +633,5 @@
   },
   "id": "0d9605e4-f4f2-4141-a7f0-1f090c88230f",
   "type": "`U`&`C`&`G`",
-  "system": true,
   "render": true
 }

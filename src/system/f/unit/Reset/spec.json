@@ -12,13 +12,11 @@
   },
   "outputs": {},
   "metadata": {
-    "icon": "circle",
+    "icon": "circle-stop",
     "description": "reset `unit` to default state",
-    "complexity": 18,
     "tags": ["f", "unit"]
   },
   "id": "d745a41b-70ae-4162-a1d8-aac17d73b73d",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

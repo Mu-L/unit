@@ -25,7 +25,6 @@
   "metadata": {
     "icon": "plus",
     "description": "concat arrays `a`, `b` and `c`",
-    "complexity": 6,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -35,8 +34,7 @@
           "unitId": "concat",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "b": {
       "plug": {
@@ -44,8 +42,7 @@
           "unitId": "concat0",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "c": {
       "plug": {
@@ -53,8 +50,7 @@
           "unitId": "concat0",
           "pinId": "b"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "outputs": {
@@ -64,11 +60,9 @@
           "unitId": "concat",
           "pinId": "ab"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "id": "abbbe3fa-8ee4-4446-8feb-e21a66fd8580",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

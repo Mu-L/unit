@@ -5,7 +5,7 @@ import { ID_DIV, ID_EMPTY, ID_IDENTITY } from '../../system/_ids'
 import { uuid } from '../../util/id'
 import { system } from '../util/system'
 
-const UNIT_ID_EMTPY = 'empty'
+const UNIT_ID_EMPTY = 'empty'
 const UNIT_ID_IDENTITY = 'identity'
 const UNIT_ID_IDENTITY_0 = 'identity0'
 const UNIT_ID_IDENTITY_1 = 'identity1'
@@ -14,7 +14,7 @@ const UNIT_ID_DIV_0 = 'div0'
 
 const spec0 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -47,10 +47,11 @@ false && watchGraphAndLog(composition0)
 
 composition0.play()
 
-const empty0 = composition0.getUnit(UNIT_ID_EMTPY) as Graph
+const empty0 = composition0.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition0.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -67,6 +68,10 @@ composition0.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -79,7 +84,7 @@ assert.equal(empty0.getOutputCount(), 0)
 
 const spec1 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -112,10 +117,11 @@ false && watchGraphAndLog(composition1)
 
 composition1.play()
 
-const empty1 = composition1.getUnit(UNIT_ID_EMTPY) as Graph
+const empty1 = composition1.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition1.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -145,6 +151,10 @@ composition1.moveSubgraphInto(
     input: {},
     output: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -198,7 +208,7 @@ assert.equal(empty1.takeOutput('a'), 0)
 
 const spec2 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -231,10 +241,11 @@ false && watchGraphAndLog(composition2)
 
 composition2.play()
 
-const empty2 = composition2.getUnit(UNIT_ID_EMTPY) as Graph
+const empty2 = composition2.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition2.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -265,6 +276,10 @@ composition2.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -277,7 +292,7 @@ assert.equal(empty2.getOutputCount(), 2)
 
 const spec3 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -320,10 +335,11 @@ false && watchGraphAndLog(composition3)
 
 composition3.play()
 
-const empty3 = composition3.getUnit(UNIT_ID_EMTPY) as Graph
+const empty3 = composition3.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition3.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -354,6 +370,10 @@ composition3.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -365,7 +385,7 @@ assert.equal(empty3.getInputCount(), 2)
 assert.equal(empty3.getOutputCount(), 2)
 
 assert.deepEqual(composition3.getMergeSpec('0'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     input: {
       a0: true,
     },
@@ -378,7 +398,7 @@ assert.deepEqual(composition3.getMergeSpec('0'), {
 assert.deepEqual(composition3.getExposedPinSpec('input', 'a'), {
   plug: {
     0: {
-      unitId: UNIT_ID_EMTPY,
+      unitId: UNIT_ID_EMPTY,
       pinId: 'a',
     },
   },
@@ -386,7 +406,7 @@ assert.deepEqual(composition3.getExposedPinSpec('input', 'a'), {
 
 const spec4 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -414,10 +434,11 @@ false && watchGraphAndLog(composition4)
 
 composition4.play()
 
-const empty4 = composition4.getUnit(UNIT_ID_EMTPY) as Graph
+const empty4 = composition4.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition4.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -469,6 +490,10 @@ composition4.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -480,6 +505,7 @@ assert.equal(empty4.getInputCount(), 1)
 assert.equal(empty4.getOutputCount(), 0)
 
 assert.deepEqual(empty4.getExposedPinSpec('input', 'a'), {
+  defaultIgnored: undefined,
   plug: {
     0: {
       unitId: UNIT_ID_IDENTITY,
@@ -491,7 +517,7 @@ assert.deepEqual(empty4.getExposedPinSpec('input', 'a'), {
 
 const spec5 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -540,10 +566,11 @@ false && watchGraphAndLog(composition5)
 
 composition5.play()
 
-const empty5 = composition5.getUnit(UNIT_ID_EMTPY) as Graph
+const empty5 = composition5.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition5.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -596,6 +623,10 @@ composition5.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -607,7 +638,7 @@ assert.deepEqual(composition5.getMergeSpec('0'), {
       a: true,
     },
   },
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     input: {
       a: true,
     },
@@ -619,7 +650,7 @@ assert.deepEqual(composition5.getMergeSpec('1'), {
       a: true,
     },
   },
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     output: {
       a: true,
     },
@@ -642,7 +673,7 @@ assert.deepEqual(empty5.getExposedPinSpec('input', 'a'), {
 
 const spec6 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -691,10 +722,11 @@ false && watchGraphAndLog(composition6)
 
 composition6.play()
 
-const empty6 = composition6.getUnit(UNIT_ID_EMTPY) as Graph
+const empty6 = composition6.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition6.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -752,6 +784,10 @@ composition6.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -786,7 +822,7 @@ composition6.setUnitInputData(UNIT_ID_IDENTITY, 'a', 1)
 
 const spec7 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_DIV]: {
@@ -815,10 +851,11 @@ false && watchGraphAndLog(composition7)
 
 composition7.play()
 
-const empty7 = composition7.getUnit(UNIT_ID_EMTPY) as Graph
+const empty7 = composition7.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition7.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -847,7 +884,11 @@ composition7.moveSubgraphInto(
   },
   {
     [UNIT_ID_DIV]: [UNIT_ID_DIV_0],
-  }
+  },
+  {},
+  {},
+  {},
+  {}
 )
 
 assert.equal(composition7.getUnitCount(), 1)
@@ -863,9 +904,6 @@ assert.deepEqual(empty7.getComponentSpec(), {
   subComponents: {
     [UNIT_ID_DIV]: {
       children: [UNIT_ID_DIV_0],
-      childSlot: {
-        [UNIT_ID_DIV_0]: 'default',
-      },
     },
     [UNIT_ID_DIV_0]: {
       children: [],
@@ -876,7 +914,7 @@ assert.deepEqual(empty7.getComponentSpec(), {
 
 const spec8 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -900,10 +938,11 @@ false && watchGraphAndLog(composition8)
 
 composition8.play()
 
-const empty8 = composition8.getUnit(UNIT_ID_EMTPY) as Graph
+const empty8 = composition8.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition8.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -940,6 +979,10 @@ composition8.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -959,7 +1002,7 @@ assert.deepEqual(empty8.getPlug('input', 'a', '0').peak(), null)
 
 const spec9 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -992,10 +1035,11 @@ false && watchGraphAndLog(composition9)
 
 composition9.play()
 
-const empty9 = composition9.getUnit(UNIT_ID_EMTPY) as Graph
+const empty9 = composition9.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition9.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1032,6 +1076,10 @@ composition9.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1054,7 +1102,7 @@ assert.deepEqual(empty9.getMergeCount(), 0)
 
 const spec10 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -1105,10 +1153,11 @@ false && watchGraphAndLog(composition10)
 
 composition10.play()
 
-const empty10 = composition10.getUnit(UNIT_ID_EMTPY) as Graph
+const empty10 = composition10.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition10.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1143,6 +1192,10 @@ composition10.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1172,7 +1225,7 @@ assert.deepEqual(empty10.getMergeCount(), 1)
 
 const spec11 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -1223,10 +1276,11 @@ false && watchGraphAndLog(composition11)
 
 composition11.play()
 
-const empty11 = composition11.getUnit(UNIT_ID_EMTPY) as Graph
+const empty11 = composition11.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition11.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1261,6 +1315,10 @@ composition11.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1278,7 +1336,7 @@ assert.deepEqual(composition11.getMergeSpec('2'), {
       a: true,
     },
   },
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     output: {
       a: true,
     },
@@ -1298,7 +1356,7 @@ assert.deepEqual(empty11.getMergeCount(), 0)
 
 const spec12 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -1349,10 +1407,11 @@ false && watchGraphAndLog(composition12)
 
 composition12.play()
 
-const empty12 = composition12.getUnit(UNIT_ID_EMTPY) as Graph
+const empty12 = composition12.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition12.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1411,6 +1470,10 @@ composition12.moveSubgraphInto(
     },
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1430,19 +1493,21 @@ assert.deepEqual(empty12.getExposedInputSpec('a'), {
     },
   },
   ref: false,
+  defaultIgnored: undefined,
 })
-assert.deepEqual(empty12.getExposedOutputSpec('a'), {
+assert.deepStrictEqual(empty12.getExposedOutputSpec('a'), {
   plug: {
     '0': {
       mergeId: '0',
     },
   },
   ref: false,
+  defaultIgnored: undefined,
 })
 
 const spec13 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
   },
@@ -1476,10 +1541,11 @@ false && watchGraphAndLog(composition13)
 
 composition13.play()
 
-const empty13 = composition13.getUnit(UNIT_ID_EMTPY) as Graph
+const empty13 = composition13.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition13.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1529,6 +1595,10 @@ composition13.moveSubgraphInto(
     },
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1558,7 +1628,7 @@ assert.deepEqual(empty13.getExposedOutputSpec('a'), {
 
 const spec14 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
   },
@@ -1588,10 +1658,11 @@ composition14.play()
 
 composition14.setPinData('input', 'a', 1)
 
-const empty14 = composition14.getUnit(UNIT_ID_EMTPY) as Graph
+const empty14 = composition14.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition14.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1624,6 +1695,10 @@ composition14.moveSubgraphInto(
     },
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1639,18 +1714,20 @@ assert.deepEqual(empty14.getExposedInputSpec('a'), {
     '0': {},
   },
   ref: false,
+  defaultIgnored: undefined,
 })
 assert.deepEqual(empty14.getExposedOutputSpec('a'), {
   plug: {
     '0': {},
   },
   ref: false,
+  defaultIgnored: undefined,
 })
 assert.deepEqual(empty14.getInput('a').peak(), 1)
 
 const spec15 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -1674,10 +1751,11 @@ false && watchGraphAndLog(composition15)
 
 composition15.play()
 
-const empty15 = composition15.getUnit(UNIT_ID_EMTPY) as Graph
+const empty15 = composition15.getUnit(UNIT_ID_EMPTY) as Graph
 
 composition15.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1701,6 +1779,10 @@ composition15.moveSubgraphInto(
   {},
   {},
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -1709,12 +1791,13 @@ assert.deepEqual(empty15.getInputCount(), 1)
 assert(empty15.getInput('a').constant())
 
 composition15.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
     merge: [],
-    link: [{ unitId: UNIT_ID_EMTPY, type: 'input', pinId: 'a' }],
+    link: [{ unitId: UNIT_ID_EMPTY, type: 'input', pinId: 'a' }],
     unit: [],
     plug: [],
   },
@@ -1724,6 +1807,10 @@ composition15.moveSubgraphInto(
     unit: {},
     plug: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {},
   {},

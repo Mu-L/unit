@@ -1,11 +1,12 @@
 import { bundleSpec } from '../../../../../bundle'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
 import { GraphBundle } from '../../../../../types/GraphClass'
 import { GraphSpec } from '../../../../../types/GraphSpec'
 import { $Graph } from '../../../../../types/interface/async/$Graph'
 import { $S } from '../../../../../types/interface/async/$S'
+import { UCGEE } from '../../../../../types/interface/UCGEE'
 import { weakMerge } from '../../../../../weakMerge'
 import { $wrap } from '../../../../../wrap'
 import { ID_START } from '../../../../_ids'
@@ -22,13 +23,15 @@ export interface O {
   graph: $Graph
 }
 
-export default class Start extends Semifunctional<I, O> {
+export default class Start extends Holder<I, O> {
+  private _graph: $Graph
+
   constructor(system: System) {
     super(
       {
         fi: ['graph', 'system', 'opt'],
         fo: ['graph'],
-        i: ['done'],
+        i: [],
         o: [],
       },
       {
@@ -59,29 +62,28 @@ export default class Start extends Semifunctional<I, O> {
 
     const bundle = bundleSpec(
       spec,
-      weakMerge(__bundle.specs, this.__system.specs)
+      weakMerge(__bundle.specs, this.__system.specs),
+      false
     )
 
-    const _ = ['G', 'C', 'U']
+    const $graph = system.$start({ bundle, _: UCGEE })
 
-    const $graph = system.$newGraph({ bundle, _ })
-
-    const graph = $wrap<$Graph>(this.__system, $graph, _)
+    const graph = $wrap<$Graph>(this.__system, $graph, UCGEE)
 
     if (!paused) {
       graph.$play({})
     }
 
-    if (!paused) {
-      graph.$play({})
-    }
+    this._graph = graph
 
     done({ graph })
   }
 
-  onIterDataInputData(name: string, data: any) {
-    // if (name === 'done') {
-    this._forward_empty('graph')
-    // }
+  d() {
+    if (this._graph) {
+      this._graph.$destroy({})
+
+      this._graph = undefined
+    }
   }
 }

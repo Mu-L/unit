@@ -42,8 +42,7 @@
           "unitId": "50chance",
           "pinId": "any"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -53,17 +52,14 @@
           "unitId": "pick",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "random",
     "description": "50% chance 0, 50% chance 1",
-    "complexity": 21,
     "tags": ["core", "common"]
   },
   "id": "8a5043d9-e6ac-4628-9fde-a11cbd240e10",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

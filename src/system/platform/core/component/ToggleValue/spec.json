@@ -74,7 +74,6 @@
           "mergeId": "1"
         }
       },
-      "type": "`U`",
       "ref": true
     },
     "any": {
@@ -83,19 +82,16 @@
           "unitId": "getvalue",
           "pinId": "any"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "toggle-left",
     "description": "toggle `obj` boolean property",
-    "complexity": 18,
     "tags": ["platform", "core", "component"]
   },
   "id": "dae754da-d773-41b9-bbc8-f72b83b6f03d",
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": false
 }

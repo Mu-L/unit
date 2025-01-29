@@ -13,7 +13,7 @@ export interface O<T> {
   'a[i]': T
 }
 
-export default class At<T> extends Functional<I<T>, O<T>> {
+export default class At0<T> extends Functional<I<T>, O<T>> {
   constructor(system: System) {
     super(
       {

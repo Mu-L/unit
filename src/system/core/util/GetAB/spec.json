@@ -35,9 +35,8 @@
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "object-get",
     "description": "get `a` and `b` from object `ab`",
-    "complexity": 6,
     "tags": ["core", "util"]
   },
   "inputs": {
@@ -46,8 +45,7 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -57,8 +55,7 @@
           "unitId": "get",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     },
     "b": {
       "plug": {
@@ -66,11 +63,9 @@
           "unitId": "get0",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "40555189-33ef-48b6-af8a-5ab4805b9a1f",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

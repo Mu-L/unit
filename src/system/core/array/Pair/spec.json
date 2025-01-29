@@ -40,7 +40,6 @@
   "metadata": {
     "icon": "brackets",
     "description": "build array with elements `0` and `1`",
-    "complexity": 11,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -50,8 +49,7 @@
           "unitId": "single0",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     },
     "1": {
       "plug": {
@@ -59,8 +57,7 @@
           "unitId": "single",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "outputs": {
@@ -70,11 +67,9 @@
           "unitId": "concat",
           "pinId": "ab"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "id": "a7d5c2f3-6134-4248-b9bc-33271c280267",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

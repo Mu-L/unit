@@ -8,7 +8,6 @@
           "pinId": "disabled"
         }
       },
-      "type": "boolean",
       "metadata": {
         "position": {
           "0": {
@@ -26,7 +25,6 @@
           "pinId": "fullwindow"
         }
       },
-      "type": "boolean",
       "metadata": {
         "position": {
           "0": {
@@ -44,7 +42,6 @@
           "pinId": "style"
         }
       },
-      "type": "object",
       "metadata": {
         "position": {
           "0": {
@@ -81,7 +78,16 @@
         }
       },
       "ref": true,
-      "type": "`U`&`G`",
+      "defaultIgnored": true
+    },
+    "state": {
+      "plug": {
+        "0": {
+          "unitId": "io",
+          "pinId": "state"
+        }
+      },
+      "ref": true,
       "defaultIgnored": true
     }
   },
@@ -202,11 +208,9 @@
   "metadata": {
     "icon": "chalkboard",
     "description": "io + cloud",
-    "complexity": 398,
     "tags": ["platform", "core", "component"]
   },
   "id": "9aba266d-5200-4281-b477-749c9b3c5815",
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

@@ -5,7 +5,7 @@
       "type": "`U`"
     },
     "graph": {
-      "type": "`U`&`G`",
+      "type": "`G`",
       "ref": true
     },
     "id": {
@@ -16,11 +16,9 @@
   "metadata": {
     "icon": "circle",
     "description": "add unit of `class` to `graph`",
-    "complexity": 3,
     "tags": ["f", "graph"]
   },
   "id": "b80d4b5a-40e9-11eb-a2bb-1777d47bf9ae",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

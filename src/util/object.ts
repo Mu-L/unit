@@ -1,6 +1,7 @@
 import deepMerge from '../system/f/object/DeepMerge/f'
 import { keys } from '../system/f/object/Keys/f'
 import { Dict } from '../types/Dict'
+import { Key } from '../types/Key'
 
 export function forEachObjVK<A>(
   obj: Dict<A>,
@@ -134,7 +135,7 @@ export function findKeyObjIndexed<A>(
   }
 }
 
-export function filterObj<T>(
+export function filterObj<T extends Dict<any>>(
   obj: T,
   callback: <K extends keyof T>(value: T[K], key: K) => boolean
 ): Partial<T> {
@@ -169,24 +170,6 @@ export const getObjSingleKey = (obj: Dict<any>): string => {
   return keys(obj)[0]
 }
 
-export function clone<T>(a: T): T {
-  if (typeof a !== 'object' || a === null) {
-    return a
-  }
-
-  if (a instanceof Set) {
-    return new Set(clone([...a])) as any
-  }
-
-  const _a = (Array.isArray(a) ? [] : {}) as T
-
-  for (const k in a) {
-    _a[k] = clone(a[k])
-  }
-
-  return _a
-}
-
 export function invertObj(obj: Dict<string>): Dict<string> {
   const _obj = {}
   for (const key in obj) {
@@ -206,7 +189,7 @@ export function _keyCount(obj: Dict<any>): number {
   return keys(obj).length
 }
 
-export function set<T>(obj: object, k: string, v: any): void {
+export function set<T>(obj: object, k: Key, v: any): void {
   obj[k] = v
 }
 
@@ -214,7 +197,18 @@ export function get<T extends object, K extends keyof T>(obj: T, k: K): T[K] {
   return obj[k]
 }
 
-export function deepSet(obj: object, path: string[], value: any): void {
+export function deepGet(obj: object, path: Key[]): any {
+  let v: any = obj
+
+  for (const p of path) {
+    v = obj[p]
+    obj = v
+  }
+
+  return v
+}
+
+export function deepSet(obj: object, path: Key[], value: any): void {
   let o = obj
 
   const last_index = path.length - 1
@@ -236,7 +230,7 @@ export function deepSet(obj: object, path: string[], value: any): void {
   }
 }
 
-export function deepDelete(obj: object, path: string[]): void {
+export function deepDelete(obj: object, path: Key[]): void {
   let o = obj
 
   const last_index = path.length - 1
@@ -258,7 +252,7 @@ export function deepDelete(obj: object, path: string[]): void {
   }
 }
 
-export function deepDestroy(obj: object, path: string[]): void {
+export function deepDestroy(obj: object, path: Key[]): void {
   if (path.length === 1) {
     delete obj[path[0]]
 
@@ -269,18 +263,20 @@ export function deepDestroy(obj: object, path: string[]): void {
 
   const o = obj[p]
 
-  deepDestroy(o, rest)
+  if (o) {
+    deepDestroy(o, rest)
 
-  if (isEmptyObject(o)) {
-    delete obj[p]
+    if (isEmptyObject(o)) {
+      delete obj[p]
+    }
   }
 }
 
-export function deepDeepMerge(obj: object, path: string[], value: any): void {
+export function deepDeepMerge(obj: object, path: Key[], value: any): void {
   deepSet(obj, path, deepMerge(deepGetOrDefault(obj, path, {}), value))
 }
 
-export function deepGetOrDefault(obj: object, path: string[], d: any): any {
+export function deepGetOrDefault(obj: object, path: Key[], d: any): any {
   let o = obj
 
   for (let i = 0; i < path.length; i++) {
@@ -368,6 +364,10 @@ export function deepIncFrom(obj: object, path: string[], from: number): any {
   deepSet(obj, path, value + 1)
 }
 
+export function deepInc(obj: object, path: string[]): any {
+  return deepIncFrom(obj, path, 0)
+}
+
 export function deepDecFrom(obj: object, path: string[], from: number): any {
   let value = deepGetOrDefault(obj, path, undefined)
 
@@ -376,6 +376,10 @@ export function deepDecFrom(obj: object, path: string[], from: number): any {
   }
 
   deepSet(obj, path, value - 1)
+}
+
+export function deepDec(obj: object, path: string[]): any {
+  return deepDecFrom(obj, path, 0)
 }
 
 export function incKeyFrom(obj: object, key: string, from: number): any {

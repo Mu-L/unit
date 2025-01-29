@@ -1,6 +1,7 @@
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Element } from '../../../../../client/element'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
+import { SVGElement_ } from '../../../../../client/svg'
 import { System } from '../../../../../system'
 import SVGCircle from '../../svg/Circle/Component'
 import SVGRect from '../../svg/Rect/Component'
@@ -20,17 +21,9 @@ export interface Props {
   strokeDashOffset?: number
 }
 
-export const DEFAULT_STYLE = {
-  position: 'absolute',
-  fill: 'none',
-  pointerEvents: 'none',
-  transform: 'translate(-50%, -50%)',
-  userSelect: 'none',
-}
-
 export default class Selection extends Element<HTMLDivElement, Props> {
-  private _selection: SVGSVG
-  private _selection_shape: SVGCircle | SVGRect
+  public _selection: SVGSVG
+  public _selection_shape: SVGElement_
 
   constructor($props: Props, $system: System) {
     super($props, $system)
@@ -71,12 +64,13 @@ export default class Selection extends Element<HTMLDivElement, Props> {
     const $element = parentElement($system)
 
     this.$element = $element
+    this.$unbundled = false
     this.$slot = selection.$slot
 
     this.registerRoot(selection)
   }
 
-  private _render_selection_shape = (): SVGCircle | SVGRect => {
+  private _render_selection_shape = (): SVGElement_ => {
     const {
       width = 0,
       height = 0,

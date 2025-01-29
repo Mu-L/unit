@@ -1,24 +1,50 @@
+import { Graph } from '../Class/Graph'
 import { ChildOutOfBound } from '../exception/ChildOutOfBoundError'
-import { evaluate } from '../spec/evaluate'
+import { evaluateDataValue } from '../spec/evaluateDataValue'
+import { resolveDataRef } from '../spec/resolveDataValue'
 import { Dict } from '../types/Dict'
 import { AnimationSpec } from '../types/interface/C'
 import { Component_ } from '../types/interface/Component'
 import { UnitBundle } from '../types/UnitBundle'
 import { Unlisten } from '../types/Unlisten'
-import { insert } from '../util/array'
+import { insert, push } from '../util/array'
+
+function _appendChild(
+  component: Component_,
+  children: Component_[],
+  Class: UnitBundle<Component_>
+): [number, Component_] {
+  return pushChild(component, children, Class)
+}
 
 export function appendChild(
   component: Component_,
   children: Component_[],
   Class: UnitBundle<Component_>
 ): number {
-  const i = pushChild(component, children, Class)
+  const [i, child] = _appendChild(component, children, Class)
 
-  const { __bundle: bundle } = Class
+  const { __bundle } = Class
 
-  component.emit('append_child', bundle, [])
+  component.emit('append_child', __bundle, child, [])
 
   return i
+}
+
+export function appendChildren(
+  component: Component_,
+  children: Component_[],
+  Classes: UnitBundle<Component_>[]
+): number {
+  for (const Class of Classes) {
+    _appendChild(component, children, Class)
+  }
+
+  const bundles = Classes.map((c) => c.__bundle)
+
+  component.emit('append_children', bundles, [])
+
+  return children.length
 }
 
 export function instanceChild(
@@ -39,9 +65,11 @@ export function instanceChild(
     const { data } = input[name]
 
     if (data !== undefined) {
-      const _data = evaluate(data, system.specs, system.classes)
+      const dataRef = evaluateDataValue(data, system.specs, system.classes)
 
-      unit.pushInput(name, _data)
+      const data_ = resolveDataRef(dataRef, system.specs, system.classes)
+
+      unit.pushInput(name, data_)
     }
   }
 
@@ -60,14 +88,14 @@ export function pushChild(
   component: Component_,
   children: Component_[],
   Class: UnitBundle<Component_>
-): number {
-  const unit = instanceChild(component, Class)
+): [number, Component_] {
+  const child = instanceChild(component, Class)
 
-  children.push(unit)
+  children.push(child)
 
   const i = children.length - 1
 
-  return i
+  return [i, child]
 }
 
 export function insertChild(
@@ -123,6 +151,14 @@ export function removeChild(
   return child
 }
 
+export function refRoot(
+  element: Component_,
+  root: Component_[],
+  at: number
+): Component_ {
+  return root[at]
+}
+
 export function refChild(
   element: Component_,
   children: Component_[],
@@ -139,11 +175,17 @@ export function refChildren(
 }
 
 export function refSlot(
-  element: Component_,
+  element: Graph,
   slotName: string,
-  slot: Dict<Component_>
+  slot: Dict<string>
 ): Component_ {
-  return slot[slotName] || element
+  const subComponentId = slot[slotName]
+
+  if (subComponentId) {
+    return element.getSubComponent(subComponentId)
+  } else {
+    return element
+  }
 }
 
 export function registerParentRoot(
@@ -151,19 +193,20 @@ export function registerParentRoot(
   parentRoot: Component_[],
   child: Component_,
   slotName: string,
-  at?: number
+  at: number = undefined,
+  emit: boolean = true
 ): void {
   if (at === undefined) {
-    parentRoot.push(child)
+    push(parentRoot, child)
   } else {
     insert(parentRoot, child, at)
   }
 
-  component.emit('register_parent_root', child, slotName)
-
   const slot = component.refSlot(slotName)
 
   slot.appendParentChild(component, 'default')
+
+  emit && component.emit('register_parent_root', child, slotName)
 }
 
 export function unregisterParentRoot(
@@ -219,23 +262,25 @@ export function reorderParentRoot(
 export function unregisterRoot(
   component: Component_,
   root: Component_[],
-  child: Component_
+  child: Component_,
+  emit: boolean = true
 ): void {
   const at = root.indexOf(child)
 
   root.splice(at, 1)
 
-  component.emit('unregister_root', component)
+  emit && component.emit('unregister_root', child)
 }
 
 export function registerRoot(
   component: Component_,
   root: Component_[],
-  child: Component_
+  child: Component_,
+  emit: boolean = true
 ): void {
   root.push(child)
 
-  component.emit('register_root', component)
+  emit && component.emit('register_root', child)
 }
 
 export function appendParentChild(

@@ -8,8 +8,7 @@
           "pinId": "element"
         }
       },
-      "ref": true,
-      "type": "`U`"
+      "ref": true
     }
   },
   "outputs": {
@@ -19,8 +18,7 @@
           "unitId": "if",
           "pinId": "a if b"
         }
-      },
-      "type": "{key:string,keyCode:number,ctrlKey:boolean,shiftKey:boolean,altKey:boolean,metaKey:boolean,repeat:boolean}"
+      }
     }
   },
   "units": {
@@ -155,7 +153,7 @@
   },
   "metadata": {
     "icon": "square",
-    "complexity": 18,
+    "description": "listen for \"Enter\" keydown",
     "position": {
       "merge": {
         "lwzzgu": {
@@ -175,6 +173,5 @@
     "tags": ["platform", "core", "component"]
   },
   "id": "de45f6d0-7504-4061-b4ab-5d1ee902a0cb",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

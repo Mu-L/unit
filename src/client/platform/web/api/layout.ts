@@ -1,181 +1,231 @@
 import { API } from '../../../../API'
 import { BootOpt } from '../../../../system'
-import { Style } from '../../../../system/platform/Style'
+import { Style, Tag } from '../../../../system/platform/Style'
+import { traverseTree, Tree } from '../../../../tree'
 import { LayoutNode } from '../../../LayoutNode'
+import { colorToHex, hexToRgba, RGBA } from '../../../color'
 import { parseTransform } from '../../../parseTransform'
 import { applyStyle } from '../../../style'
 import { parseFontSize } from '../../../util/style/getFontSize'
 import { parseOpacity } from '../../../util/style/getOpacity'
 
-const fitChildren = (
-  window: Window,
-  parentTrait: LayoutNode,
-  parentNode: HTMLElement,
-  children: Style[],
+export const isTextName = (tag: string) => {
+  return ['text'].includes(tag)
+}
+
+export const isSVGName = (tag: string) => {
+  return ['path', 'rect', 'circle', 'line', 'ellipse'].includes(tag)
+}
+
+const shouldExpandStyle = (style: Style) => {
+  let {
+    display: childDisplay = 'block',
+    width: childWidthStr = 'auto',
+    height: childHeightStr = 'auto',
+  } = style
+
+  const displayContents = childDisplay === 'contents'
+  const fitWidth = childWidthStr === 'fit-content' || childWidthStr === 'auto'
+  const fitHeight =
+    childHeightStr === 'fit-content' || childHeightStr === 'auto'
+
+  const shouldExpand = fitWidth || fitHeight || displayContents
+
+  return shouldExpand
+}
+
+const maybeExpand = (
+  tag: Tag & { trait?: LayoutNode; element?: HTMLElement },
   path: number[],
-  childrenFontSize: number[],
-  childrenOpacity: number[],
-  childrenSx: number[],
-  childrenSy: number[],
-  expandChild: (path: number[]) => Style[]
+  expandChild: (path: number[]) => (Tag & { element?: HTMLElement })[]
 ) => {
+  const shouldExpand = shouldExpandStyle(tag.style)
+
+  if (shouldExpand) {
+    expand(tag, path, expandChild)
+  }
+}
+
+const expand = (
+  tag: Tag & { trait?: LayoutNode; element?: HTMLElement },
+  path: number[],
+  expandChild: (path: number[]) => (Tag & { element?: HTMLElement })[]
+) => {
+  const childrenTags = expandChild(path)
+
   let i = 0
 
-  for (const childStyle of children) {
-    const childNode = window.document.createElement('div')
+  for (const childTag of childrenTags) {
+    const childElement = tagToElement(childTag)
 
-    let {
-      display: childDisplay = 'block',
-      width: childWidthStr = 'auto',
-      height: childHeightStr = 'auto',
-      'font-size': childFontSizeStr,
-      opacity: childOpacityStr = '1',
-      transform: childTransform = '',
-    } = childStyle
+    childTag.element = childElement
 
-    const [
-      childTransformX,
-      childTransformY,
-      childScaleX,
-      childScaleY,
-      childRotateX,
-      childRotateY,
-      childRotateZ,
-    ] = parseTransform(childTransform, parentTrait.width, parentTrait.height)
+    tag.element.appendChild(childElement)
 
-    const childOpacity = parseOpacity(childOpacityStr)
-
-    let fontSize =
-      (childFontSizeStr && parseFontSize(childFontSizeStr)) ||
-      parentTrait.fontSize
-
-    const fontSizeUnit = childFontSizeStr?.match(/(px|em|rem|pt|vw|vh|%)$/)?.[1]
-
-    if (fontSizeUnit === 'vw') {
-      fontSize *= parentTrait.width / 100
-    }
-
-    if (fontSizeUnit === 'vh') {
-      fontSize *= parentTrait.height / 100
-    }
-
-    const sx = parentTrait.sx * childScaleX
-    const sy = parentTrait.sy * childScaleY
-
-    const displayContents = childDisplay === 'contents'
-    const fitWidth = childWidthStr === 'fit-content' || childWidthStr === 'auto'
-    const fitHeight =
-      childHeightStr === 'fit-content' || childHeightStr === 'auto'
-
-    if (fitWidth || fitHeight || displayContents) {
-      const childPath = [...path, i]
-
-      const childChildrenStyle = expandChild(childPath)
-
-      fitChildren(
-        window,
-        { ...parentTrait, fontSize },
-        childNode,
-        childChildrenStyle,
-        childPath,
-        [],
-        [],
-        [],
-        [],
-        expandChild
-      )
-    }
-
-    childrenFontSize.push(fontSize)
-    childrenOpacity.push(childOpacity)
-    childrenSx.push(sx)
-    childrenSy.push(sy)
-
-    applyStyle(childNode, childStyle)
-
-    parentNode.appendChild(childNode)
+    maybeExpand(childTag, [...path, i], expandChild)
 
     i++
   }
 }
 
-export function webLayout(window: Window, opt: BootOpt): API['layout'] {
-  const animation: API['layout'] = {
-    reflectChildrenTrait: function (
-      parentTrait: LayoutNode,
-      parentStyle: Style,
-      childrenStyle: Style[],
-      path: number[] = [],
-      expandChild: (path: number[]) => Style[]
-    ): LayoutNode[] {
-      const parentNode = window.document.createElement('div')
+const fitTreeChildren = (
+  parentNode: HTMLElement,
+  tree: Tree<Tag & { trait?: LayoutNode; element?: HTMLElement }>[],
+  path: number[],
+  expandChild: (path: number[]) => Tag[]
+) => {
+  let i = 0
 
-      applyStyle(parentNode, parentStyle)
+  for (const node of tree) {
+    const childPath = [...path, i]
+
+    const tag = node.value
+
+    const element = tagToElement(tag)
+
+    node.value.element = element
+
+    parentNode.appendChild(element)
+
+    if (!node.children.length) {
+      maybeExpand(tag, childPath, expandChild)
+    }
+
+    fitTreeChildren(element, node.children, childPath, expandChild)
+
+    i++
+  }
+}
+
+const tagToElement = (child: Tag) => {
+  const { name, style, textContent } = child
+
+  let tag = name.replace('#', '').toLocaleLowerCase()
+
+  const isText = isTextName(tag)
+  const isSvg = isSVGName(tag)
+
+  const tag_ = isText || isSvg ? 'div' : tag
+
+  const childNode = window.document.createElement(tag_)
+
+  if (isText) {
+    childNode.textContent = textContent
+  }
+
+  applyStyle(childNode, style)
+
+  if (isText) {
+    childNode.style.display = 'inline'
+  }
+
+  return childNode
+}
+
+export function webLayout(window: Window, opt: BootOpt): API['layout'] {
+  const animation = {
+    reflectTreeTrait: function (
+      parentTrait: LayoutNode,
+      tree: Tree<Tag & { trait?: LayoutNode; element?: HTMLElement }>[],
+      expandChild: (path: number[]) => Tag[]
+    ): void {
+      const parentNode = window.document.createElement('div')
 
       parentNode.style.position = 'absolute'
       parentNode.style.left = `${parentTrait.x}px`
       parentNode.style.top = `${parentTrait.y}px`
       parentNode.style.width = `${parentTrait.width}px`
       parentNode.style.height = `${parentTrait.height}px`
-      // parentNode.style.transform = `scale(${parentTrait.sx}, ${parentTrait.sy})`
       parentNode.style.transform = ``
       parentNode.style.fontSize = `${parentTrait.fontSize}px`
-      parentNode.style.opacity = 'hidden'
+      parentNode.style.visibility = 'hidden'
       parentNode.style.margin = '0'
 
-      const childrenFontSize: number[] = []
-      const childrenOpacity: number[] = []
-      const childrenSx: number[] = []
-      const childrenSy: number[] = []
-
-      fitChildren(
-        window,
-        parentTrait,
-        parentNode,
-        childrenStyle,
-        path,
-        childrenFontSize,
-        childrenOpacity,
-        childrenSx,
-        childrenSy,
-        expandChild
-      )
+      fitTreeChildren(parentNode, tree, [], expandChild)
 
       window.document.body.appendChild(parentNode)
 
-      const childrenTrait: LayoutNode[] = []
+      for (const root of tree) {
+        traverseTree(root, (node) => {
+          const { name, style, element } = node.value
 
-      for (let i = 0; i < childrenStyle.length; i++) {
-        const childStyle = childrenStyle[i]
-        const childFontSize = childrenFontSize[i]
-        const childOpacity = childrenOpacity[i]
-        const childSx = childrenSx[i]
-        const childSy = childrenSy[i]
+          const computedStyle = window.getComputedStyle(element)
+          const rect = element.getBoundingClientRect()
 
-        const childNode = parentNode.children.item(i) as HTMLElement
+          const { x, y, width, height } = rect
 
-        const rect = childNode.getBoundingClientRect()
+          let {
+            opacity: childOpacityStr = '1',
+            transform: childTransform = '',
+          } = style
 
-        let x = rect.x
-        let y = rect.y
+          const [
+            childTransformX,
+            childTransformY,
+            childScaleX,
+            childScaleY,
+            childRotateX,
+            childRotateY,
+            childRotateZ,
+          ] = parseTransform(
+            childTransform,
+            parentTrait.width,
+            parentTrait.height
+          )
 
-        const childTrait: LayoutNode = {
-          x,
-          y,
-          width: rect.width,
-          height: rect.height,
-          opacity: childOpacity,
-          fontSize: childFontSize,
-          sx: childSx,
-          sy: childSy,
-        }
+          let childFontSizeStr = computedStyle.fontSize
 
-        childrenTrait.push(childTrait)
+          let fontSize =
+            (childFontSizeStr &&
+              parseFontSize(
+                childFontSizeStr,
+                parentTrait.width,
+                parentTrait.height
+              )) ||
+            parentTrait.fontSize
+
+          const opacity = parseOpacity(childOpacityStr)
+
+          const fontSizeUnit = childFontSizeStr?.match(
+            /(px|em|rem|pt|vw|vh|%)$/
+          )?.[1]
+
+          if (fontSizeUnit === 'vw') {
+            fontSize *= parentTrait.width / 100
+          }
+
+          if (fontSizeUnit === 'vh') {
+            fontSize *= parentTrait.height / 100
+          }
+
+          const sx = parentTrait.sx * childScaleX
+          const sy = parentTrait.sy * childScaleY
+
+          let color: RGBA
+
+          if (computedStyle.color) {
+            const hex: string = colorToHex(computedStyle.color)
+
+            color = (hex && hexToRgba(hex)) || parentTrait.color
+          } else {
+            color = parentTrait.color
+          }
+
+          node.value.trait = {
+            x,
+            y,
+            width,
+            height,
+            opacity,
+            fontSize,
+            sx,
+            sy,
+            color,
+          }
+        })
       }
 
       window.document.body.removeChild(parentNode)
-
-      return childrenTrait
     },
   }
 

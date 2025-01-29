@@ -7,8 +7,7 @@
           "unitId": "specs",
           "pinId": "any"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -18,8 +17,7 @@
           "unitId": "keys",
           "pinId": "keys"
         }
-      },
-      "type": "string[]"
+      }
     }
   },
   "units": {
@@ -72,9 +70,7 @@
   "metadata": {
     "icon": null,
     "description": "all system spec ids",
-    "complexity": 8,
     "tags": ["core", "meta"]
   },
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

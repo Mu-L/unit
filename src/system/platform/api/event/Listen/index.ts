@@ -1,4 +1,4 @@
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
 import { EE } from '../../../../../types/interface/EE'
 import { Unlisten } from '../../../../../types/Unlisten'
@@ -14,7 +14,7 @@ export interface O<T> {
   data: any
 }
 
-export default class Listen<T> extends Semifunctional<I<T>, O<T>> {
+export default class Listen<T> extends Holder<I<T>, O<T>> {
   private _unlisten: Unlisten | undefined = undefined
 
   constructor(system: System) {
@@ -22,7 +22,7 @@ export default class Listen<T> extends Semifunctional<I<T>, O<T>> {
       {
         fi: ['emitter', 'event'],
         fo: [],
-        i: ['remove'],
+        i: [],
         o: ['data'],
       },
       {
@@ -33,56 +33,24 @@ export default class Listen<T> extends Semifunctional<I<T>, O<T>> {
         },
       },
       system,
-      ID_LISTEN
+      ID_LISTEN,
+      'remove'
     )
-
-    this.addListener('destroy', () => {
-      if (this._unlisten) {
-        this._remove()
-
-        this._forward_empty('data')
-      }
-    })
-  }
-
-  private _remove = () => {
-    if (this._unlisten) {
-      this._unlisten()
-
-      this._unlisten = undefined
-    }
   }
 
   f({ emitter, event }: I<T>) {
     const listener = (...data: any[]) => {
-      if (this._paused) {
-        return
-      }
-
       this._output.data.push(data[0])
     }
 
     this._unlisten = emitter.addListener(event, listener)
   }
 
-  i() {
-    this._remove()
-
-    this._forward_empty('data')
-  }
-
   d() {
-    this._remove()
-
-    this._forward_empty('data')
-  }
-
-  onIterDataInputData(name: string, data: any) {
-    // if (name === 'remove') {
     if (this._unlisten) {
-      this._remove()
-      this._done()
+      this._unlisten()
+
+      this._unlisten = undefined
     }
-    // }
   }
 }

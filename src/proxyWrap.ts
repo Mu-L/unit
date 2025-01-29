@@ -1,104 +1,155 @@
-import { ASYNC_GRAPH_CALL_EVENT_MAP } from './constant/ASYNC_GRAPH_CALL_EVENT_MAP'
-import { ASYNC_GRAPH_WATCH_SET } from './constant/ASYNC_GRAPH_WATCH_SET'
+import { camelToSnake, snakeToCamel } from './client/id'
+import { METHOD, METHOD_TYPES, MethodType } from './client/method'
+import { $map } from './constant/$map'
 import { Moment } from './debug/Moment'
-import { AllTypes } from './interface'
-import { AllKeys } from './types/AllKeys'
 import { Callback } from './types/Callback'
 import { Dict } from './types/Dict'
 import { Unlisten } from './types/Unlisten'
+import { mapObjKV, mapObjVK } from './util/object'
 
 export function proxy<T extends object>(
-  unit: T,
-  CALL: Dict<string>,
-  WATCH: Set<string>
+  obj: T,
+  filters: Record<MethodType, Set<string>>
 ): T {
   let stop_event: string = undefined
+  let stop_depth: number = 0
 
-  const proxy = new Proxy(unit, {
-    get: (target, name: string) => {
-      const value = target[name]
+  function attach<T extends object>(
+    obj: T,
+    filters: Record<MethodType, Set<string>>,
+    depth: number
+  ) {
+    const { call, watch, ref } = filters
 
-      if (CALL[name]) {
-        stop_event = CALL[name]
-      } else if (WATCH.has(name)) {
-        return (data: any, callback: Callback<any>): Unlisten => {
-          return value.call(target, data, (moment: Moment) => {
-            const { event } = moment
-
-            if (
-              stop_event === event &&
-              (moment.data?.path?.length ?? 0) === 0
-            ) {
-              stop_event = undefined
-            } else {
-              callback(moment)
-            }
-          })
+    return new Proxy(obj, {
+      get: (target, name: string) => {
+        if (name === '__wrapped') {
+          return true
         }
-      }
 
-      return value
-    },
-  })
+        const value = target[name]
 
-  return proxy
-}
+        if (call.has(name)) {
+          return (...args: any[]) => {
+            stop_event = camelToSnake(name.slice(1))
+            stop_depth = depth
 
-const ASYNC_INTERFACE_PROXY_CALL_FILTER: AllKeys<
-  AllTypes<any>,
-  Dict<string>
-> = {
-  V: { $write: 'write' },
-  J: { $set: 'set' },
-  CA: { $draw: 'draw' },
-  G: ASYNC_GRAPH_CALL_EVENT_MAP,
-  // TODO
-  B: {},
-  IB: {},
-  CC: {},
-  C: {},
-  CS: {},
-  CO: {},
-  GP: {},
-  M: {},
-  E: {},
-  EE: {},
-  BD: {},
-  BS: {},
-  BSE: {},
-  BC: {},
-  NO: {},
-  A: {},
-  PP: {},
-  PS: {},
-  CH: {},
-  MS: {},
-  S: {},
-  U: {},
-  TR: {},
-  RE: {},
-  F: {},
-  L: {},
-  AC: {},
-  D: {},
-}
+            return value.call(target, ...args)
+          }
+        } else if (watch.has(name)) {
+          return (data: any, callback: Callback<any>): Unlisten => {
+            return value.call(target, data, (moment: Moment) => {
+              const { event } = moment
 
-const ASYNC_INTERFACE_PROXY_WATCH_FILTER: Dict<Set<string>> = {
-  U: new Set(['$watch']),
-  G: ASYNC_GRAPH_WATCH_SET,
-}
+              const path = moment.data?.path
 
-export function proxyWrap<T extends object>(unit: T, _: string[] = []): T {
-  let CALL = {}
-  let WATCH = new Set<string>()
+              if (path) {
+                if (stop_event) {
+                  if (!call.has(`$${snakeToCamel(event)}`)) {
+                    callback(moment)
 
-  for (const __ of _) {
-    const CALL_FILTER = ASYNC_INTERFACE_PROXY_CALL_FILTER[__] || {}
-    const WATCH_FILTER = ASYNC_INTERFACE_PROXY_WATCH_FILTER[__] || new Set()
+                    return
+                  }
 
-    CALL = { ...CALL, ...CALL_FILTER }
-    WATCH = new Set([...WATCH, ...WATCH_FILTER])
+                  if (stop_event === event) {
+                    if (path.length === stop_depth) {
+                      stop_event = undefined
+                      stop_depth = 0
+                    }
+                  } else {
+                    if (path.length > stop_depth) {
+                      callback(moment)
+                    }
+                  }
+                } else {
+                  callback(moment)
+                }
+              } else {
+                if (stop_event) {
+                  if (stop_event === event && stop_depth === depth) {
+                    stop_event = undefined
+
+                    return
+                  }
+                }
+
+                callback(moment)
+              }
+            })
+          }
+        } else if (ref.has(name)) {
+          return (data: Dict<any>) => {
+            const { detached = true } = data
+
+            stop_depth = depth + 1
+
+            const $ref = value.call(target, data)
+
+            if ($ref.__wrapped) {
+              return $ref
+            }
+
+            const filters = interfaceFilters($ref.__)
+
+            if (detached) {
+              return proxy($ref, filters)
+            } else {
+              return attach($ref, filters, depth + 1)
+            }
+          }
+        }
+
+        return value
+      },
+    })
   }
 
-  return proxy(unit, CALL, WATCH)
+  return attach(obj, filters, 0)
+}
+
+const $set = (array: string[]) => {
+  return new Set(array.map($map))
+}
+
+const ASYNC_FILTER = mapObjKV(METHOD, (__, filter) => mapObjVK(filter, $set))
+
+const _interface_filter_cache: Dict<Record<MethodType, Set<string>>> = {}
+
+export function interfaceFilters(
+  _: string[] = []
+): Record<MethodType, Set<string>> {
+  const id = _.sort().join('-')
+
+  let filter = _interface_filter_cache[id]
+
+  if (filter) {
+    return filter
+  }
+
+  filter = {
+    get: new Set(),
+    call: new Set(),
+    watch: new Set(),
+    ref: new Set(),
+  }
+
+  for (const __ of _) {
+    for (const type of METHOD_TYPES) {
+      const FILTER = ASYNC_FILTER[__][type]
+
+      for (const name of FILTER) {
+        filter[type].add(name)
+      }
+    }
+  }
+
+  _interface_filter_cache[id] = filter
+
+  return filter
+}
+
+export function proxyWrap<T extends object>(obj: T, _: string[] = []): T {
+  const filters = interfaceFilters(_)
+
+  return proxy(obj, filters)
 }

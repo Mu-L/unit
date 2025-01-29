@@ -1,6 +1,9 @@
 // http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
 
-export default function debounce(
+import { System } from '../system'
+
+export function debounce(
+  system: System,
   func: Function,
   threshold: number = 100,
   execAsap: boolean = false
@@ -8,6 +11,12 @@ export default function debounce(
   let timeout: NodeJS.Timeout
 
   return function debounced(...args: any[]) {
+    const {
+      api: {
+        window: { setTimeout, clearTimeout },
+      },
+    } = system
+
     // @ts-ignore
     let obj = this
 

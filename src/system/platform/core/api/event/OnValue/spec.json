@@ -5,7 +5,8 @@
       "id": "367241d8-ad12-11ea-beed-9777f31699a8",
       "input": {
         "event": {
-          "data": "'value'"
+          "data": "'value'",
+          "constant": true
         },
         "remove": {
           "ignored": false
@@ -22,7 +23,6 @@
           "pinId": "emitter"
         }
       },
-      "type": "`EE`",
       "ref": true
     }
   },
@@ -33,17 +33,14 @@
           "unitId": "listen",
           "pinId": "data"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "metadata": {
     "icon": "square",
     "description": "listen to `element` input event",
-    "complexity": 5,
     "tags": ["platform", "core", "api", "event"]
   },
   "id": "d0e6f14c-400c-42f3-bfd6-1bbe0146f490",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

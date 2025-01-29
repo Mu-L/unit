@@ -1,10 +1,8 @@
 import { Done } from '../../../../../Class/Functional/Done'
 import { Graph } from '../../../../../Class/Graph'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
-import { start } from '../../../../../start'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
 import { GraphBundle } from '../../../../../types/GraphClass'
-import { GraphSpec } from '../../../../../types/GraphSpec'
 import { ID_NEW_0 } from '../../../../_ids'
 
 export interface I {
@@ -16,13 +14,15 @@ export interface O {
   graph: Graph
 }
 
-export default class New extends Semifunctional<I, O> {
+export default class New extends Holder<I, O> {
+  private _graph: Graph
+
   constructor(system: System) {
     super(
       {
         fi: ['graph'],
         fo: ['graph'],
-        i: ['done'],
+        i: [],
       },
       {
         output: {
@@ -36,25 +36,19 @@ export default class New extends Semifunctional<I, O> {
     )
   }
 
-  f({ graph: graphClass }: I, done: Done<O>): void {
-    // console.log('New', 'f', bundle)
+  f({ graph: Class }: I, done: Done<O>): void {
+    const graph = new Class(this.__system)
 
-    const { unit, specs = {} } = graphClass.__bundle
-
-    this.__system.injectSpecs(specs)
-
-    const spec = this.__system.getSpec(unit.id) as GraphSpec
-
-    const graph = start(this.__system, { spec, specs })
+    this._graph = graph
 
     done({ graph })
   }
 
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
-    this._forward_all_empty()
-    this._backward('graph')
-    this._backward('done')
-    // }
+  d() {
+    if (this._graph) {
+      this._graph.destroy()
+
+      this._graph = undefined
+    }
   }
 }

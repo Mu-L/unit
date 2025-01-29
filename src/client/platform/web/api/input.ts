@@ -46,6 +46,10 @@ export function webInput(
   const pointerMoveListener = (event) => {
     const { pointerId, clientX, clientY } = event
 
+    if (!pointers[pointerId]) {
+      pointerInListener(event)
+    }
+
     pointers[pointerId].screenX = clientX
     pointers[pointerId].screenY = clientY
   }
@@ -53,17 +57,14 @@ export function webInput(
   const pointerDownListener = (event) => {
     const { pointerId } = event
 
+    if (!pointers[pointerId]) {
+      pointerInListener(event)
+    }
+
     pointers[pointerId].down = true
   }
 
-  const pointerUpListener = (event) => {
-    const { pointerId } = event
-
-    // Safari can fire a pointer up without a preceding pointer down
-    if (pointers[pointerId]) {
-      pointers[pointerId].down = false
-    }
-  }
+  const pointerUpListener = (event) => {}
 
   const pointerCancelListener = (event) => {
     //

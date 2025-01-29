@@ -99,8 +99,7 @@
           "pinId": "init"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     },
     "keys": {
       "plug": {
@@ -109,8 +108,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "string[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -120,17 +118,14 @@
           "unitId": "loop",
           "pinId": "final"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "metadata": {
     "icon": "brackets-curly",
     "description": "delete all `keys` from `obj`",
-    "complexity": 37,
     "tags": ["core", "object"]
   },
   "id": "474d900a-fd28-11ea-b59c-670afe58a912",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

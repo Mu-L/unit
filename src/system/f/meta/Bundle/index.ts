@@ -1,16 +1,16 @@
 import { Functional } from '../../../../Class/Functional'
 import { Done } from '../../../../Class/Functional/Done'
+import { BundleOpt } from '../../../../Class/Unit'
 import { System } from '../../../../system'
 import { BundleSpec } from '../../../../types/BundleSpec'
-import { G } from '../../../../types/interface/G'
-import { clone } from '../../../../util/object'
+import { $G } from '../../../../types/interface/async/$G'
+import { Async } from '../../../../types/interface/async/Async'
+import { clone } from '../../../../util/clone'
 import { ID_BUNDLE } from '../../../_ids'
 
 export interface I<T> {
-  graph: G
-  opt: {
-    snapshot?: boolean
-  }
+  graph: $G
+  opt: BundleOpt
 }
 
 export interface O<T> {
@@ -37,18 +37,14 @@ export default class Bundle<T> extends Functional<I<T>, O<T>> {
   }
 
   f({ graph, opt }: I<T>, done: Done<O<T>>): void {
-    const { stringifyBundleData } = this.__system
+    graph = Async(graph, ['G'], this.__system.async)
 
-    const { snapshot = false } = opt
+    graph.$getBundle(opt, (bundle) => {
+      bundle = clone(bundle)
 
-    const _bundle = graph.getBundleSpec(snapshot)
-
-    const bundle = clone(_bundle)
-
-    stringifyBundleData(bundle)
-
-    done({
-      bundle,
+      done({
+        bundle,
+      })
     })
   }
 }

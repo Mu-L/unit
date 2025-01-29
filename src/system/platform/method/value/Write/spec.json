@@ -2,15 +2,15 @@
   "name": "write",
   "inputs": {
     "value": {
-      "type": "`V`",
+      "type": "`V<T>`",
       "ref": true
     },
     "data": {
-      "type": "any"
+      "type": "<T>"
     }
   },
   "outputs": {
-    "data": {
+    "done": {
       "type": "any",
       "defaultIgnored": true
     }
@@ -18,11 +18,9 @@
   "metadata": {
     "icon": "object-set",
     "description": "set `unit` property `name` to `data`",
-    "complexity": 3,
     "tags": ["platform", "method", "value"]
   },
   "id": "98ab5ee1-0997-4ad2-bc77-776208b6bb25",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

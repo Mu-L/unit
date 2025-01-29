@@ -126,7 +126,6 @@
   "metadata": {
     "icon": "list-ordered",
     "description": "count from `a` to `b`, not inclusive",
-    "complexity": 25,
     "tags": ["core", "loop"]
   },
   "inputs": {
@@ -135,16 +134,14 @@
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "number"
+      }
     },
     "a": {
       "plug": {
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -153,11 +150,9 @@
         "0": {
           "mergeId": "4"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "cc816c77-3ee5-4a84-8f75-c319b53985c3",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -1,35 +1,31 @@
-import { API } from '../API'
+import { API, InterceptOpt, ServerHandler, ServerInterceptor } from '../API'
+import { Graph } from '../Class/Graph'
 import { EventEmitter_ } from '../EventEmitter'
-import { NOOP } from '../NOOP'
 import { Object_ } from '../Object'
 import { Registry } from '../Registry'
 import { Component } from '../client/component'
-import { styleToCSS } from '../client/id/styleToCSS'
-import { appendRootStyle, removeRootStyle } from '../client/render/attachStyle'
-import { fromBundle } from '../spec/fromBundle'
-import { stringifyBundleSpecData } from '../spec/stringifySpec'
+import { icons } from '../client/icons'
+import { themeColor } from '../client/theme'
+import { start } from '../start'
 import { BootOpt, System } from '../system'
-import { Style } from '../system/platform/Style'
 import { BundleSpec } from '../types/BundleSpec'
 import { Dict } from '../types/Dict'
-import { GraphBundle } from '../types/GraphClass'
 import { Unlisten } from '../types/Unlisten'
 import { KeyboardState } from '../types/global/KeyboardState'
 import { PointerState } from '../types/global/PointerState'
-import { randomIdNotIn } from '../util/id'
+import { ASYNC } from '../types/interface/async/wrapper'
+import { remove } from '../util/array'
+import { weakMerge } from '../weakMerge'
+import { style } from './style'
 
 export function boot(
   parent: System | null = null,
   api: API,
   opt: BootOpt
 ): System {
-  const {
-    path = '',
-    specs = {},
-    classes = {},
-    components = {},
-    flags = {},
-  } = opt
+  const { specs = {}, classes = {}, components = {}, flags = {} } = opt
+
+  const path = opt.path || '/'
 
   const keyboard: KeyboardState = {
     pressed: [],
@@ -46,21 +42,29 @@ export function boot(
     pointers,
   }
 
-  const cache = {
-    iframe: [],
+  const cache: System['cache'] = {
     dragAndDrop: {},
     pointerCapture: {},
-    spriteSheetMap: {},
+    servers: {},
+    events: {},
+    requests: {},
+    responses: {},
+    ws: {},
+    wss: {},
+    interceptors: [],
   }
 
   const feature = {}
 
-  const registry = new Registry(specs)
+  const specs__ = weakMerge(specs, {})
+
+  const registry = new Registry(specs__)
 
   const { specs_ } = registry
 
   const {
     specsCount,
+    lock: specsLock,
     newSpecId,
     hasSpec,
     emptySpec,
@@ -73,69 +77,66 @@ export function boot(
     registerUnit,
     unregisterUnit,
     shouldFork,
+    lockSpec,
+    unlockSpec,
   } = registry
+
+  for (const specId in specs) {
+    specsLock[specId] = true
+  }
 
   const emitter = parent ? parent.emitter : new EventEmitter_()
 
-  const componentLocalToRemote: Dict<string> = {}
-  const componentLocal: Dict<Component> = {}
-  const componentRemoteToLocal: Dict<Set<string>> = {}
+  const componentRemoteToLocal: Dict<Component[]> = {}
+
+  const theme = 'dark'
+  const color = themeColor(theme)
 
   const system: System = {
     path,
     parent,
     emitter,
-    animated: true,
-    root: null,
-    theme: 'dark',
+    root: (parent && parent.root) || null,
+    color,
+    theme,
     customEvent,
+    async: ASYNC,
     input,
     context,
     specs_,
-    specs,
+    specs: specs__,
     classes,
     components,
-    graphs: [],
+    icons,
     specsCount,
+    lock: specsLock,
     cache,
     feature,
     foreground: {
       svg: undefined,
       app: undefined,
     },
+    style,
     showLongPress: undefined,
     captureGesture: undefined,
     global: parent
       ? parent.global
       : {
           ref: {},
-          component: componentLocal,
+          graph: {},
           data: new Object_({}),
           scope: {},
         },
     api,
     flags: {
       defaultInputModeNone: false,
-      tick: 'sync',
       ...flags,
     },
-    tick:
-      flags.tick === 'sync'
-        ? (callback: () => void) => {
-            callback()
-          }
-        : (callback) => system.api.animation.requestAnimationFrame(callback),
-    boot: (opt: BootOpt) => boot(system, api, opt),
-    stringifyBundleData: (bundle: BundleSpec) => {
-      return stringifyBundleSpecData(bundle)
+    boot: (opt_: BootOpt = {}) => {
+      return boot(system, api, weakMerge(opt, opt_))
     },
-    fromBundle: (bundle: BundleSpec) => {
-      return fromBundle(bundle, specs, {})
-    },
-    newGraph: (Bundle: GraphBundle) => {
-      const graph = new Bundle(system)
-
-      return graph
+    start: (bundle: BundleSpec): Graph => {
+      return start(system, bundle)
     },
     getSpec: getSpec.bind(registry),
     hasSpec: hasSpec.bind(registry),
@@ -149,83 +150,44 @@ export function boot(
     registerUnit: registerUnit.bind(registry),
     unregisterUnit: unregisterUnit.bind(registry),
     shouldFork: shouldFork.bind(registry),
-    injectPrivateCSSClass: function (
-      globalId: string,
-      className: string,
-      style: Style
-    ): Unlisten {
-      if (system.root) {
-        if (!system.global.component[globalId]) {
-          throw new Error('component not found')
-        }
-
-        const css = `${styleToCSS(style)}`
-
-        appendRootStyle(system, css)
-
-        return () => {
-          removeRootStyle(system, css)
-        }
-      } else {
-        return NOOP
-      }
-    },
+    lockSpec: lockSpec.bind(registry),
+    unlockSpec: unlockSpec.bind(registry),
     getLocalComponents: function (remoteGlobalId: string): Component[] {
-      const localIds = componentRemoteToLocal[remoteGlobalId]
+      const components = componentRemoteToLocal[remoteGlobalId]
 
-      return localIds ? [...localIds].map((id) => componentLocal[id]) : []
+      return components ?? []
     },
     registerLocalComponent: function (
       component: Component,
       remoteGlobalId: string
-    ): string {
-      const localId = randomIdNotIn(componentLocalToRemote)
-
-      componentLocal[localId] = component
-
-      componentLocalToRemote[localId] = remoteGlobalId
-
+    ): void {
       componentRemoteToLocal[remoteGlobalId] =
-        componentRemoteToLocal[remoteGlobalId] ?? new Set()
-      componentRemoteToLocal[remoteGlobalId].add(localId)
+        componentRemoteToLocal[remoteGlobalId] ?? []
+      componentRemoteToLocal[remoteGlobalId].push(component)
 
       emitter.emit(remoteGlobalId, component)
-
-      return localId
     },
-    unregisterLocalComponent: function (localId: string): void {
-      const remoteGlobalId = componentLocalToRemote[localId]
+    unregisterLocalComponent: function (
+      component: Component,
+      remoteGlobalId: string
+    ): void {
+      const components = componentRemoteToLocal[remoteGlobalId]
 
-      if (!remoteGlobalId) {
-        throw new Error('local component not found')
+      remove(components, component)
+    },
+    intercept: function (opt: InterceptOpt, handler: ServerHandler): Unlisten {
+      const interceptor: ServerInterceptor = {
+        opt,
+        handler,
       }
 
-      const localIds = componentRemoteToLocal[remoteGlobalId]
+      cache.interceptors.push(interceptor)
 
-      localIds.delete(localId)
-
-      if (localIds.size === 0) {
-        delete componentRemoteToLocal[remoteGlobalId]
-      }
-
-      delete componentLocalToRemote[localId]
-    },
-    destroy: function (): void {
-      for (const graph of system.graphs) {
-        graph.destroy()
+      return () => {
+        remove(cache.interceptors, interceptor)
       }
     },
   }
 
   return system
-}
-
-export function destroy(system: System) {
-  const { graphs } = system
-
-  for (const graph of graphs) {
-    graph.destroy()
-  }
-
-  // TODO
 }

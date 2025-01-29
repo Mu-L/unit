@@ -1,10 +1,10 @@
 import { addListeners } from '../../../../../client/addListener'
-import classnames from '../../../../../client/classnames'
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { classnames } from '../../../../../client/classnames'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Element } from '../../../../../client/element'
 import { makeCustomListener } from '../../../../../client/event/custom'
 import { makeResizeListener } from '../../../../../client/event/resize'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { SimNode, Simulation } from '../../../../../client/simulation'
 import { COLOR_NONE } from '../../../../../client/theme'
 import { System } from '../../../../../system'
@@ -110,7 +110,11 @@ export default class Cabinet extends Element<HTMLDivElement, Props> {
     if (prop === 'className') {
       this._cabinet.setProp('className', current)
     } else if (prop === 'style') {
-      this._cabinet.setProp('style', { ...DEFAULT_STYLE, ...current })
+      this._cabinet.setProp('style', {
+        ...DEFAULT_STYLE,
+        ...current,
+      })
+
       const { style = {} } = this.$props
       const { color = 'currentColor', backgroundColor = COLOR_NONE } = style
 
@@ -121,9 +125,8 @@ export default class Cabinet extends Element<HTMLDivElement, Props> {
           backgroundColor,
         })
       }
-    } else if (prop === 'disabled') {
-      // TODO
-    } else if (prop === 'hidden') {
+    }
+    if (prop === 'hidden') {
       if (this._hidden && !current) {
         this.show(false)
       } else if (!this._hidden && current) {
@@ -207,6 +210,8 @@ export default class Cabinet extends Element<HTMLDivElement, Props> {
           l = ay - by - bh
         } else if (by <= ay) {
           l = by + bh - ay
+
+          s = 3
         } else {
           s = -1
         }
@@ -349,8 +354,6 @@ export default class Cabinet extends Element<HTMLDivElement, Props> {
 
         const { component } = drawer
 
-        component.$element.style.pointerEvents = `none`
-
         if (component) {
           this._fixed_drawer_node.add(drawerId)
 
@@ -369,17 +372,18 @@ export default class Cabinet extends Element<HTMLDivElement, Props> {
     drawer_component.addEventListener(
       makeCustomListener('activated', () => {
         // console.log('Cabinet', '_on_drawer_activated')
-
-        const drawer = this._drawer[drawerId]
-
-        const { component } = drawer
-
-        component.$element.style.pointerEvents = `auto`
       })
     )
     drawer_component.addEventListener(
       makeCustomListener('inactive', () => {
         // console.log('Cabinet', '_on_drawer_inactive')
+
+        const {
+          api: {
+            window: { setTimeout },
+          },
+        } = this.$system
+
         this._memSetActive(drawerId, false)
 
         const drawer = this._drawer[drawerId]

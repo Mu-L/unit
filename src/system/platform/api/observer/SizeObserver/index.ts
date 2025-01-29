@@ -1,5 +1,5 @@
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { Component } from '../../../../../client/component'
 import { System } from '../../../../../system'
 import { Component_ } from '../../../../../types/interface/Component'
@@ -17,13 +17,15 @@ export type O = {
   height: number
 }
 
-export default class SizeObserver extends Semifunctional<I, O> {
+export default class SizeObserver extends Holder<I, O> {
+  private _observer: ResizeObserver
+
   constructor(system: System) {
     super(
       {
         fi: ['component', 'opt'],
         fo: [],
-        i: ['done'],
+        i: [],
         o: ['width', 'height'],
       },
       {
@@ -36,6 +38,14 @@ export default class SizeObserver extends Semifunctional<I, O> {
       system,
       ID_SIZE_OBSERVER
     )
+  }
+
+  async f({ component, opt }: I, done: Done<O>) {
+    const {
+      api: {
+        document: { ResizeObserver },
+      },
+    } = this.__system
 
     const observer_callback: ResizeObserverCallback = (
       entries: ResizeObserverEntry[]
@@ -51,25 +61,15 @@ export default class SizeObserver extends Semifunctional<I, O> {
     const observer = new ResizeObserver(observer_callback)
 
     this._observer = observer
-  }
-
-  private _observer: ResizeObserver
-
-  async f({ component, opt }: I, done: Done<O>) {
-    const {
-      api: {
-        document: { ResizeObserver },
-      },
-    } = this.__system
 
     const globalId = component.getGlobalId()
 
-    let _component = (await firstGlobalComponentPromise(
+    const component_ = (await firstGlobalComponentPromise(
       this.__system,
       globalId
     )) as Component<HTMLElement>
 
-    const leaf = _component.getFirstRootLeaf() as Component<HTMLElement>
+    const leaf = component_.getFirstRootLeaf() as Component<HTMLElement>
 
     const { $node } = leaf
 
@@ -77,21 +77,10 @@ export default class SizeObserver extends Semifunctional<I, O> {
   }
 
   d() {
-    this._observer.disconnect()
-  }
+    if (this._observer) {
+      this._observer.disconnect()
 
-  i() {
-    this.d()
-  }
-
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
-    this.d()
-
-    this._forward_all_empty()
-
-    this._backward('opt')
-    this._backward('done')
-    // }
+      this._observer = undefined
+    }
   }
 }

@@ -7,7 +7,7 @@ import {
 } from '../../../../../client/animation/animation'
 import { setAlpha } from '../../../../../client/color'
 import { Component } from '../../../../../client/component'
-import mergeStyle from '../../../../../client/component/mergeStyle'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { dragOverTimeListener } from '../../../../../client/dragOverTimeListener'
 import { makeCustomListener } from '../../../../../client/event/custom'
 import { makeClickListener } from '../../../../../client/event/pointer/click'
@@ -17,7 +17,7 @@ import { makePointerLeaveListener } from '../../../../../client/event/pointer/po
 import { makePointerMoveListener } from '../../../../../client/event/pointer/pointermove'
 import { makePointerUpListener } from '../../../../../client/event/pointer/pointerup'
 import { makeResizeListener } from '../../../../../client/event/resize'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { COLOR_NONE, themeBackgroundColor } from '../../../../../client/theme'
 import { userSelect } from '../../../../../client/util/style/userSelect'
 import {
@@ -29,7 +29,6 @@ import { Dict } from '../../../../../types/Dict'
 import { Unlisten } from '../../../../../types/Unlisten'
 import { rangeArray } from '../../../../../util/array'
 import { callAll } from '../../../../../util/call/callAll'
-import { uuid } from '../../../../../util/id'
 import clamp from '../../../../core/relation/Clamp/f'
 import Div from '../../Div/Component'
 import Icon from '../../Icon/Component'
@@ -127,6 +126,12 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
     )
 
     const collapse = () => {
+      const {
+        api: {
+          window: { setTimeout },
+        },
+      } = this.$system
+
       if (_control_in_count === 0) {
         this._collapsed = true
 
@@ -140,7 +145,7 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
 
         const backgroundColor = this._background_color()
 
-        mergeStyle(root, {
+        mergePropStyle(root, {
           left: `${this._x}px`,
           top: `${this._y}px`,
           width: `${COLLAPSED_WIDTH}px`,
@@ -159,24 +164,24 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
         })
 
         setTimeout(() => {
-          mergeStyle(root, {
+          mergePropStyle(root, {
             transition: `opacity ${ANIMATION_T_S}s linear`,
           })
         }, ANIMATION_T_MS)
 
-        mergeStyle(container, {
+        mergePropStyle(container, {
           opacity: '0',
           transform: `scale(${WR}, ${HR})`,
           pointerEvents: 'none',
           ...userSelect('none'),
         })
 
-        mergeStyle(_icon, {
+        mergePropStyle(_icon, {
           opacity: '1',
           pointerEvents: 'auto',
         })
 
-        mergeStyle(button, {
+        mergePropStyle(button, {
           opacity: '0',
           pointerEvents: 'none',
         })
@@ -191,14 +196,18 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
 
           this.dispatchEvent('dock-leave', {})
         }
-      } else {
-        this.dispatchContextEvent('_control_back', false)
       }
 
       this.dispatchEvent('collapse')
     }
 
     const uncollapse = () => {
+      const {
+        api: {
+          window: { setTimeout },
+        },
+      } = this.$system
+
       const { width, height } = this.$props
 
       this._collapsed = false
@@ -208,7 +217,7 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
 
       this._clamp_x_y()
 
-      mergeStyle(root, {
+      mergePropStyle(root, {
         left: `${this._x}px`,
         top: `${this._y}px`,
         width: `${width}px`,
@@ -226,29 +235,29 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
         ),
       })
 
-      mergeStyle(container, {
+      mergePropStyle(container, {
         opacity: '1',
         transform: 'scale(1, 1)',
         pointerEvents: 'auto',
         ...userSelect('auto'),
       })
 
-      mergeStyle(button, {
+      mergePropStyle(button, {
         opacity: '1',
         pointerEvents: 'auto',
       })
 
       setTimeout(() => {
-        mergeStyle(root, {
+        mergePropStyle(root, {
           transition: `opacity ${ANIMATION_T_S}s linear`,
         })
 
-        mergeStyle(_icon, {
+        mergePropStyle(_icon, {
           pointerEvents: 'none',
         })
       }, ANIMATION_T_MS)
 
-      mergeStyle(_icon, {
+      mergePropStyle(_icon, {
         opacity: '0',
       })
 
@@ -329,7 +338,7 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
 
                 this._clamp_x_y()
 
-                mergeStyle(root, {
+                mergePropStyle(root, {
                   left: `${this._x}px`,
                   top: `${this._y}px`,
                 })
@@ -362,13 +371,13 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
     }
 
     const dim = () => {
-      mergeStyle(root, {
+      mergePropStyle(root, {
         opacity: `${DIM_OPACITY}`,
       })
     }
 
     const undim = () => {
-      mergeStyle(root, {
+      mergePropStyle(root, {
         opacity: '1',
       })
     }
@@ -376,14 +385,6 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
     const reset_dim = () => {
       if (this._collapsed) {
         const on_active = (): void => {
-          const message_id = uuid()
-
-          this._message_id[message_id] = true
-
-          this.dispatchContextEvent('_control_foreground', {
-            message_id,
-          })
-
           this._set_z_index(MAX_Z_INDEX)
 
           if (!this._collapsed) {
@@ -715,11 +716,11 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
     if (this._collapsed) {
       const backgroundColor = this._background_color()
 
-      mergeStyle(this._root, {
+      mergePropStyle(this._root, {
         backgroundColor,
       })
     } else {
-      mergeStyle(this._root, {
+      mergePropStyle(this._root, {
         backgroundColor: COLOR_NONE,
       })
     }
@@ -728,7 +729,7 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
   private _set_z_index = (zIndex: number) => {
     this._z_index = zIndex
 
-    mergeStyle(this._root, {
+    mergePropStyle(this._root, {
       zIndex: `${zIndex}`,
     })
   }
@@ -736,8 +737,6 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
   private _context_unlisten: Unlisten
 
   private _z_index: number = MAX_Z_INDEX
-
-  private _message_id: Dict<boolean> = {}
 
   private _clamp_x_y = () => {
     const { $width, $height } = this.$context
@@ -748,12 +747,12 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
     this._x = clamp({
       a: this._x,
       min: this._collapsed ? PADDING : BUTTON_WIDTH + PADDING,
-      max: $width - w - PADDING,
+      max: $width - w - PADDING - 1,
     }).a
     this._y = clamp({
       a: this._y,
-      min: 0,
-      max: this._collapsed ? $height : $height - h,
+      min: PADDING + 1,
+      max: this._collapsed ? $height - BUTTON_HEIGHT + 4 : $height - h,
     }).a
   }
 
@@ -777,19 +776,12 @@ export default class GUIControl extends Component<HTMLDivElement, Props> {
       makeResizeListener(() => {
         this._clamp_x_y()
 
-        mergeStyle(this._root, {
+        mergePropStyle(this._root, {
           left: `${this._x}px`,
           top: `${this._y}px`,
         })
 
         this._refresh_dock()
-      }),
-      makeCustomListener('_control_foreground', ({ message_id }) => {
-        if (!this._message_id[message_id]) {
-          this._set_z_index(this._z_index - 1)
-        } else {
-          delete this._message_id[message_id]
-        }
       }),
     ])
 

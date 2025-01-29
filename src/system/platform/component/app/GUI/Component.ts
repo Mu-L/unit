@@ -4,16 +4,16 @@ import {
   ifLinearTransition,
   linearTransition,
 } from '../../../../../client/animation/animation'
-import classnames from '../../../../../client/classnames'
-import { setAlpha } from '../../../../../client/color'
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { classnames } from '../../../../../client/classnames'
+import { colorToHex, setAlpha } from '../../../../../client/color'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Context, setColor, setTheme } from '../../../../../client/context'
 import { preventContextMenu } from '../../../../../client/contextMenu'
 import { Element } from '../../../../../client/element'
 import { makeCustomListener } from '../../../../../client/event/custom'
 import { makeInputListener } from '../../../../../client/event/input'
 import { graphComponentFromId } from '../../../../../client/graphComponentFromSpec'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import {
   COLOR_NONE,
   defaultThemeColor,
@@ -37,6 +37,7 @@ import Search from '../Search/Component'
 export interface Props {
   className?: string
   style?: Dict<string>
+  animated?: boolean
 }
 
 export const DEFAULT_UNIT_ID = 'unit'
@@ -46,11 +47,12 @@ export const DEFAULT_STYLE = {
   width: '100%',
   height: '100%',
   overflow: 'hidden',
-  zIndex: '3',
 }
 
 export default class GUI extends Element<HTMLDivElement, Props> {
   public _container: Div
+  public _control: Frame
+  public _main: Div
   public _gui: Div
   public _background: Div
   public _search: Search
@@ -58,7 +60,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
   public _cabinet: Cabinet
   public _minimap: Minimap
   public _color_picker: Color
-  public _color_pallete: Div
+  public _color_palette: Div
   public _share: Div
   public _import: IconButton
   public _folder: IconButton
@@ -69,12 +71,13 @@ export default class GUI extends Element<HTMLDivElement, Props> {
 
   private _manually_changed_color: boolean = false
 
+  private _dock_x: number = 0
+  private _dock_y: number = 0
+
   constructor($props: Props, $system: System) {
     super($props, $system)
 
-    const { className, style = {} } = this.$props
-
-    const pointerEvents = style.pointerEvents === 'none' ? 'inherit' : 'all'
+    const { className, style = {}, animated = true } = this.$props
 
     const modes = new Modes(
       {
@@ -85,7 +88,6 @@ export default class GUI extends Element<HTMLDivElement, Props> {
           left: '0px',
           transform: 'translate(0%, -50%)',
           backgroundColor: 'none',
-          pointerEvents,
         },
       },
       this.$system
@@ -101,7 +103,6 @@ export default class GUI extends Element<HTMLDivElement, Props> {
           left: '50%',
           transform: 'translate(-50%, 0%)',
           backgroundColor: 'none',
-          pointerEvents,
         },
       },
       this.$system
@@ -159,11 +160,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
         sliderStyle: {
           borderRadius: '1.5px',
           cursor: 'pointer',
-          transition: ifLinearTransition(
-            this.$system.animated,
-            'left',
-            'background-color'
-          ),
+          transition: ifLinearTransition(animated, 'left', 'background-color'),
         },
       }
     )
@@ -189,6 +186,9 @@ export default class GUI extends Element<HTMLDivElement, Props> {
           borderRadius: '3px',
           boxSizing: 'border-box',
         },
+        attr: {
+          tabindex: '-1',
+        },
       },
       this.$system
     )
@@ -203,10 +203,10 @@ export default class GUI extends Element<HTMLDivElement, Props> {
     )
     this._color_picker = color_picker
 
-    const color_pallete = new Div(
+    const color_palette = new Div(
       {
         style: {
-          className: 'gui-color-pallete',
+          className: 'gui-color-palette',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
@@ -214,9 +214,9 @@ export default class GUI extends Element<HTMLDivElement, Props> {
       },
       this.$system
     )
-    color_pallete.appendChild(color_theme)
-    color_pallete.appendChild(color_picker)
-    this._color_pallete = color_pallete
+    color_palette.appendChild(color_theme)
+    color_palette.appendChild(color_picker)
+    this._color_palette = color_palette
 
     const folder_button = new IconButton(
       {
@@ -282,9 +282,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
         className: 'graph-gui-cabinet',
         style: {
           backgroundColor: 'none',
-          pointerEvents,
         },
-        // hidden: true,
       },
       this.$system
     )
@@ -326,23 +324,6 @@ export default class GUI extends Element<HTMLDivElement, Props> {
     )
     this._background = background
 
-    const control = new Frame(
-      {
-        className: 'gui-control',
-        style: {
-          position: 'absolute',
-          top: '0px',
-          overflow: 'visible',
-          background: 'none',
-          pointerEvents: 'none',
-        },
-      },
-      this.$system
-    )
-    control.registerParentRoot(modes)
-    control.registerParentRoot(search)
-    control.registerParentRoot(cabinet)
-
     const main = new Parent(
       {
         className: 'gui-main',
@@ -350,6 +331,27 @@ export default class GUI extends Element<HTMLDivElement, Props> {
       },
       this.$system
     )
+    this._main = main
+
+    const control = new Frame(
+      {
+        className: 'gui-control',
+        style: {
+          position: 'absolute',
+          left: `0px`,
+          top: '0px',
+          overflow: 'visible',
+          background: 'none',
+          transition: linearTransition('left', 'width', 'height', 'opacity'),
+        },
+      },
+      this.$system
+    )
+    control.registerParentRoot(main)
+    control.registerParentRoot(modes)
+    control.registerParentRoot(search)
+    control.registerParentRoot(cabinet)
+    this._control = control
 
     const foreground = new Div(
       {
@@ -377,7 +379,6 @@ export default class GUI extends Element<HTMLDivElement, Props> {
       this.$system
     )
     gui.registerParentRoot(background)
-    gui.registerParentRoot(main)
     gui.registerParentRoot(control)
     gui.registerParentRoot(foreground)
     this._gui = gui
@@ -439,30 +440,35 @@ export default class GUI extends Element<HTMLDivElement, Props> {
       container,
     })
 
+    this.registerRoot(container)
+
     this.addEventListeners([
       makeCustomListener('dock-move', ({ dy = 0, dx = 0 }) => {
-        if (this._hidden) {
-          return
-        }
+        this._dock_x = dx
+        this._dock_y = dy
 
         mergePropStyle(control, {
           left: `${dx}px`,
           width: `calc(100% - ${dx}px)`,
           height: `calc(100% - ${dy}px)`,
-          transition: linearTransition('left', 'width', 'height', 'opacity'),
-        })
-
-        mergePropStyle(control, {
-          left: `${dx}px`,
-          width: `calc(100% - ${dx}px)`,
-          height: `calc(100% - ${dy}px)`,
-          transition: linearTransition('left', 'width', 'height', 'opacity'),
         })
 
         mergePropStyle(background, {
-          paddingBottom: `${dy}px`,
-          paddingLeft: `${dx}px`,
+          paddingBottom: `${dy / 2}px`,
+          paddingLeft: `${dx / 2}px`,
           transition: linearTransition('padding-bottom', 'padding-left'),
+        })
+
+        mergePropStyle(search, {
+          transform: this._hidden
+            ? `translate(-50%, calc(100% + ${this._dock_y}px))`
+            : 'translate(-50%, 0%)',
+        })
+
+        mergePropStyle(modes, {
+          transform: this._hidden
+            ? `translate(calc(-100% - ${this._dock_x}px), -50%)`
+            : `translate(0%, -50%)`,
         })
 
         if (dy > 0) {
@@ -495,10 +501,6 @@ export default class GUI extends Element<HTMLDivElement, Props> {
         }
       }),
       makeCustomListener('dock-leave', () => {
-        if (this._hidden) {
-          return
-        }
-
         mergePropStyle(control, {
           left: `${0}px`,
           width: '100%',
@@ -520,8 +522,6 @@ export default class GUI extends Element<HTMLDivElement, Props> {
         })
       }),
     ])
-
-    this.registerRoot(container)
   }
 
   private _get_color = (): string => {
@@ -534,12 +534,24 @@ export default class GUI extends Element<HTMLDivElement, Props> {
     return color
   }
 
+  private _control_background_color = (): string => {
+    const backgroundColor = this._background_color()
+
+    const controlBackgroundColor = setAlpha(backgroundColor, 0.75)
+
+    return controlBackgroundColor
+  }
+
   private _background_color = (): string => {
+    const { style = {} } = this.$props
+
     const { $theme } = this.$context
 
-    const backgroundColor = setAlpha(themeBackgroundColor($theme), 0.75)
+    const backgroundColor = style.background ?? themeBackgroundColor($theme)
 
-    return backgroundColor
+    const backgroundColorHex = colorToHex(backgroundColor)
+
+    return backgroundColorHex
   }
 
   private _refresh_pointer_events = (): void => {
@@ -560,30 +572,42 @@ export default class GUI extends Element<HTMLDivElement, Props> {
 
   private _refresh_color = (): void => {
     const color = this._get_color()
-    const backgroundColor = this._background_color()
+    const backgroundColor = this._control_background_color()
 
     mergePropStyle(this._cabinet, {
       backgroundColor,
+      color,
     })
     mergePropStyle(this._modes, {
       backgroundColor,
+      color,
     })
     mergePropStyle(this._search, {
       backgroundColor,
+      color,
     })
     mergePropStyle(this._minimap, {
       color,
     })
   }
 
+  private _refresh_background = () => {
+    this._container.$element.style.backgroundColor = this._background_color()
+  }
+
   onPropChanged(prop: string, current: any): void {
     // console.log('GUI', 'onPropChanged', prop, current)
 
     if (prop === 'style') {
-      this._container.setProp('style', { ...DEFAULT_STYLE, ...current })
+      this._container.setProp('style', {
+        ...DEFAULT_STYLE,
+        backgroundColor: this._background_color(),
+        ...current,
+      })
 
       this._refresh_pointer_events()
       this._refresh_color()
+      this._refresh_background()
     }
   }
 
@@ -612,7 +636,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
         color: {
           icon: 'palette',
           title: 'color',
-          component: this._color_pallete,
+          component: this._color_palette,
           active: false,
           width: 60,
           height: 72,
@@ -641,11 +665,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
       makeCustomListener('colorchanged', this._on_context_color_changed),
     ])
 
-    if (this.$context.$parent === null) {
-      this.$context.$element.style.backgroundColor = themeBackgroundColor(
-        this.$context.$theme
-      )
-    }
+    this._container.$element.style.backgroundColor = this._background_color()
 
     this._refresh_color()
   }
@@ -661,12 +681,9 @@ export default class GUI extends Element<HTMLDivElement, Props> {
 
     const { $theme } = this.$context
 
-    if (this.$context.$parent === null) {
-      setTheme(this.$context, $theme)
+    setTheme(this.$context, $theme)
 
-      this.$context.$element.style.backgroundColor =
-        themeBackgroundColor($theme)
-    }
+    this._container.$element.style.backgroundColor = this._background_color()
 
     if (!this._manually_changed_color) {
       const default_theme_color = defaultThemeColor($theme)
@@ -677,6 +694,8 @@ export default class GUI extends Element<HTMLDivElement, Props> {
     }
 
     this._refresh_color()
+
+    this._gui.dispatchEvent('theme', $theme)
   }
 
   private _on_context_color_changed = (): void => {
@@ -729,12 +748,16 @@ export default class GUI extends Element<HTMLDivElement, Props> {
   }
 
   public hide_background = (animate: boolean): void => {
-    this._animate_background(
-      {
-        opacity: '0.25',
-      },
-      animate
-    )
+    // this._animate_background(
+    //   {
+    //     opacity: '0.25',
+    //   },
+    //   animate
+    // )
+    mergePropStyle(this._background, {
+      opacity: '0.5',
+      transition: ifLinearTransition(animate, 'opacity'),
+    })
   }
 
   public hide_search = (animate: boolean): void => {
@@ -745,7 +768,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
     //   animate
     // )
     mergePropStyle(this._search, {
-      transform: 'translate(-50%, 100%)',
+      transform: `translate(-50%, calc(100% + ${this._dock_y}px))`,
       transition: ifLinearTransition(animate, 'transform'),
     })
   }
@@ -776,7 +799,7 @@ export default class GUI extends Element<HTMLDivElement, Props> {
     //   animate
     // )
     mergePropStyle(this._modes, {
-      transform: 'translate(-100%, -50%)',
+      transform: `translate(calc(-100% - ${this._dock_x}px), -50%)`,
       transition: ifLinearTransition(animate, 'transform'),
     })
   }
@@ -786,12 +809,16 @@ export default class GUI extends Element<HTMLDivElement, Props> {
   }
 
   public show_background = (animate: boolean): void => {
-    this._animate_background(
-      {
-        opacity: '1',
-      },
-      animate
-    )
+    // this._animate_background(
+    //   {
+    //     opacity: '1',
+    //   },
+    //   animate
+    // )
+    mergePropStyle(this._background, {
+      opacity: '1',
+      transition: ifLinearTransition(animate, 'opacity'),
+    })
   }
 
   public show_search = (animate: boolean): void => {

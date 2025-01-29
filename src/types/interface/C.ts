@@ -7,7 +7,8 @@ import { Component_ } from './Component'
 export type C_J = {}
 
 export type C_EE = {
-  append_child: [UnitBundleSpec, string[]]
+  append_child: [UnitBundleSpec, Component_, string[]]
+  append_children: [UnitBundleSpec[], string[]]
   insert_child: [UnitBundleSpec, number, string[]]
   remove_child: [number, string[]]
   [remove_child_at: `remove_child_at_${number}`]: [number]
@@ -17,6 +18,7 @@ export type C_EE = {
   unregister_parent_root: [Component_]
   register_root: [Component_]
   unregister_root: [Component_]
+  set_sub_component: [string, UnitBundleSpec]
   append_parent_child: [Component_, string]
   remove_parent_child: [Component_]
   reorder_root: [Component_, number]
@@ -38,24 +40,30 @@ export type ComponentSetup = {
 }
 
 export interface C {
-  registerRoot(component: Component_): void
-  unregisterRoot(component: Component_): void
+  registerRoot(component: Component_, ...extra: any[]): void
+  unregisterRoot(component: Component_, ...extra: any[]): void
   reorderRoot(component: Component_, to: number): void
-  registerParentRoot(component: Component_, slotName: string, at?: number): void
+  registerParentRoot(
+    component: Component_,
+    slotName: string,
+    at?: number,
+    ...extra: any[]
+  ): void
   unregisterParentRoot(component: Component_): void
   reorderParentRoot(component: Component_, to: number): void
   appendParentChild(component: Component_, slotName: string): void
   removeParentChild(component: Component_): void
-  appendChild(Class: UnitBundle<Component_>): number
-  insertChild(Class: UnitBundle<Component_>, at: number): void
-  pushChild(Class: UnitBundle<Component_>): number
+  appendChild(Class: UnitBundle): number
+  appendChildren(Classes: UnitBundle[]): number
+  insertChild(Class: UnitBundle, at: number): void
+  pushChild(Class: UnitBundle): number
   removeChild(at: number): Component_
   pullChild(at: number): Component_
   hasChild(at: number): boolean
   refChild(at: number): Component_
   refChildren(): Component_[]
   refSlot(slotName: string): Component_
-  detach(): void
+  refRoot(at: number): Component_
   animate(keyframes: Keyframe[], opt: KeyframeAnimationOptions): void
   cancelAnimation(id: string): void
   getAnimations(): AnimationSpec[]

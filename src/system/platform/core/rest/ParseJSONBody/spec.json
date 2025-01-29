@@ -31,7 +31,6 @@
   "metadata": {
     "icon": "arrow-right",
     "description": "parse response `res` body into JSON",
-    "complexity": 8,
     "tags": ["platform", "core", "rest"]
   },
   "inputs": {
@@ -41,8 +40,7 @@
           "unitId": "get",
           "pinId": "obj"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -52,11 +50,9 @@
           "unitId": "parse",
           "pinId": "json"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "63ede222-07af-4b27-98bc-d8bc7cc5b14c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

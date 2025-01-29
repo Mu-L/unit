@@ -9,37 +9,37 @@ import { Unlisten } from '../../../types/Unlisten'
 import { AsyncGraph } from '../../../types/interface/async/AsyncGraph'
 import { callAll } from '../../../util/call/callAll'
 import { weakMerge } from '../../../weakMerge'
-import { render as _render } from '../../render'
-import defaultWebBoot, { webBoot } from './boot'
-import webInit from './init'
+import { render as render_ } from '../../render'
+import { defaultWebBoot, webBoot } from './boot'
+import { webInit } from './init'
 
-export default function render(
+export function render(
   bundle: BundleSpec,
-  bootOpt?: BootOpt
-): [Graph, System, Unlisten] {
+  opt?: BootOpt
+): [System, Graph, Unlisten] {
   const { spec = {}, specs = {} } = bundle
 
-  const [system, unlistenSystem] = defaultWebBoot({
+  bundle.spec = spec
+  bundle.specs = specs
+
+  const [system, deboot] = defaultWebBoot({
     specs: weakMerge(specs, _specs),
     classes: _classes,
     components: _components,
-    ...bootOpt,
+    ...opt,
   })
-
-  if (!spec.id || !system.hasSpec(spec.id)) {
-    system.newSpec(spec)
-  }
 
   const graph = start(system, bundle)
 
   const $graph = AsyncGraph(graph)
 
-  const webUnlisten = webInit(system, window, system.root)
-  const renderUnlisten = _render(system, $graph)
+  const deinit = webInit(system, window, system.root)
 
-  const unlisten = callAll([webUnlisten, renderUnlisten, unlistenSystem])
+  const unrender = render_(system, $graph)
 
-  return [graph, system, unlisten]
+  const destroy = callAll([deinit, unrender, deboot])
+
+  return [system, graph, destroy]
 }
 
 export function renderBundle(
@@ -50,10 +50,12 @@ export function renderBundle(
   // console.log('renderBundle')
 
   const [system, unlistenSystem] = webBoot(window, root, opt)
+
   const graph = start(system, bundle)
+
   const $graph = AsyncGraph(graph)
 
-  const unlistenRender = _render(system, $graph)
+  const unlistenRender = render_(system, $graph)
 
   const unlisten = callAll([unlistenRender, unlistenSystem])
 

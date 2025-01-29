@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "brackets-curly",
     "description": "output an empty object",
-    "complexity": 5,
     "tags": ["core", "object"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "wait",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -36,11 +34,9 @@
           "unitId": "wait",
           "pinId": "a"
         }
-      },
-      "type": "{}"
+      }
     }
   },
   "id": "dc6e6bc0-081b-11eb-baf7-b7383b70c236",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

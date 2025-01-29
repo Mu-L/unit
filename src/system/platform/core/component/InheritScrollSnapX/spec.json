@@ -72,9 +72,8 @@
     "defaultHeight": 240
   },
   "metadata": {
-    "icon": null,
-    "description": "style children with scroll-snap x",
-    "complexity": 53
+    "icon": "square",
+    "description": "style children with scroll-snap x"
   },
   "id": "0b5d4999-21ce-48da-907d-2891514c451d"
 }

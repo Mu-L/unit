@@ -79,7 +79,6 @@
   "metadata": {
     "icon": "list-ordered",
     "description": "count from `a` to `b`, not inclusive",
-    "complexity": 21,
     "tags": ["core", "loop"]
   },
   "inputs": {
@@ -91,7 +90,6 @@
         }
       },
       "functional": true,
-      "type": "number",
       "metadata": {
         "examples": ["0"]
       }
@@ -104,7 +102,6 @@
         }
       },
       "functional": true,
-      "type": "number",
       "metadata": {
         "examples": ["3"]
       }
@@ -117,8 +114,7 @@
           "unitId": "loopincrement",
           "pinId": "current"
         }
-      },
-      "type": "number"
+      }
     },
     "test": {
       "plug": {
@@ -126,7 +122,6 @@
           "mergeId": "2"
         }
       },
-      "type": "boolean",
       "defaultIgnored": true
     },
     "final": {
@@ -136,11 +131,9 @@
           "pinId": "final"
         }
       },
-      "type": "number",
       "defaultIgnored": true
     }
   },
   "id": "29e43ad7-be5e-437f-8f0f-2df996c8b89c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -1,48 +1,39 @@
 import { getSpec, isSystemSpecId } from './client/spec'
-import { evaluate } from './spec/evaluate'
-import { TreeNodeType, getTree } from './spec/parser'
+import { evaluateDataValue } from './spec/evaluateDataValue'
 import { Specs } from './types'
 import { BundleSpec } from './types/BundleSpec'
 import { GraphSpec } from './types/GraphSpec'
 import { GraphSpecs } from './types/GraphSpecs'
 import { GraphUnitSpec } from './types/GraphUnitSpec'
 import { UnitBundleSpec } from './types/UnitBundleSpec'
+import { deepGet } from './util/object'
+import { weakMerge } from './weakMerge'
 
 export function unitBundleSpec(
   unit: GraphUnitSpec,
-  specs: Specs
+  specs: Specs,
+  system: boolean = false
 ): UnitBundleSpec {
   const { id } = unit
 
-  const spec = getSpec(specs, id)
+  const custom = {}
 
-  const { system } = spec
+  _bundleUnit(unit, specs, custom, new Set(), system)
 
-  if (system) {
-    return {
-      unit: {
-        id,
-        ...unit,
-      },
-    }
-  } else {
-    const custom: GraphSpecs = {
-      [id]: spec as GraphSpec,
-    }
-
-    _bundle(spec as GraphSpec, specs, custom, new Set())
-
-    return {
-      unit: {
-        id,
-        ...unit,
-      },
-      specs: custom,
-    }
+  return {
+    unit: {
+      id,
+      ...unit,
+    },
+    specs: custom,
   }
 }
 
-export function unitBundleSpecById(id: string, specs: Specs): UnitBundleSpec {
+export function unitBundleSpecById(
+  id: string,
+  specs: Specs,
+  system: boolean = false
+): UnitBundleSpec {
   const spec = getSpec(specs, id)
 
   const { base } = spec
@@ -58,7 +49,7 @@ export function unitBundleSpecById(id: string, specs: Specs): UnitBundleSpec {
       [id]: spec as GraphSpec,
     }
 
-    _bundle(spec as GraphSpec, specs, custom, new Set())
+    _bundle(spec as GraphSpec, specs, custom, new Set(), system)
 
     return {
       unit: {
@@ -69,12 +60,15 @@ export function unitBundleSpecById(id: string, specs: Specs): UnitBundleSpec {
   }
 }
 
-export function bundleSpec(spec: GraphSpec, specs: Specs): BundleSpec {
-  const custom: GraphSpecs = {}
-
+export function bundleSpec(
+  spec: GraphSpec,
+  specs: Specs,
+  system: boolean = false,
+  custom: GraphSpecs = {}
+): BundleSpec {
   const branch = new Set<string>([])
 
-  _bundle(spec, specs, custom, branch)
+  _bundle(spec, specs, custom, branch, system)
 
   return { spec, specs: custom }
 }
@@ -83,13 +77,14 @@ function _bundle(
   spec: GraphSpec,
   specs: Specs,
   custom: GraphSpecs,
-  branch: Set<string>
+  branch: Set<string>,
+  system: boolean
 ): void {
   if (!spec.id) {
     throw new Error('spec id is required')
   }
 
-  if (spec.system) {
+  if (spec.system && !system) {
     return
   }
 
@@ -99,50 +94,73 @@ function _bundle(
 
   branch.add(spec.id)
 
-  _bundleUnits(spec, specs, custom, branch)
+  _bundleUnits(spec, specs, custom, branch, system)
+}
+
+function _bundleUnit(
+  unit: GraphUnitSpec,
+  specs: Specs,
+  custom: GraphSpecs,
+  branch: Set<string>,
+  system: boolean
+) {
+  const { id, input = {} } = unit
+
+  for (const inputId in input) {
+    const _input = input[inputId] ?? {}
+
+    const { data } = _input
+
+    if (data !== undefined) {
+      const dataRef = evaluateDataValue(data, specs, {})
+
+      for (const path of dataRef.ref ?? []) {
+        const bundle = deepGet(dataRef.data, path)
+
+        for (const specId in bundle.specs) {
+          const spec = bundle.specs[specId]
+
+          custom[specId] = spec
+
+          _bundle(
+            spec,
+            weakMerge(specs, bundle.specs ?? {}),
+            custom,
+            branch,
+            system
+          )
+        }
+
+        _bundleUnit(bundle.unit, specs, custom, branch, system)
+
+        if (bundle.specs) {
+          delete bundle.specs
+        }
+      }
+    }
+  }
+
+  const _spec = getSpec(weakMerge(specs, custom), id) as GraphSpec
+
+  if (!custom[id] && !isSystemSpecId(specs, id)) {
+    custom[id] = _spec
+  }
+
+  _bundle(_spec, specs, custom, new Set(branch), system)
 }
 
 function _bundleUnits(
   spec: GraphSpec,
   specs: Specs,
   custom: GraphSpecs,
-  branch: Set<string>
+  branch: Set<string>,
+  system: boolean
 ): void {
   const { units = {} } = spec
 
   for (const unit_id in units) {
     const unit = units[unit_id]
 
-    const { id, input = {} } = unit
-
-    for (const inputId in input) {
-      const _input = input[inputId] ?? {}
-
-      const { data } = _input
-
-      if (data) {
-        const tree = getTree(data)
-
-        if (tree.type === TreeNodeType.Unit) {
-          const bundle = evaluate(tree.value, specs, {}) as UnitBundleSpec
-
-          for (const specId in bundle.specs) {
-            const spec = bundle.specs[specId]
-
-            custom[specId] = spec
-
-            _bundle(spec, specs, custom, branch)
-          }
-        }
-      }
-    }
-
-    const _spec = getSpec(specs, id) as GraphSpec
-
-    if (!specs[id] || !isSystemSpecId(specs, id)) {
-      custom[id] = _spec
-    }
-
-    _bundle(_spec, specs, custom, new Set(branch))
+    _bundleUnit(unit, specs, custom, branch, system)
   }
 }

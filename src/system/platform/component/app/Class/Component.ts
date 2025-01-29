@@ -1,8 +1,8 @@
-import classnames from '../../../../../client/classnames'
+import { classnames } from '../../../../../client/classnames'
 import { getSpecRadius } from '../../../../../client/complexity'
 import { Component } from '../../../../../client/component'
 import { Element } from '../../../../../client/element'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { isComponentId } from '../../../../../client/spec'
 import {
   pointInCircle,
@@ -17,7 +17,10 @@ import { lineWrap } from '../../../../../spec/lineWrap'
 import { System } from '../../../../../system'
 import { Specs } from '../../../../../types'
 import { Dict } from '../../../../../types/Dict'
+import { GraphSpec } from '../../../../../types/GraphSpec'
 import { IO } from '../../../../../types/IO'
+import { ID_EMPTY } from '../../../../_ids'
+import { keyCount } from '../../../../core/object/KeyCount/f'
 import { keys } from '../../../../f/object/Keys/f'
 import Icon from '../../../component/Icon/Component'
 import SVGCircle from '../../svg/Circle/Component'
@@ -40,24 +43,26 @@ export interface Props {
 export const CLASS_DEFAULT_WIDTH = 90
 export const CLASS_DEFAULT_HEIGHT = 90
 
-export default class ClassDatum extends Element<SVGSVGElement, Props> {
+export default class ClassDatum extends Element<HTMLDivElement, Props> {
   private _svg: SVGSVG
   private _svg_g: SVGG
 
   constructor($props: Props, $system: System) {
     super($props, $system)
 
-    const { id, attr, className } = $props
+    const { id = ID_EMPTY, attr, className } = $props
 
     const { width, height } = this._size()
 
     const svg = new SVGSVG(
       {
         className: classnames('unit-class', className),
-        width,
-        height,
+        attr: {
+          width: `${width}`,
+          height: `${height}`,
+          ...attr,
+        },
         style: this._style(),
-        attr,
         viewBox: `-1 -1 ${width + 2} ${height + 2}`,
       },
       this.$system
@@ -72,7 +77,7 @@ export default class ClassDatum extends Element<SVGSVGElement, Props> {
       this.$system
     )
     this._svg_g = svg_g
-    this._svg.appendChild(svg_g)
+    this._svg.registerParentRoot(svg_g)
 
     if (id) {
       this._render(id)
@@ -80,13 +85,35 @@ export default class ClassDatum extends Element<SVGSVGElement, Props> {
 
     const $element = parentElement($system)
 
-    this.$element = svg.$element
+    this.$element = $element
     this.$slot['default'] = svg
+    this.$unbundled = false
+
+    this.setSubComponents({
+      svg,
+      svg_g,
+    })
+
+    this.registerRoot(svg)
+  }
+
+  private _refresh_style = () => {
+    const style = this._style()
+
+    this._svg.setProp('style', style)
+  }
+
+  private _refresh_view_box = () => {
+    const { width, height } = this._size()
+
+    this._svg.setProp('viewBox', `-1 -1 ${width + 2} ${height + 2}`)
   }
 
   onPropChanged(prop: string, current: any): void {
     if (prop === 'id') {
       this._render(current)
+      this._refresh_style()
+      this._refresh_view_box()
     } else if (prop === 'style') {
       this._svg.setProp('style', this._style())
     } else if (prop === 'attr') {
@@ -95,9 +122,10 @@ export default class ClassDatum extends Element<SVGSVGElement, Props> {
   }
 
   private _r = (): number => {
-    const { specs, id } = this.$props
+    const { classes } = this.$system
+    const { specs = this.$system.specs, id = ID_EMPTY } = this.$props
 
-    const r = getSpecRadius(specs, id) - 1.5
+    const r = getSpecRadius(specs, classes, id) - 1.5
 
     return r
   }
@@ -222,14 +250,21 @@ export default class ClassDatum extends Element<SVGSVGElement, Props> {
         this.$system
       )
       children.push(pin_link)
+
+      this._svg.setProp('viewBox', `-1 -1 ${width + 2} ${height + 2}`)
     }
 
     input_pin_ids.forEach((_, index: number) => {
       push_pin('input', index)
     })
 
-    // const icon = (spec.metadata && spec.metadata.icon) || 'question'
-    const icon = (spec.metadata && spec.metadata.icon) || null
+    let icon = (spec.metadata && spec.metadata.icon) || null
+
+    if (!icon && !spec.base) {
+      if (keyCount((spec as GraphSpec).units ?? {}) > 0) {
+        icon = 'question'
+      }
+    }
 
     let core_shape: SVGCircle | SVGRect
     if (is_component) {
@@ -265,14 +300,16 @@ export default class ClassDatum extends Element<SVGSVGElement, Props> {
       )
     }
 
-    const core_icon: Icon = new Icon(
+    const core_icon = new Icon(
       {
         className: 'unit-class-core-icon',
         icon,
-        x: cX - core_r / 2,
-        y: cY - core_r / 2,
-        width: core_r,
-        height: core_r,
+        attr: {
+          x: cX - core_r / 2,
+          y: cY - core_r / 2,
+          width: core_r,
+          height: core_r,
+        },
         style: {
           color: 'currentColor',
         },

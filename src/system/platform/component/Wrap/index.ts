@@ -7,6 +7,7 @@ import { Component_ } from '../../../../types/interface/Component'
 import { WP } from '../../../../types/interface/WP'
 import { UnitBundle } from '../../../../types/UnitBundle'
 import { ID_PARENT, ID_WRAP } from '../../../_ids'
+import _specs from '../../../_specs'
 import Parent from '../Parent'
 
 export type I = {
@@ -18,9 +19,13 @@ export type O = {
 }
 
 export default class Wrap extends Element_<I, O> implements WP {
-  private _Container: UnitBundle = bundleClass(Parent, {
-    unit: { id: ID_PARENT },
-  })
+  private _Container: UnitBundle = bundleClass(
+    Parent,
+    {
+      unit: { id: ID_PARENT },
+    },
+    _specs
+  )
 
   private _child_container: Component_[] = []
   private _parent_container: Component_[] = []
@@ -145,15 +150,15 @@ export default class Wrap extends Element_<I, O> implements WP {
     }
   }
 
-  refParentRootContainer(at: number): C {
+  refParentRootContainer(at: number): Component_ {
     return this._parent_container[at]
   }
 
-  refChildContainer(at: number): C {
+  refChildContainer(at: number): Component_ {
     return this._child_container[at]
   }
 
-  refParentChildContainer(at: number): C {
+  refParentChildContainer(at: number): Component_ {
     return this._parent_child_container[at]
   }
 }

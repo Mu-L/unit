@@ -60,7 +60,6 @@
   "metadata": {
     "icon": "toggle-right",
     "description": "iteratively toggle `current` value",
-    "complexity": 11,
     "tags": ["core", "iterate"]
   },
   "inputs": {
@@ -70,8 +69,7 @@
           "unitId": "iterate",
           "pinId": "init"
         }
-      },
-      "type": "boolean"
+      }
     },
     "toggle": {
       "plug": {
@@ -79,8 +77,7 @@
           "unitId": "wait",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -90,11 +87,9 @@
           "unitId": "iterate",
           "pinId": "current"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "id": "58c50bb2-569f-4b7a-aba3-176d9ac91d5c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

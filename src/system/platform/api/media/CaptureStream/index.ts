@@ -1,9 +1,8 @@
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { Source } from '../../../../../Source'
 import { System } from '../../../../../system'
 import { Callback } from '../../../../../types/Callback'
-import { CSOpt } from '../../../../../types/interface/async/$CS'
 import { CS } from '../../../../../types/interface/CS'
 import { MS } from '../../../../../types/interface/MS'
 import { Unlisten } from '../../../../../types/Unlisten'
@@ -12,7 +11,7 @@ import { ID_CAPTURE_STREAM } from '../../../../_ids'
 
 export interface I {
   source: CS
-  opt: CSOpt
+  opt: { frameRate: number }
   stop: any
 }
 
@@ -20,7 +19,7 @@ export interface O {
   stream: MS
 }
 
-export default class CaptureStream extends Semifunctional<I, O> {
+export default class CaptureStream extends Holder<I, O> {
   __ = ['U']
 
   private _stream: Source<MediaStream> = new Source()
@@ -30,7 +29,7 @@ export default class CaptureStream extends Semifunctional<I, O> {
       {
         fi: ['source', 'opt'],
         fo: ['stream'],
-        i: ['stop'],
+        i: [],
         o: [],
       },
       {
@@ -46,7 +45,8 @@ export default class CaptureStream extends Semifunctional<I, O> {
         },
       },
       system,
-      ID_CAPTURE_STREAM
+      ID_CAPTURE_STREAM,
+      'stop'
     )
   }
 
@@ -66,14 +66,8 @@ export default class CaptureStream extends Semifunctional<I, O> {
     done({ stream })
   }
 
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'stop') {
+  d() {
     this._stream.set(null)
-
-    this._done()
-
-    this._input.stop.pull()
-    // }
   }
 
   mediaStream(callback: Callback<MediaStream>): Unlisten {

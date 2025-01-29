@@ -4,7 +4,7 @@ Currently, these are the most taped development frontlines:
 
 ## Language
 
-The internal functioning of Unit is rulled by a collection of lower level classes that define reusable naturally occuring multi-input-multi-output state machines, which are the basis of the Unit system, such as [Unit](../../Class/Unit/index.ts), [Primitive](../../Class/Primitive/index.ts), [Functional](../../Class/Functional/index.ts) and [Graph](../../Class/Graph/index.ts). Every object in Unit extends [\$](../../Class/$/index.ts) base class.
+The internal functioning of Unit is ruled by a collection of lower level classes that define reusable naturally occurring multi-input-multi-output state machines, which are the basis of the Unit system, such as [Unit](../../Class/Unit/index.ts), [Primitive](../../Class/Primitive/index.ts), [Functional](../../Class/Functional/index.ts) and [Graph](../../Class/Graph/index.ts). Every object in Unit extends [\$](../../$/index.ts) base class.
 
 ## Primitives
 
@@ -12,19 +12,19 @@ Unit's primitives mostly grow in a few directions:
 
 - Control (common, globally useful, flow control programming patterns)
 - Web (new Web APIs and components)
-- Node.js (lower level APIs unnavailable on the Web)
+- Node.js (lower level APIs unavailable on the Web)
 - System (allow the user to create and control sandboxed sub-systems)
 - Extension (complementary APIs only available to Web extensions)
 
 Each new API is to be wrapped into a carefully designed and well documented primitive state machine.
 
-All currently available primitives live in the [system](/src/system) folder.
+All primitives live in the [system](/src/system) folder.
 
-These are examples of primitive classes: [`add`](/src/system/f/arithmetic/Add/index.ts) (`+` operation), [`oscilator node`](/src/system/platform/api/media/audio/OscillatorNode/index.ts) (Web Audio API), and `peer transmitter` (simplified Web RTC).
+These are some examples of primitive classes: [`add`](/src/system/f/arithmetic/Add/index.ts) (`+` operation), [`oscillator node`](/src/system/platform/api/media/audio/OscillatorNode/index.ts) (Web Audio API), and `peer transmitter` (simplified Web RTC).
 
 ## Editor
 
-The Unit [Editor](../../system/platform/component/app/Editor/Component.ts) is where most of the live programming interactivity is implemented right now. It is the main place to improve the graph editing experience.
+The Unit [Editor](../../system/platform/component/app/Editor/Component.ts) is where most of the live programming interactivity is implemented. It is the main place to improve the graph editing experience.
 
 These are some common areas the editor can continuously improve:
 
@@ -58,7 +58,7 @@ Right now the collection is composed of mostly lower level functional units that
 
 ## Decomposition
 
-Some components, such as the editor itself, have been written in TypeScript during the process of boostraping Unit.
+Some components, such as the editor itself, have been written in TypeScript during the process of bootstrapping Unit.
 
 Continuously abstracting away functionality from textually defined components in the form of units has many advantages:
 

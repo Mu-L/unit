@@ -8,7 +8,6 @@
           "pinId": "emitter"
         }
       },
-      "type": "`EE`",
       "ref": true
     }
   },
@@ -19,8 +18,7 @@
           "unitId": "listen",
           "pinId": "data"
         }
-      },
-      "type": "{clientX:number,clientY:number,offsetX:number,offsetY:number,pointerId:number,pointerType:string}"
+      }
     }
   },
   "units": {
@@ -77,10 +75,8 @@
   "metadata": {
     "icon": "square",
     "description": "listen to `element` 'mount' event",
-    "complexity": 5,
     "tags": ["platform", "core", "api", "event"]
   },
   "id": "6ecc9c94-98bd-11eb-845c-dfd895d4184c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

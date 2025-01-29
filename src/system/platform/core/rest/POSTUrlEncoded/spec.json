@@ -8,7 +8,6 @@
           "pinId": "url"
         }
       },
-      "type": "string",
       "metadata": {
         "position": {
           "0": {
@@ -25,7 +24,6 @@
           "pinId": "obj"
         }
       },
-      "type": "any",
       "metadata": {
         "position": {
           "0": {
@@ -42,7 +40,6 @@
           "pinId": "b"
         }
       },
-      "type": "object",
       "metadata": {
         "position": {
           "0": {
@@ -61,7 +58,6 @@
           "pinId": "response"
         }
       },
-      "type": "{status:number,body:string}",
       "metadata": {
         "position": {
           "0": {
@@ -227,7 +223,6 @@
   "metadata": {
     "icon": "send",
     "description": "POST url-encoded body",
-    "complexity": 14,
     "tags": ["platform", "core", "rest"],
     "position": {
       "merge": {
@@ -247,6 +242,5 @@
     }
   },
   "id": "b9a7ef07-db1c-4a4a-814d-4e4113bbbbf7",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

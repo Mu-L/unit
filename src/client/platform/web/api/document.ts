@@ -43,9 +43,18 @@ export function webDocument(
     elementsFromPoint(x: number, y: number): Element[] {
       return root.shadowRoot.elementsFromPoint(x, y)
     },
+    canSelectShadowDom: function (): boolean {
+      // @ts-ignore
+      return !!root.shadowRoot.getSelection
+    },
     getSelection(): Selection {
       // @ts-ignore
-      return root.shadowRoot?.getSelection?.() || document.getSelection()
+      if (root.shadowRoot.getSelection) {
+        // @ts-ignore
+        return root.shadowRoot.getSelection()
+      }
+
+      return document.getSelection()
     },
     createRange(): Range {
       return document.createRange()
@@ -57,6 +66,7 @@ export function webDocument(
     ResizeObserver: ResizeObserver,
     PositionObserver: PositionObserver_,
     IntersectionObserver: IntersectionObserver,
+    pictureInPictureElement: document.pictureInPictureElement,
   }
 
   return _document
