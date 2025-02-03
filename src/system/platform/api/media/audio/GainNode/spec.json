@@ -15,18 +15,17 @@
   "outputs": {
     "node": {
       "type": "`ON`&`AN`",
-      "ref": true
+      "ref": true,
+      "icon": "audio-waveform"
     }
   },
   "metadata": {
     "icon": "activity",
-    "description": "periodic waveform, such as a sine wave",
-    "complexity": 12,
+    "description": "apply gain to audio signal",
     "tags": ["platform", "api", "media", "audio"],
     "globals": ["AudioContext"]
   },
   "id": "a8d7c089-0385-4922-bb3a-6c550a8a1b3b",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

@@ -1,54 +1,79 @@
-import { API } from '../../../../API'
+import {
+  API,
+  Server,
+  ServerHandler,
+  ServerOpt,
+  ServerRequest,
+  ServerResponse,
+  ServerSocket,
+} from '../../../../API'
 import { NOOP } from '../../../../NOOP'
 import { BootOpt } from '../../../../system'
-import { Unlisten } from '../../../../types/Unlisten'
+import { WebSocketShape } from '../../../../system/platform/api/network/WebSocket'
+import { Dict } from '../../../../types/Dict'
+import { uuidNotIn } from '../../../../util/id'
+import { Waiter } from '../../../../Waiter'
+import { __intercept__fetch } from './intercept'
+
+export const CUSTOM_HEADER_X_WEBSOCKET_ID = 'X-WebSocket-Id'
 
 export function webHTTP(window: Window, opt: BootOpt): API['http'] {
   const { fetch } = window
 
-  const serverMap = {}
+  const http: API['http'] = {
+    fetch: __intercept__fetch(fetch),
+    createServer: (
+      opt: ServerOpt,
+      servers?: Dict<{ opt: ServerOpt; handler: ServerHandler }>
+    ): Server => {
+      return {
+        listen: (port, handler) => {
+          if (servers[port]) {
+            throw new Error(`port ${port} is already in use`)
+          }
 
-  const http = {
-    fetch: async (input: string, init?: RequestInit) => {
-      if (input.startsWith('unit://')) {
-        let _input = input.replace('unit://', 'http://')
+          servers[port] = { opt, handler }
 
-        const url = new URL(_input)
-
-        const { port, search } = url
-
-        const handler = serverMap[port || 8080]
-
-        const req = {
-          headers: init.headers ?? {},
-          search: search ?? '',
-          query: Object.fromEntries(new URLSearchParams(search)),
-          method: init.method ?? 'GET',
-          path: url.pathname ?? '/',
-          body: init.body ?? '',
-        }
-
-        const res = await handler(req)
-
-        return new Response(res.body, {
-          status: res.status,
-          headers: res.headers,
-        })
+          return () => {
+            delete servers[port]
+          }
+        },
       }
-
-      return fetch(input, init)
-    },
-    listen: (port: number, handler: (req) => Promise<any>): Unlisten => {
-      if (serverMap[port]) {
-        throw new Error(`Port ${port} is already in use`)
-      }
-
-      serverMap[port] = handler
-
-      return NOOP
     },
     // @ts-ignore
     EventSource: window.EventSource,
+    handleUpgrade: async function (
+      request: ServerRequest,
+      response: Waiter<ServerResponse>,
+      ws: Dict<WebSocketShape>,
+      wss: Dict<ServerSocket>
+    ): Promise<ServerSocket> {
+      const socket: ServerSocket = {
+        send: function (data: any): void {
+          const client = ws[id]
+
+          client.onmessage(new MessageEvent('message', { data }))
+        },
+        onmessage: NOOP,
+      }
+
+      const id = uuidNotIn(wss)
+
+      response.set({
+        status: 200, // 101
+        headers: {
+          Connection: 'Upgrade',
+          Upgrade: 'websocket',
+          'Sec-WebSocket-Accept': '',
+          [CUSTOM_HEADER_X_WEBSOCKET_ID]: id,
+        },
+        body: '',
+      })
+
+      wss[id] = socket
+
+      return socket
+    },
   }
 
   return http

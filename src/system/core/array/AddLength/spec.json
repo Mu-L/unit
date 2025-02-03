@@ -44,8 +44,7 @@
           "unitId": "length0",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "b": {
       "plug": {
@@ -53,8 +52,7 @@
           "unitId": "length1",
           "pinId": "a"
         }
-      },
-      "type": "<B>[]"
+      }
     }
   },
   "outputs": {
@@ -64,17 +62,14 @@
           "unitId": "add",
           "pinId": "a + b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "ruler",
     "description": "add arrays `a` and `b` lengths",
-    "complexity": 9,
     "tags": ["core", "array"]
   },
   "id": "4d0fd348-9049-4733-95fd-b0d5fb166a4a",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

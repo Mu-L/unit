@@ -3,9 +3,11 @@ import {
   GraphAddPinToMergeData,
   GraphAddUnitData,
   GraphBulkEditData,
+  GraphCloneUnitData,
   GraphCoverPinData,
   GraphCoverPinSetData,
   GraphCoverUnitPinSetData,
+  GraphExposePinData,
   GraphExposePinSetData,
   GraphExposeUnitPinSetData,
   GraphMoveSubGraphIntoData,
@@ -21,27 +23,27 @@ import {
   GraphSetUnitMetadataData,
   GraphSetUnitPinDataData,
   GraphSetUnitSizeData,
+  GraphTakeUnitErrData,
   GraphUnplugPinData,
 } from '../../Class/Graph/interface'
 import { Position } from '../../client/util/geometry/types'
-import { keys } from '../../system/f/object/Keys/f'
-import { GraphPinSpec, GraphSubPinSpec } from '../../types'
+import { GraphSubPinSpec } from '../../types'
 import { Action } from '../../types/Action'
 import { AllKeys } from '../../types/AllKeys'
-import { BundleSpec } from '../../types/BundleSpec'
 import { Dict } from '../../types/Dict'
 import { GraphMergeSpec } from '../../types/GraphMergeSpec'
 import { GraphMergesSpec } from '../../types/GraphMergesSpec'
+import { GraphPinSpec } from '../../types/GraphPinSpec'
+import { GraphSpec } from '../../types/GraphSpec'
 import { GraphUnitMerges } from '../../types/GraphUnitMerges'
 import { GraphUnitPlugs } from '../../types/GraphUnitPlugs'
-import { GraphUnitsSpec } from '../../types/GraphUnitsSpec'
 import { IO } from '../../types/IO'
 import { IOOf } from '../../types/IOOf'
 import { UnitBundleSpec } from '../../types/UnitBundleSpec'
 import { G } from '../../types/interface/G'
 import { U } from '../../types/interface/U'
 import { deepSet, mapObjKeyKV, mapObjVK, revertObj } from '../../util/object'
-import { forEachPinOnMerges } from '../util/spec'
+import { forEachPinOnMerges, opposite } from '../util/spec'
 import {
   MOVE_SUB_COMPONENT_ROOT,
   REORDER_SUB_COMPONENT,
@@ -50,19 +52,21 @@ import {
 } from './C'
 import {
   ADD_DATUM,
+  ADD_DATUM_LINK,
   REMOVE_DATUM,
+  REMOVE_DATUM_LINK,
   SET_DATUM,
   makeAddDatumAction,
+  makeAddDatumLinkAction,
   makeRemoveDatumAction,
+  makeRemoveDatumLinkAction,
   makeSetDatumAction,
 } from './D'
 
 export const ADD_UNIT = 'addUnitSpec'
-export const ADD_UNITS = 'addUnits'
 export const REMOVE_UNIT = 'removeUnit'
-export const REMOVE_UNITS = 'removeUnits'
+export const TAKE_UNIT_ERR = 'takeUnitErr'
 export const ADD_MERGE = 'addMerge'
-export const ADD_MERGES = 'addMerges'
 export const ADD_PIN_TO_MERGE = 'addPinToMerge'
 export const REMOVE_PIN_FROM_MERGE = 'removePinFromMerge'
 export const REMOVE_MERGE = 'removeMerge'
@@ -87,7 +91,6 @@ export const SET_PIN_SET_REF = 'setPinSetRef'
 export const SET_METADATA = 'setMetadata'
 export const SET_UNIT_METADATA = 'setUnitMetadata'
 export const BULK_EDIT = 'bulkEdit'
-export const REMOVE_UNIT_MERGES = 'removeUnitMerges'
 export const EXPAND_UNIT = 'expandUnit'
 export const COLLAPSE_UNITS = 'collapseUnits'
 export const MOVE_SUBGRAPH_INTO = 'moveSubgraphInto'
@@ -95,6 +98,7 @@ export const MOVE_SUBGRAPH_OUT_OF = 'moveSubgraphOutOf'
 export const SET_UNIT_SIZE = 'setUnitSize'
 export const SET_COMPONENT_SIZE = 'setComponentSize'
 export const SET_SUB_COMPONENT_SIZE = 'setSubComponentSize'
+export const CLONE_UNIT = 'cloneUnit'
 
 export const wrapAddUnitAction = (data: GraphAddUnitData) => {
   return {
@@ -103,23 +107,43 @@ export const wrapAddUnitAction = (data: GraphAddUnitData) => {
   }
 }
 
+export const wrapCloneUnitAction = (data: GraphCloneUnitData) => {
+  return {
+    type: CLONE_UNIT,
+    data,
+  }
+}
+
+export const makeCloneUnitAction = (unitId: string, newUnitId: string) => {
+  return wrapCloneUnitAction({
+    unitId,
+    newUnitId,
+  })
+}
+
 export const makeAddUnitAction = (
   unitId: string,
   bundle: UnitBundleSpec,
-  position?: Position | undefined,
-  pinPosition?: IOOf<Dict<Position>> | undefined,
-  layoutPositon?: Position | undefined,
-  parentId?: string | null | undefined,
-  merges?: GraphUnitMerges | undefined,
-  plugs?: GraphUnitPlugs | undefined
+  merges: GraphUnitMerges | null,
+  plugs: GraphUnitPlugs | null,
+  parentId: string | null | null,
+  parentIndex: number | null,
+  children: string[] | null,
+  childrenSlot: Dict<string> | null,
+  position: Position | null,
+  pinPosition: IOOf<Dict<Position>> | null,
+  layoutPosition: Position | null
 ) => {
   return wrapAddUnitAction({
     unitId,
     bundle,
     position,
     pinPosition,
-    layoutPositon,
+    layoutPosition,
     parentId,
+    parentIndex,
+    children,
+    childrenSlot,
     merges,
     plugs,
   })
@@ -141,7 +165,8 @@ export const wrapMoveSubgraphOutOfData = (data: GraphMoveSubGraphOutOfData) => {
 
 export const makeMoveSubgraphIntoAction = (
   graphId: string,
-  graphBundle: BundleSpec,
+  graphBundle: UnitBundleSpec,
+  graphSpec: GraphSpec,
   nextSpecId: string,
   nodeIds: GraphMoveSubGraphIntoData['nodeIds'],
   nextIdMap: GraphMoveSubGraphIntoData['nextIdMap'],
@@ -151,11 +176,14 @@ export const makeMoveSubgraphIntoAction = (
   nextPlugSpec: GraphMoveSubGraphIntoData['nextPlugSpec'],
   nextSubComponentParentMap: GraphMoveSubGraphIntoData['nextSubComponentParentMap'],
   nextSubComponentChildrenMap: GraphMoveSubGraphIntoData['nextSubComponentChildrenMap'],
-  nextSubComponentIndexMap: GraphMoveSubGraphIntoData['nextSubComponentIndexMap']
+  nextSubComponentIndexMap: GraphMoveSubGraphIntoData['nextSubComponentIndexMap'],
+  nextSubComponentSlot: GraphMoveSubGraphIntoData['nextSubComponentSlot'],
+  nextSubComponentParentSlot: GraphMoveSubGraphIntoData['nextSubComponentParentSlot']
 ) => {
   return wrapMoveSubgraphIntoData({
     graphId,
     graphBundle,
+    graphSpec,
     nextSpecId,
     nodeIds,
     nextIdMap,
@@ -166,73 +194,32 @@ export const makeMoveSubgraphIntoAction = (
     nextSubComponentParentMap,
     nextSubComponentChildrenMap,
     nextSubComponentIndexMap,
+    nextSubComponentSlot,
+    nextSubComponentParentSlot,
   })
 }
 
 export const makeMoveSubgraphOutOfAction = (
   graphId: string,
-  graphBundle: BundleSpec,
+  graphBundle: UnitBundleSpec,
+  graphSpec: GraphSpec,
   nextSpecId: string,
-  nodeIds: {
-    merge: string[]
-    link: {
-      unitId: string
-      type: IO
-      pinId: string
-    }[]
-    unit: string[]
-    plug: {
-      type: IO
-      pinId: string
-      subPinId: string
-    }[]
-  },
-  nextIdMap: {
-    merge: Dict<string>
-    link: Dict<IOOf<Dict<{ mergeId: string; oppositePinId: string }>>>
-    plug: IOOf<Dict<Dict<{ mergeId: string; type: IO; subPinId: string }>>>
-    unit: Dict<string>
-  },
-  nextUnitPinMergeMap: Dict<IOOf<Dict<string>>>,
-  nextPinIdMap: Dict<{
-    input: Dict<{
-      pinId: string
-      subPinId: string
-      ref?: boolean
-      defaultIgnored?: boolean
-    }>
-    output: Dict<{
-      pinId: string
-      subPinId: string
-      ref?: boolean
-      defaultIgnored?: boolean
-    }>
-  }>,
-  nextMergePinId: Dict<{
-    input: {
-      mergeId: string
-      pinId: string
-      subPinSpec: GraphSubPinSpec
-      ref?: boolean
-    }
-    output: {
-      mergeId: string
-      pinId: string
-      subPinSpec: GraphSubPinSpec
-      ref?: boolean
-    }
-  }>,
-  nextPlugSpec: {
-    input: Dict<Dict<GraphSubPinSpec>>
-    output: Dict<Dict<GraphSubPinSpec>>
-  },
-  nextSubComponentParentMap: Dict<string | null>,
-  nextSubComponentChildrenMap: Dict<string[]>,
-  nextSubComponentIndexMap: Dict<number>
+  nodeIds: GraphMoveSubGraphOutOfData['nodeIds'],
+  nextIdMap: GraphMoveSubGraphOutOfData['nextIdMap'],
+  nextUnitPinMergeMap: GraphMoveSubGraphOutOfData['nextUnitPinMergeMap'],
+  nextPinIdMap: GraphMoveSubGraphOutOfData['nextPinIdMap'],
+  nextMergePinId: GraphMoveSubGraphOutOfData['nextMergePinId'],
+  nextPlugSpec: GraphMoveSubGraphOutOfData['nextPlugSpec'],
+  nextSubComponentParentMap: GraphMoveSubGraphOutOfData['nextSubComponentParentMap'],
+  nextSubComponentChildrenMap: GraphMoveSubGraphOutOfData['nextSubComponentChildrenMap'],
+  nextSubComponentIndexMap: GraphMoveSubGraphOutOfData['nextSubComponentIndexMap'],
+  nextSubComponentSlot: GraphMoveSubGraphOutOfData['nextSubComponentSlot'],
+  nextSubComponentParentSlot: GraphMoveSubGraphOutOfData['nextSubComponentParentSlot']
 ) => {
   return wrapMoveSubgraphOutOfData({
     graphId,
     graphBundle,
+    graphSpec,
     nextSpecId,
     nodeIds,
     nextIdMap,
@@ -243,16 +230,9 @@ export const makeMoveSubgraphOutOfAction = (
     nextSubComponentChildrenMap,
     nextSubComponentIndexMap,
     nextUnitPinMergeMap,
+    nextSubComponentParentSlot,
+    nextSubComponentSlot,
   })
-}
-
-export const makeAddUnitsAction = (units: GraphUnitsSpec) => {
-  return {
-    type: ADD_UNITS,
-    data: {
-      units,
-    },
-  }
 }
 
 export const wrapMakeRemoveUnitAction = (data: GraphRemoveUnitData) => {
@@ -262,48 +242,64 @@ export const wrapMakeRemoveUnitAction = (data: GraphRemoveUnitData) => {
   }
 }
 
+export const wrapMakeTakeUnitErrAction = (data: GraphTakeUnitErrData) => {
+  return {
+    type: TAKE_UNIT_ERR,
+    data,
+  }
+}
+
 export const makeRemoveUnitAction = (
   unitId: string,
   bundle: UnitBundleSpec,
+  merges?: GraphMergesSpec,
+  plugs?: GraphUnitPlugs,
+  parentId?: string | null,
+  parentIndex?: number,
+  children?: string[],
+  childrenSlot?: Dict<string>,
   position?: Position,
   pinPosition?: IOOf<Dict<Position>>,
-  layoutPositon?: Position,
-  parentId?: string | null,
-  merges?: GraphMergesSpec,
-  plugs?: GraphUnitPlugs
+  layoutPosition?: Position
 ) => {
   return wrapMakeRemoveUnitAction({
     unitId,
     bundle,
     position,
     pinPosition,
-    layoutPositon,
+    layoutPosition,
     parentId,
+    parentIndex,
+    children,
+    childrenSlot,
     merges,
     plugs,
   })
 }
 
-export const makeRemoveUnitsAction = (ids: string[]) => {
-  return {
-    type: REMOVE_UNITS,
-    data: { ids },
-  }
+export const makeTakeUnitErrAction = (unitId: string) => {
+  return wrapMakeTakeUnitErrAction({
+    unitId,
+  })
 }
 
-export const exposePinAction = (
-  type: IO,
-  id: string,
-  subPinId: string,
-  subPin: GraphSubPinSpec
-) => {
+export const wrapExposePinAction = (data: GraphExposePinData) => {
   return {
     type: EXPOSE_PIN,
-    data: { type, id, subPinId, subPin },
+    data,
   }
 }
 
-export const setPinSetNameAction = (
+export const makeExposePinAction = (
+  type: IO,
+  pinId: string,
+  subPinId: string,
+  subPinSpec: GraphSubPinSpec
+) => {
+  return wrapExposePinAction({ type, pinId, subPinId, subPinSpec })
+}
+
+export const makeSetPinSetNameAction = (
   type: IO,
   id: string,
   functional: boolean
@@ -314,7 +310,7 @@ export const setPinSetNameAction = (
   }
 }
 
-export const setPinSetFunctionalAction = (
+export const makeSetPinSetFunctionalAction = (
   type: IO,
   id: string,
   functional: boolean
@@ -417,9 +413,10 @@ export const makeUnplugPinAction = (
   type: IO,
   pinId: string,
   subPinId: string,
-  subPinSpec: GraphPinSpec
+  subPinSpec: GraphPinSpec,
+  take?: boolean
 ) => {
-  return wrapUnplugPinAction({ type, pinId, subPinId, subPinSpec })
+  return wrapUnplugPinAction({ type, pinId, subPinId, subPinSpec, take })
 }
 
 export const wrapCoverPinAction = (data: GraphCoverPinData) => {
@@ -456,7 +453,6 @@ export const makeSetUnitPinDataAction = (
     type,
     pinId,
     data,
-    lastData: undefined,
   })
 }
 
@@ -506,12 +502,14 @@ export const wrapRemoveUnitPinDataAction = (
 export const makeRemoveUnitPinDataAction = (
   unitId: string,
   type: IO,
-  pinId: string
+  pinId: string,
+  data: string
 ) => {
   return wrapRemoveUnitPinDataAction({
     unitId,
     type,
     pinId,
+    data,
   })
 }
 
@@ -564,7 +562,7 @@ export const makeSetSubComponentSizeAction = (
   prevWidth: number,
   prevHeight: number
 ) => {
-  return wrapSetUnitSizeAction({
+  return wrapSetSubComponentSizeAction({
     unitId,
     width,
     height,
@@ -658,15 +656,6 @@ export const wrapRemoveMergeDataAction = (data: GraphRemoveMergeDataData) => {
   }
 }
 
-export const makeAddMergesAction = (merges: GraphMergesSpec): Action => {
-  return {
-    type: ADD_MERGES,
-    data: {
-      merges,
-    },
-  }
-}
-
 export const makeRemoveMergesAction = (ids: string[]): Action => {
   return {
     type: REMOVE_MERGES,
@@ -720,15 +709,6 @@ export const makeRemovePinFromMergeAction = (
   })
 }
 
-export const makeRemoveUnitMergesAction = (id: string): Action => {
-  return {
-    type: REMOVE_UNIT_MERGES,
-    data: {
-      id,
-    },
-  }
-}
-
 export const wrapBulkEditData = (data: GraphBulkEditData) => {
   return {
     type: BULK_EDIT,
@@ -748,39 +728,32 @@ export const reverseAction = ({ type, data }: Action): Action => {
       return makeRemoveUnitAction(
         data.unitId,
         data.bundle,
+        data.merges,
+        data.plugs,
+        data.parentId,
+        data.parentIndex,
+        data.children,
+        data.childrenSlot,
         data.position,
         data.pinPosition,
-        data.layoutPosition,
-        data.parentId,
-        data.merges,
-        data.plugs
+        data.layoutPosition
       )
-    case ADD_UNITS:
-      return makeRemoveUnitsAction(keys(data.units))
     case REMOVE_UNIT:
       return makeAddUnitAction(
         data.unitId,
         data.bundle,
+        data.merges,
+        data.plugs,
+        data.parentId,
+        data.parentIndex,
+        data.children,
+        data.childrenSlot,
         data.position,
         data.pinPosition,
-        data.layoutPosition,
-        data.parentId,
-        data.merges,
-        data.plugs
+        data.layoutPosition
       )
-    case REMOVE_UNITS:
-      return makeAddUnitsAction(
-        data.ids.reduce((acc, id) => {
-          acc[id] = data.units[id]
-          return acc
-        }, {})
-      )
-    case REMOVE_UNIT_MERGES:
-      return makeAddMergesAction(data.merges)
     case ADD_MERGE:
       return makeRemoveMergeAction(data.mergeId, data.mergeSpec, data.position)
-    case ADD_MERGES:
-      return makeRemoveMergesAction(keys(data.merges))
     case ADD_PIN_TO_MERGE:
       return makeRemovePinFromMergeAction(
         data.mergeId,
@@ -798,9 +771,21 @@ export const reverseAction = ({ type, data }: Action): Action => {
         data.pinId
       )
     case EXPOSE_PIN_SET:
-      return makeCoverPinSetAction(data.type, data.pinId, data.pin)
+      return makeCoverPinSetAction(data.type, data.pinId, data.pinSpec)
     case COVER_PIN_SET:
-      return makeExposePinSetAction(data.type, data.pinId, data.plug, data.data)
+      return makeExposePinSetAction(
+        data.type,
+        data.pinId,
+        data.pinSpec,
+        data.data
+      )
+    case COVER_PIN:
+      return makeExposePinAction(
+        data.type,
+        data.pinId,
+        data.subPinId,
+        data.subPinSpec
+      )
     case PLUG_PIN:
       return makeUnplugPinAction(
         data.type,
@@ -829,6 +814,13 @@ export const reverseAction = ({ type, data }: Action): Action => {
         data.pinId,
         undefined
       )
+    case REMOVE_UNIT_PIN_DATA:
+      return makeSetUnitPinDataAction(
+        data.unitId,
+        data.type,
+        data.pinId,
+        data.data
+      )
     case SET_UNIT_PIN_IGNORED:
       return makeSetUnitPinIgnoredAction(
         data.unitId,
@@ -855,6 +847,7 @@ export const reverseAction = ({ type, data }: Action): Action => {
         data.nextParentId,
         data.parentId,
         data.children,
+        data.index,
         data.nextSlotMap,
         data.slotMap
       )
@@ -869,38 +862,66 @@ export const reverseAction = ({ type, data }: Action): Action => {
       const data_ = data as GraphMoveSubGraphIntoData
 
       const nextNodeIds_ = {
-        ...data.nodeIds,
-        unit: data.nodeIds.unit.map(
-          (unitId: string) => data.nextIdMap.unit[unitId] ?? unitId
+        ...data_.nodeIds,
+        unit: data_.nodeIds.unit.map(
+          (unitId: string) => data_.nextIdMap.unit[unitId] ?? unitId
         ),
-        link: data.nodeIds.link.filter(({ unitId, type, pinId }) => {
-          if (!data.nodeIds.unit.includes(unitId)) {
+        link: data_.nodeIds.link.filter(({ unitId, type, pinId }) => {
+          if (!data_.nodeIds.unit.includes(unitId)) {
             return false
           }
 
           return true
         }),
-        plug: data.nodeIds.plug.concat(
-          data.nodeIds.link
-            .filter(({ unitId, type, pinId }) => {
-              if (!data.nodeIds.unit.includes(unitId)) {
-                return true
+        plug: data_.nodeIds.plug
+          .concat(
+            data_.nodeIds.link
+              .filter(({ unitId, type, pinId }) => {
+                if (!data_.nodeIds.unit.includes(unitId)) {
+                  return true
+                }
+
+                return false
+              })
+              .map(({ unitId, type, pinId }) => {
+                return {
+                  type: unitId === data_.graphId ? type : opposite(type),
+                  pinId,
+                  subPinId: '0',
+                }
+              })
+          )
+          .concat(
+            (() => {
+              const mergePlugsOut = []
+
+              for (const mergeId of data_.nodeIds.merge) {
+                const nextMergePinSpec = data_.nextMergePinId[mergeId]
+
+                if (nextMergePinSpec.input && nextMergePinSpec.input.pinId) {
+                  mergePlugsOut.push({
+                    type: 'input',
+                    pinId: nextMergePinSpec.input.pinId,
+                    subPinId: '0',
+                  })
+                }
+
+                if (nextMergePinSpec.output && nextMergePinSpec.output.pinId) {
+                  mergePlugsOut.push({
+                    type: 'output',
+                    pinId: nextMergePinSpec.output.pinId,
+                    subPinId: '0',
+                  })
+                }
               }
 
-              return false
-            })
-            .map(({ unitId, type, pinId }) => {
-              return {
-                type,
-                pinId,
-                subPinId: '0',
-              }
-            })
-        ),
+              return mergePlugsOut
+            })()
+          ),
       }
 
       const nextIdMap_ = {
-        ...data.nextIdMap,
+        ...data_.nextIdMap,
         unit: revertObj(data.nextIdMap.unit ?? {}),
         merge: revertObj(data.nextIdMap.merge ?? {}),
       }
@@ -908,6 +929,7 @@ export const reverseAction = ({ type, data }: Action): Action => {
       return makeMoveSubgraphOutOfAction(
         data.graphId,
         data.graphBundle,
+        data.graphSpec,
         data.nextSpecId,
         nextNodeIds_,
         nextIdMap_,
@@ -917,7 +939,9 @@ export const reverseAction = ({ type, data }: Action): Action => {
         data.nextPlugSpec,
         data.nextSubComponentParentMap,
         data.nextSubComponentChildrenMap,
-        data.nextSubComponentIndexMap
+        data.nextSubComponentIndexMap,
+        {},
+        {}
       )
     }
 
@@ -943,10 +967,8 @@ export const reverseAction = ({ type, data }: Action): Action => {
       const nextUnitPinMergeMap_ = {}
 
       forEachPinOnMerges(
-        data_.graphBundle.spec.merges ?? {},
+        data_.graphSpec.merges ?? {},
         (mergeId, unitId, type, pinId) => {
-          const nextUnitId = nextIdMap_.unit[unitId] ?? unitId
-
           deepSet(nextUnitPinMergeMap_, [unitId, type, pinId], mergeId)
         }
       )
@@ -977,9 +999,9 @@ export const reverseAction = ({ type, data }: Action): Action => {
         }
       )
 
-      const nextPlugSpec_ = {
-        input: mapObjVK<any, any>(data_.nextPlugSpec.input, (pinSpec) => {
-          return mapObjVK<any, any>(pinSpec, (subPinSpec) => {
+      const nextPlugSpec_: IOOf<Dict<Dict<GraphSubPinSpec>>> = {
+        input: mapObjVK(data_.nextPlugSpec.input, (pinSpec) => {
+          return mapObjVK(pinSpec, (subPinSpec) => {
             const { mergeId, unitId } = subPinSpec
 
             if (mergeId) {
@@ -995,10 +1017,10 @@ export const reverseAction = ({ type, data }: Action): Action => {
             }
 
             return subPinSpec
-          })
+          }) as Dict<GraphSubPinSpec>
         }),
-        output: mapObjVK<any, any>(data_.nextPlugSpec.output, (nextPlug) => {
-          return mapObjVK<any, any>(nextPlug, (subPinSpec) => {
+        output: mapObjVK(data_.nextPlugSpec.output, (nextPlug) => {
+          return mapObjVK(nextPlug, (subPinSpec) => {
             const { mergeId, unitId } = subPinSpec
 
             if (mergeId) {
@@ -1014,13 +1036,14 @@ export const reverseAction = ({ type, data }: Action): Action => {
             }
 
             return subPinSpec
-          })
+          }) as Dict<GraphSubPinSpec>
         }),
       }
 
       return makeMoveSubgraphIntoAction(
         data_.graphId,
         data_.graphBundle,
+        data_.graphSpec,
         data_.nextSpecId,
         nextNodeIds_,
         nextIdMap_,
@@ -1030,7 +1053,9 @@ export const reverseAction = ({ type, data }: Action): Action => {
         nextPlugSpec_,
         data_.nextSubComponentParentMap,
         data_.nextSubComponentChildrenMap,
-        data_.nextSubComponentIndexMap
+        data_.nextSubComponentIndexMap,
+        {},
+        {}
       )
     }
 
@@ -1065,6 +1090,10 @@ export const reverseAction = ({ type, data }: Action): Action => {
       return makeSetDatumAction(data.id, data.value, data.prevValue)
     case REMOVE_DATUM:
       return makeAddDatumAction(data.id, data.value)
+    case ADD_DATUM_LINK:
+      return makeRemoveDatumLinkAction(data.id, data.value, data.pinSpec)
+    case REMOVE_DATUM_LINK:
+      return makeAddDatumLinkAction(data.id, data.value, data.pinSpec)
     default:
       throw new Error('irreversible')
   }
@@ -1077,7 +1106,7 @@ export const processAction = (
 ): void => {
   const { type, data } = action
 
-  if (!method[type] && fallback) {
+  if (!method[type] && !fallback) {
     throw new Error(`no method for ${type}`)
   }
 

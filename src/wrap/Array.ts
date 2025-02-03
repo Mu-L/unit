@@ -2,33 +2,47 @@ import { $ } from '../Class/$'
 import { SharedRef } from '../SharefRef'
 import { MethodNotImplementedError } from '../exception/MethodNotImplementedError'
 import { System } from '../system'
+import { Callback } from '../types/Callback'
 import { A } from '../types/interface/A'
+import { TA } from '../types/interface/TA'
+import { V } from '../types/interface/V'
 
 export function wrapSharedRefArrayInterface<T extends any[]>(
-  data: SharedRef<T>,
-  _system: System
+  data: SharedRef<T>
 ): A<T> {
-  return {
+  const array: A<T> = {
     append(a: T): Promise<void> {
-      const b: any[] = []
-
       data.current.push(a)
 
       return
     },
     put(i: number, data: any): Promise<void> {
-      throw new MethodNotImplementedError()
+      data.current[i] = data
+
+      return Promise.resolve()
     },
     at(i: number): Promise<any> {
-      throw new MethodNotImplementedError()
+      return Promise.resolve(data.current[i])
     },
     length(): Promise<number> {
-      throw new MethodNotImplementedError()
+      return Promise.resolve(data.current.length)
     },
     indexOf(a: T): Promise<number> {
-      throw new MethodNotImplementedError()
+      return Promise.resolve(data.current.indexOf(a))
+    },
+    pop: function (): Promise<T> {
+      if (!data.current.length) {
+        throw new Error('empty array')
+      }
+
+      return Promise.resolve(data.current.pop())
+    },
+    shift: function (): Promise<T> {
+      return Promise.resolve(data.current.shift())
     },
   }
+
+  return array
 }
 
 export function wrapArray<T>(array: T[], system: System): A<T> & $ {
@@ -51,8 +65,24 @@ export function wrapArray<T>(array: T[], system: System): A<T> & $ {
       return array.length
     }
 
-    indexOf(a: T): Promise<number> {
+    async indexOf(a: T): Promise<number> {
       throw new MethodNotImplementedError()
+    }
+
+    async pop(): Promise<T> {
+      if (!array.length) {
+        throw new Error('empty array')
+      }
+
+      return array.pop()
+    }
+
+    async shift(): Promise<T> {
+      if (!array.length) {
+        throw new Error('empty array')
+      }
+
+      return array.shift()
     }
   })(system)
 
@@ -62,11 +92,28 @@ export function wrapArray<T>(array: T[], system: System): A<T> & $ {
 export function wrapUint8Array(
   array: Uint8Array | Uint8ClampedArray,
   system: System
-): A<number> & $ {
-  const _array = new (class Array extends $ implements A<number> {
+): V<number[]> & A<number> & TA & $ {
+  const _array = new (class Array
+    extends $
+    implements V<number[]>, A<number>, TA
+  {
     __: string[] = ['A']
 
-    append(a: number): Promise<void> {
+    buffer(): ArrayBuffer {
+      return array.buffer
+    }
+
+    read(callback: Callback<number[]>): void {
+      callback([...array])
+    }
+
+    write(data: number[], callback: Callback): void {
+      array.set(data)
+
+      callback()
+    }
+
+    async append(a: number): Promise<void> {
       array[array.length] = a
 
       return
@@ -84,8 +131,36 @@ export function wrapUint8Array(
       return array.length
     }
 
-    indexOf(a: number): Promise<number> {
+    async indexOf(a: number): Promise<number> {
       throw new MethodNotImplementedError()
+    }
+
+    async set(array_: Uint8ClampedArray, offset: number): Promise<void> {
+      array.set(array_, offset)
+    }
+
+    async pop(): Promise<number> {
+      if (array.length === 0) {
+        throw new Error('empty array')
+      }
+
+      const last = array[array.length - 1]
+
+      array = array.subarray(0, array.length - 1)
+
+      return Promise.resolve(last)
+    }
+
+    shift(): Promise<number> {
+      if (array.length === 0) {
+        throw new Error('empty array')
+      }
+
+      const first = array[0]
+
+      array = array.subarray(1, array.length)
+
+      return Promise.resolve(first)
     }
 
     raw() {

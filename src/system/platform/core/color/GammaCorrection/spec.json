@@ -140,7 +140,6 @@
     "icon": "palette",
     "description": "gamma correction algorithm",
     "link": "https://en.wikipedia.org/wiki/Gamma_correction",
-    "complexity": 26,
     "tags": ["platform", "core", "color"]
   },
   "inputs": {
@@ -149,8 +148,7 @@
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -159,11 +157,9 @@
         "0": {
           "mergeId": "6"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "0a2aad57-975f-4806-a8c9-58e42161d8ec",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

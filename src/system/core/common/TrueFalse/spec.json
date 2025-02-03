@@ -7,8 +7,7 @@
           "unitId": "wait",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -18,8 +17,7 @@
           "unitId": "foreach",
           "pinId": "a[i]"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "units": {
@@ -85,9 +83,7 @@
   "metadata": {
     "icon": "map-signs",
     "description": "outputs true and then false",
-    "complexity": 36,
     "tags": ["core", "common"]
   },
-  "id": "e24d1987-e3e7-4f1a-bf4a-191c79b2eae6",
-  "system": true
+  "id": "e24d1987-e3e7-4f1a-bf4a-191c79b2eae6"
 }

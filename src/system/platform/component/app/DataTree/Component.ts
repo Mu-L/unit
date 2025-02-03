@@ -1,15 +1,14 @@
-import classnames from '../../../../../client/classnames'
+import { classnames } from '../../../../../client/classnames'
 import {
   childrenOverflow,
   CONTAINER_COLUMN_LEFT_MARGIN,
   CONTAINER_COLUMN_RIGHT_MARGIN,
   CONTAINER_ROW_LEFT_MARGIN,
   CONTAINER_ROW_RIGHT_MARGIN,
-  getLeafHeight,
 } from '../../../../../client/component/getDatumSize'
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Element } from '../../../../../client/element'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { COLOR_NONE } from '../../../../../client/theme'
 import { idFromUnitValue } from '../../../../../spec/idFromUnitValue'
 import {
@@ -38,17 +37,8 @@ export interface Props {
   invalid?: boolean
 }
 
-const STYLE_SEPARATOR = {
-  display: 'flex',
-  alignItems: 'center',
-  textAlign: 'center',
-  boxSizing: 'border-box',
-}
-
 const STYLE_DELIMITER = {
   display: 'flex',
-  alignItems: 'center',
-  textAlign: 'center',
   boxSizing: 'border-box',
 }
 
@@ -79,18 +69,6 @@ const STYLE_CONTAINER = (overflow: boolean) => {
   }
 }
 
-const STYLE_COMMA = {
-  display: 'flex',
-  textAlign: 'left',
-  boxSizing: 'border-box',
-}
-
-const STYLE_SPACE = {
-  display: 'inline-block',
-  boxSizing: 'border-box',
-  width: '2px',
-}
-
 export const DEFAULT_STYLE = {
   width: 'fit-content',
   height: '100%',
@@ -99,11 +77,11 @@ export const DEFAULT_STYLE = {
 }
 
 export default class DataTree extends Element<HTMLDivElement, Props> {
-  private _data: TreeNode
-  private _root: Div
-  private _child: Dict<DataTree> = {}
-  private _delimiter_list: Div[] = []
-  private _leaf: DataTreeLeaf | null = null
+  public _data: TreeNode
+  public _root: Div
+  public _child: Dict<DataTree> = {}
+  public _delimiter_list: Div[] = []
+  public _leaf: DataTreeLeaf | null = null
 
   constructor($props: Props, $system: System) {
     super($props, $system)
@@ -232,9 +210,15 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
     style: Dict<string>
     children: Element[]
   } => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { appendChildren = [], parent, fontSize } = this.$props
     const empty = data.children.length === 0
-    const overflow = childrenOverflow(data, fontSize)
+    const overflow = childrenOverflow(data, fontSize, measureText)
     const style = STYLE_PARENT(overflow)
     const object_literal_open_delimiter = this._delimiter(
       {
@@ -331,9 +315,15 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
     style: Dict<string>
     children: Element[]
   } => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { appendChildren = [], parent, fontSize } = this.$props
     const empty = data.children.length === 0
-    const overflow = childrenOverflow(data, fontSize)
+    const overflow = childrenOverflow(data, fontSize, measureText)
     const style = STYLE_PARENT(overflow)
     const array_literal_open_delimiter = this._delimiter(
       {
@@ -403,9 +393,15 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
     style: Dict<string>
     children: Element[]
   } => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { path = [], appendChildren = [], fontSize } = this.$props
     const empty = data.children.length === 0
-    const overflow = childrenOverflow(data, fontSize)
+    const overflow = childrenOverflow(data, fontSize, measureText)
     const style = STYLE_PARENT(overflow)
     const expression_open_delimiter = this._delimiter(
       { display: overflow && path[path.length - 1] > 0 ? 'none' : 'block' },
@@ -467,10 +463,16 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
   private _key_value = (
     data: TreeNode
   ): { style: Dict<string>; children: Element[] } => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { appendChildren = [], fontSize } = this.$props
     const value_tree = data.children[1]
     const key_tree = data.children[0]
-    const value_overflow = childrenOverflow(value_tree, fontSize)
+    const value_overflow = childrenOverflow(value_tree, fontSize, measureText)
     const style = {
       display: 'flex',
       flexDirection: value_overflow ? 'column' : 'row',
@@ -695,13 +697,19 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
   private _or = (
     data: TreeNode
   ): { style: Dict<string>; children: Element[] } => {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     const { fontSize } = this.$props
-    const overflow = childrenOverflow(data, fontSize)
+    const overflow = childrenOverflow(data, fontSize, measureText)
     const style = { ...STYLE_PARENT(overflow), alignItems: 'center' }
     const children: Element[] = []
     for (let i = 0; i < data.children.length; i++) {
       const element = data.children[i]
-      const or_delimiter = this._separator({}, '|')
+      const or_delimiter = this._delimiter({}, '|')
       const or_element_tree = this._child_element(
         i,
         element,
@@ -721,7 +729,7 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
     const children: Element[] = []
     for (let i = 0; i < data.children.length; i++) {
       const element = data.children[i]
-      const and_delimiter = this._separator({}, '&')
+      const and_delimiter = this._delimiter({}, '&')
       const and_element_tree = this._child_element(
         i,
         element,
@@ -734,57 +742,19 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
     return { style, children }
   }
 
-  private _space = (): Div => {
-    return new Div(
-      {
-        style: {
-          ...STYLE_SPACE,
-        },
-        innerText: ' ',
-      },
-      this.$system
-    )
+  private _space = (style: Dict<string> = {}): Div => {
+    return this._delimiter(style, ' ')
   }
 
-  private _comma = (): Div => {
-    return new Div(
-      {
-        style: {
-          ...STYLE_COMMA,
-        },
-        innerText: ',',
-      },
-      this.$system
-    )
-  }
-
-  private _separator = (style: Dict<string>, innerText: string): Div => {
-    const { fontSize } = this.$props
-
-    const lineHeight = getLeafHeight('', fontSize)
-
-    const separator = new Div(
-      {
-        className: 'separator',
-        style: {
-          ...STYLE_SEPARATOR,
-          lineHeight: `${lineHeight}px`,
-          ...style,
-        },
-        innerText,
-      },
-      this.$system
-    )
-
-    this._delimiter_list.push(separator)
-
-    return separator
+  private _comma = (style: Dict<string> = {}): Div => {
+    return this._delimiter(style, ',')
   }
 
   private _delimiter = (style: Dict<string>, innerText: string): Div => {
     const { fontSize } = this.$props
 
-    const lineHeight = getLeafHeight('', fontSize)
+    const lineHeight = fontSize
+    const marginTop = (fontSize * 2) / 12
 
     const delimiter = new Div(
       {
@@ -792,6 +762,7 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
         style: {
           ...STYLE_DELIMITER,
           lineHeight: `${lineHeight}px`,
+          marginTop: `${marginTop}px`,
           ...style,
         },
         innerText,
@@ -853,6 +824,12 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
   }
 
   onPropChanged(prop: string, current: any): void {
+    const {
+      api: {
+        text: { measureText },
+      },
+    } = this.$system
+
     if (prop === 'data') {
       this._reset()
     } else if (prop === 'fontSize') {
@@ -862,10 +839,12 @@ export default class DataTree extends Element<HTMLDivElement, Props> {
         child.setProp('fontSize', current)
       })
 
-      const lineHeight = getLeafHeight('', fontSize)
+      const lineHeight = fontSize
+      const marginTop = (fontSize * 2) / 12
 
       forEach(this._delimiter_list, (delimiter) => {
         delimiter.$element.style.lineHeight = `${lineHeight}px`
+        delimiter.$element.style.marginTop = `${marginTop}px`
       })
 
       if (this._leaf) {

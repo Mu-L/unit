@@ -25,7 +25,6 @@
   "metadata": {
     "icon": "form-input",
     "description": "single line text input",
-    "complexity": 43,
     "tags": ["platform", "component", "value"]
   },
   "id": "6309ac3f-4a37-4ab0-86c6-8be70b38e31d",
@@ -35,6 +34,5 @@
     "defaultHeight": 45
   },
   "type": "`U`&`C`&`V`&`J`",
-  "system": true,
   "render": true
 }

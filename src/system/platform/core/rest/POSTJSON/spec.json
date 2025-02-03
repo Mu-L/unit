@@ -7,8 +7,7 @@
           "unitId": "stringify",
           "pinId": "json"
         }
-      },
-      "type": "any"
+      }
     },
     "url": {
       "plug": {
@@ -16,8 +15,7 @@
           "unitId": "fetch",
           "pinId": "url"
         }
-      },
-      "type": "string"
+      }
     },
     "opt": {
       "plug": {
@@ -35,8 +33,7 @@
           "unitId": "fetch",
           "pinId": "response"
         }
-      },
-      "type": "{status:number,body:string}"
+      }
     }
   },
   "units": {
@@ -152,10 +149,8 @@
   "metadata": {
     "icon": "send",
     "description": "POST JSON body",
-    "complexity": 14,
     "tags": ["platform", "core", "rest"]
   },
   "id": "6fcb6d82-4d64-438e-8a30-82f8b89c524b",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

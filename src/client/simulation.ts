@@ -80,7 +80,7 @@ export type SimulationEvents = EventEmitter_EE<Simulation_EE> & Simulation_EE
 
 export class Simulation<
   N = {},
-  L = {}
+  L = {},
 > extends EventEmitter_<SimulationEvents> {
   public _nodes: Dict<SimNode<N>>
   public _links: Dict<SimLink<L>>
@@ -107,7 +107,7 @@ export class Simulation<
     alphaDecay,
     velocityDecay = 0.2,
     n = 1,
-    t = 3 / ANIMATION_C,
+    t = 1 / ANIMATION_C,
     stability = 1,
     force = NOOP,
   }: SimulationOpt) {
@@ -223,8 +223,7 @@ export class Simulation<
     const F = 0.75 // friction
     const T = this._t
 
-    // const order = this._stability
-    const order = 4
+    const order = this._stability
 
     const order_1 = order - 1
 

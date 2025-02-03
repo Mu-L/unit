@@ -100,9 +100,8 @@
     }
   },
   "metadata": {
-    "icon": null,
+    "icon": "plus",
     "description": "add `n` next numbers to `from`",
-    "complexity": 40,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -112,8 +111,7 @@
           "unitId": "add",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     },
     "n": {
       "plug": {
@@ -122,7 +120,7 @@
           "pinId": "initb"
         }
       },
-      "type": "any"
+      "functional": true
     },
     "from": {
       "plug": {
@@ -131,7 +129,7 @@
           "pinId": "inita"
         }
       },
-      "type": "any"
+      "functional": true
     }
   },
   "outputs": {
@@ -141,11 +139,9 @@
           "unitId": "loop2",
           "pinId": "finala"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "57e0cf37-1bf7-449e-91fd-f1ddf62c607d",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

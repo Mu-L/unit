@@ -1,8 +1,9 @@
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
 import { Component_ } from '../../../../../types/interface/Component'
 import { OB } from '../../../../../types/interface/OB'
+import { Unlisten } from '../../../../../types/Unlisten'
 import { ID_OBSERVE } from '../../../../_ids'
 import { firstGlobalComponentPromise } from '../../../../globalComponent'
 
@@ -15,13 +16,15 @@ export type O<T> = {
   entry: T[]
 }
 
-export default class Observe<T> extends Semifunctional<I<T>, O<T>> {
+export default class Observe<T> extends Holder<I<T>, O<T>> {
+  private _unlisten: Unlisten
+
   constructor(system: System) {
     super(
       {
         fi: ['component', 'observer'],
         fo: [],
-        i: ['done'],
+        i: [],
         o: ['entry'],
       },
       {
@@ -43,8 +46,6 @@ export default class Observe<T> extends Semifunctional<I<T>, O<T>> {
       },
     } = this.__system
 
-    // component.emit('call', { method: 'target', data: [] })
-
     const globalId = component.getGlobalId()
 
     const _component = await firstGlobalComponentPromise(
@@ -60,12 +61,16 @@ export default class Observe<T> extends Semifunctional<I<T>, O<T>> {
       return
     }
 
-    observer.observe(leaf.$element, (entry) => {
+    this._unlisten = observer.observe(leaf.$element, (entry) => {
       this._output.entry.push(entry)
     })
   }
 
   d() {
-    // TODO
+    if (this._unlisten) {
+      this._unlisten()
+
+      this._unlisten = undefined
+    }
   }
 }

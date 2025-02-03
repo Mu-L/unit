@@ -3,21 +3,27 @@ import { System } from '../system'
 import forEachValueKey from '../system/core/object/ForEachKeyValue/f'
 import { Specs } from '../types'
 import { Dict } from '../types/Dict'
+import { IO } from '../types/IO'
 import { io } from '../types/IOOf'
 import { UnitBundleSpec } from '../types/UnitBundleSpec'
+import { clone } from '../util/clone'
 import { weakMerge } from '../weakMerge'
-import { evaluate } from './evaluate'
-import { evaluateMemorySpec } from './evaluate/evaluateMemorySpec'
+import { evaluateDataValue } from './evaluateDataValue'
 import { unitFromId } from './fromId'
 import { applyUnitDefaultIgnored } from './fromSpec'
+import { remapSpecs } from './remapBundle'
+import { resolveDataRef } from './resolveDataValue'
 
-export function unitFromBundleSpec(
+export function unitFromBundleSpec<I, O>(
   system: System,
   bundle: UnitBundleSpec,
   specs: Specs,
-  branch: Dict<true> = {}
-): Unit {
-  applyUnitDefaultIgnored(bundle.unit, weakMerge(specs, bundle.specs ?? {}))
+  push: boolean,
+  branch: Dict<true>
+): Unit<I, O> {
+  const specs_ = weakMerge(specs, bundle.specs ?? {})
+
+  applyUnitDefaultIgnored(bundle.unit, specs_)
 
   const {
     unit: { id, input },
@@ -25,24 +31,24 @@ export function unitFromBundleSpec(
 
   const { classes } = system
 
-  if (bundle.specs) {
-    system.injectSpecs(bundle.specs)
-  }
+  const spec_map_id = system.injectSpecs(bundle.specs ?? {})
 
-  const unit = unitFromId(system, id, specs, classes, branch)
+  remapSpecs(bundle, spec_map_id)
 
-  io((type) => {
-    const pins = bundle.unit[type] ?? {}
+  const unit = unitFromId<I, O>(system, id, specs_, classes, branch, push)
+
+  io((type: IO) => {
+    const pins = bundle.unit[type as IO] ?? {}
 
     forEachValueKey(pins, (pinSpec = {}, pinId: string) => {
       const { constant, ignored } = pinSpec
 
       if (typeof constant === 'boolean') {
-        unit.setPinConstant(type, pinId, constant)
+        unit.setPinConstant(type, pinId as keyof I | keyof O, constant)
       }
 
       if (typeof ignored === 'boolean') {
-        unit.setPinIgnored(type, pinId, ignored)
+        unit.setPinIgnored(type, pinId as keyof I | keyof O, ignored)
       }
     })
   })
@@ -52,40 +58,26 @@ export function unitFromBundleSpec(
   } = bundle
 
   if (memory) {
-    evaluateMemorySpec(memory, specs, classes)
+    const memory_ = clone(memory)
 
-    unit.restore(memory)
+    unit.restore(memory_)
   }
 
-  forEachValueKey(input || {}, (unitPinSpec, pinId: string) => {
-    const { data } = unitPinSpec ?? {}
+  if (push) {
+    forEachValueKey(input || {}, (unitPinSpec, pinId) => {
+      const { data } = unitPinSpec ?? {}
 
-    if (data !== undefined) {
-      const input = unit.getInput(pinId)
+      const dataRef = evaluateDataValue(data, specs, classes)
 
-      const _data = evaluate(data, system.specs, classes)
+      if (dataRef.data !== undefined) {
+        const input = unit.getInput(pinId as any)
 
-      const isClass = _data instanceof Function
+        const data_ = resolveDataRef(dataRef, specs, classes)
 
-      if (isClass) {
-        system.injectSpecs(_data.__bundle?.specs ?? {})
+        input.push(data_)
       }
-
-      if (input.ref()) {
-        if (isClass) {
-          const __data = new _data(system)
-
-          __data.play()
-
-          input.push(__data)
-        } else {
-          //
-        }
-      } else {
-        input.push(_data)
-      }
-    }
-  })
+    })
+  }
 
   return unit
 }

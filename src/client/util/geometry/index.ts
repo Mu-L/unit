@@ -1,5 +1,5 @@
 import { randomIntegerBetween } from '../../math'
-import { Point, Position, Rect } from './types'
+import { Line, Point, Position, Rect } from './types'
 
 export const DEG = Math.PI / 180
 
@@ -154,7 +154,7 @@ export const ellipsoidalToCartesian = (
   rx: number,
   ry: number,
   angle: number
-): { x: number; y: number } => {
+): Position => {
   // flattening factor
   const ff = 1 - ry / rx
   let e2 = 2 * ff
@@ -518,7 +518,35 @@ export function centerRectsBoundingRect(rects: Rect[]): Rect {
     maxY = Math.max(maxY, rect.y + rect.height / 2)
   }
 
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+  const width = maxX - minX
+  const height = maxY - minY
+
+  return { x: minX + width / 2, y: minY + height / 2, width, height }
+}
+
+export function centerRectsBoundingLine(rects: Rect[]): Line {
+  if (rects.length === 0) {
+    return {
+      x0: 0,
+      y0: 0,
+      x1: 0,
+      y1: 0,
+    }
+  }
+
+  let x0 = Infinity
+  let y0 = Infinity
+  let x1 = -Infinity
+  let y1 = -Infinity
+
+  for (const rect of rects) {
+    x0 = Math.min(x0, rect.x - rect.width / 2)
+    y0 = Math.min(y0, rect.y - rect.height / 2)
+    x1 = Math.max(x1, rect.x + rect.width / 2)
+    y1 = Math.max(y1, rect.y + rect.height / 2)
+  }
+
+  return { x0, y0, x1, y1 }
 }
 
 export function rectangleRegion(
@@ -545,11 +573,6 @@ export function rectangleRegion(
 }
 
 export type Shape = 'circle' | 'rect'
-
-// TODO
-export function bezierSpline(): Point[] {
-  return []
-}
 
 export function isInside(a: Thing, b: Thing, offset: number = 0): boolean {
   if (a.shape === 'circle' && b.shape === 'circle') {
@@ -749,4 +772,85 @@ export const roundPoint = (position: Position): Position => {
     x: Math.round(position.x),
     y: Math.round(position.y),
   }
+}
+
+export function catmullRom(
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+  t: number
+): number {
+  const tensionFactor = 0.5
+  const startingPointWeight = 2
+  const linearTerm1 = -1
+  const linearTerm2 = 1
+  const quadraticTerm1 = 2
+  const quadraticTerm2 = -5
+  const quadraticTerm3 = 4
+  const quadraticTerm4 = -1
+  const cubicTerm1 = -1
+  const cubicTerm2 = 3
+  const cubicTerm3 = -3
+  const cubicTerm4 = 1
+
+  const t2 = t * t
+  const t3 = t2 * t
+
+  return (
+    tensionFactor *
+    (startingPointWeight * p1 +
+      (linearTerm1 * p0 + linearTerm2 * p2) * t +
+      (quadraticTerm1 * p0 +
+        quadraticTerm2 * p1 +
+        quadraticTerm3 * p2 +
+        quadraticTerm4 * p3) *
+        t2 +
+      (cubicTerm1 * p0 + cubicTerm2 * p1 + cubicTerm3 * p2 + cubicTerm4 * p3) *
+        t3)
+  )
+}
+
+export function catmullRomSpline(points: Point[]): number[][] {
+  if (points.length < 4) return
+
+  const spline: number[][] = []
+
+  spline.push([points[0].x, points[0].y])
+
+  for (let i = 0; i < points.length - 3; i++) {
+    const fourPoints = points.slice(i, i + 4)
+
+    const segment = catmullRomSplineSegment(fourPoints)
+
+    for (let i = 0; i < segment.length; i++) {
+      spline.push(segment[i])
+    }
+  }
+
+  return spline
+}
+
+export function catmullRomSplineSegment(
+  lastFourPoints: Point[],
+  step: number = 0.1
+): number[][] {
+  if (lastFourPoints.length < 4) {
+    return []
+  }
+
+  const spline: number[][] = []
+
+  spline.push([lastFourPoints[0].x, lastFourPoints[0].y])
+
+  const [p0, p1, p2, p3] = lastFourPoints
+
+  for (let t = 0; t <= 1; t += step) {
+    const x = catmullRom(p0.x, p1.x, p2.x, p3.x, t)
+    const y = catmullRom(p0.y, p1.y, p2.y, p3.y, t)
+
+    spline.push([x, y])
+  }
+
+  return spline
 }

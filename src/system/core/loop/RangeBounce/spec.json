@@ -64,7 +64,6 @@
   "metadata": {
     "icon": "exchange",
     "description": "count from `a` to `b - 1`, then regressive count from `b - 1` to `a`",
-    "complexity": 49,
     "tags": ["core", "loop"]
   },
   "inputs": {
@@ -75,7 +74,7 @@
           "pinId": "a"
         }
       },
-      "type": "number"
+      "functional": true
     },
     "b": {
       "plug": {
@@ -83,7 +82,7 @@
           "mergeId": "bjpzdvv"
         }
       },
-      "type": "number"
+      "functional": true
     }
   },
   "outputs": {
@@ -92,11 +91,9 @@
         "0": {
           "mergeId": "ymwlenzvu"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "343f1382-4d2d-4022-b4b3-139e40ab6627",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -1,8 +1,10 @@
+import { SELF } from '../constant/SELF'
 import { forEachPinOnMerge } from '../spec/util/spec'
 import forEachValueKey from '../system/core/object/ForEachKeyValue/f'
 import { keys } from '../system/f/object/Keys/f'
-import { GraphPinSpec, GraphSubPinSpec, PinSpec, Specs } from '../types'
+import { GraphSubPinSpec, PinSpec, Specs } from '../types'
 import { Dict } from '../types/Dict'
+import { GraphPinSpec } from '../types/GraphPinSpec'
 import { GraphSpec } from '../types/GraphSpec'
 import { IO } from '../types/IO'
 import { forEach } from '../util/array'
@@ -18,22 +20,38 @@ import {
 } from './id'
 
 export type GraphNode = {
-  next: { [id: string]: GraphNode }
-  previous: { [id: string]: GraphNode }
+  next: Dict<GraphNode>
+  previous: Dict<GraphNode>
 }
 
-export type GraphNodeMap = { [id: string]: GraphNode }
-export type SubGraphNode = { [id: string]: Set<string> }
+export type GraphNodeMap = Dict<GraphNode>
+export type SubGraphNode = Dict<Set<string>>
 
 export function getSubPinSpecNodeId(
   type: IO,
   subPinSpec: GraphSubPinSpec
 ): string {
-  const { mergeId, unitId, pinId } = subPinSpec
+  const { mergeId, unitId, pinId, kind = type } = subPinSpec
   if (mergeId) {
     return getMergeNodeId(mergeId)
   } else {
-    return getPinNodeId(unitId!, type, pinId!)
+    return getPinNodeId(unitId!, kind, pinId!)
+  }
+}
+
+export function getSubPinSpecNodeId_(
+  type: IO,
+  subPinSpec: GraphSubPinSpec
+): string {
+  const { mergeId, unitId, pinId, kind = type } = subPinSpec
+  if (mergeId) {
+    return getMergeNodeId(mergeId)
+  } else {
+    if (pinId === SELF) {
+      return unitId
+    } else {
+      return getPinNodeId(unitId!, kind, pinId!)
+    }
   }
 }
 
@@ -207,8 +225,8 @@ export const change_link_target_on_graph = (
 ): void => {
   const target = graph[target_id]
   const source = graph[source_id]
-  delete source.next[target_id]
-  delete target.previous[source_id]
+  delete source?.next[target_id]
+  delete target?.previous[source_id]
   const next_target = graph[next_target_id]
   source.next[next_target_id] = next_target
   next_target.previous[source_id] = source
@@ -294,14 +312,17 @@ const _build_subgraph = (
   })
 }
 
-// TODO optimize
 export const makeRelated = (graph: GraphNodeMap): SubGraphNode => {
   const related: Dict<any> = {}
+
   forEachValueKey(graph, (_, id) => {
     const relatedTo = new Set<string>([id])
+
     setConnectedTo(id, graph, relatedTo)
+
     related[id] = relatedTo
   })
+
   return related
 }
 

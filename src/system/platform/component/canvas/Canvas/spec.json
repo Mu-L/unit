@@ -16,13 +16,20 @@
     "d": {
       "type": "any[][]",
       "optional": true
+    },
+    "attr": {
+      "type": "object",
+      "optional": true,
+      "defaultIgnored": true,
+      "metadata": {
+        "examples": ["{tabIndex:1}", "{title:'hello'}", "{draggable:true}"]
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "chalkboard",
     "description": "for painting",
-    "complexity": 51,
     "tags": ["platform", "component", "canvas"]
   },
   "id": "94243ec4-8967-4907-8cdd-7223fe256cf6",
@@ -32,6 +39,5 @@
     "defaultHeight": 200
   },
   "type": "`U`&`C`&`V`&`J`&`PS`&`CS`&`CA`",
-  "system": true,
   "render": true
 }

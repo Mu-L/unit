@@ -1,7 +1,10 @@
-import { EventEmitter_, EventEmitter_EE } from './EventEmitter'
-import { isPrimitive } from './spec/primitive'
+import { $, $Events } from './Class/$'
+import { Unit } from './Class/Unit'
+import { System } from './system'
+import { Callback } from './types/Callback'
 import { PI } from './types/interface/PI'
 import { V } from './types/interface/V'
+import { Unlisten } from './types/Unlisten'
 
 export type PinEvent =
   | '_data'
@@ -15,7 +18,7 @@ export type PinEvent =
 
 export type Pin_EE<T> = {
   _data: [T]
-  data: [T]
+  data: [T, boolean]
   pull: []
   drop: [T]
   start: []
@@ -24,17 +27,18 @@ export type Pin_EE<T> = {
   ref: [boolean]
   ignored: [boolean]
   constant: [boolean]
+  edit: any[]
 }
 
 export type Pin_M<T = any> = {
   _register: T | undefined
-  _invalid: boolean
-  _constant: boolean
-  _ignored: boolean
-  _idle: boolean
+  _invalid?: boolean
+  _constant?: boolean
+  _ignored?: boolean
+  _idle?: boolean
 }
 
-export type PinEvents<T> = EventEmitter_EE<Pin_EE<T>> & Pin_EE<T>
+export type PinEvents<T> = $Events<Pin_EE<T>> & Pin_EE<T>
 
 export type PinConstructor = {
   data?: any
@@ -43,10 +47,9 @@ export type PinConstructor = {
   ref?: boolean
 }
 
-export class Pin<T = any>
-  extends EventEmitter_<PinEvents<T>>
-  implements V<T>, PI<T>
-{
+export class Pin<T = any> extends $<PinEvents<T>> implements V<T>, PI<T> {
+  __ = ['V', 'PI']
+
   private _constant: boolean = false
   private _ignored: boolean = false
   private _ref: boolean = false
@@ -54,8 +57,11 @@ export class Pin<T = any>
   private _idle: boolean = true
   private _register: T | undefined = undefined
 
-  constructor({ data, constant, ignored, ref }: PinConstructor = {}) {
-    super()
+  constructor(
+    { data, constant, ignored, ref }: PinConstructor = {},
+    $system: System
+  ) {
+    super($system)
 
     if (data !== undefined) {
       this._idle = false
@@ -71,6 +77,8 @@ export class Pin<T = any>
     const data = this._register
 
     if (this._register !== undefined) {
+      this._disembody(data)
+
       this._register = undefined
 
       this.emit('drop', data)
@@ -82,11 +90,17 @@ export class Pin<T = any>
   }
 
   public invalidate() {
-    if (this._register !== undefined && !this._invalid) {
-      this._invalid = true
-      this._idle = true
+    const data = this._register
 
-      this.emit('invalid')
+    if (data !== undefined) {
+      this._disembody(data)
+
+      if (!this._invalid) {
+        this._invalid = true
+        this._idle = true
+
+        this.emit('invalid')
+      }
     }
   }
 
@@ -119,16 +133,71 @@ export class Pin<T = any>
     return data
   }
 
-  public push(data: T): void {
+  private _unlisten: Unlisten
+
+  private _embodied: boolean = false
+
+  private _embody = (data: any) => {
+    if (this._ref) {
+      if (data instanceof Function) {
+        this._embodied = true
+
+        data = new data(this.__system)
+      }
+
+      if (data instanceof $) {
+        if (data.__.includes('U')) {
+          ;(data as Unit).play()
+        }
+
+        data.register()
+
+        this._unlisten = data.addListener('edit', () => {
+          this.emit('edit', data)
+        })
+      }
+    }
+
+    return data
+  }
+
+  private _disembody = (data: any) => {
+    if (this._ref) {
+      if (this._unlisten) {
+        this._unlisten()
+
+        this._unlisten = undefined
+      }
+
+      if (data instanceof $) {
+        data.unregister()
+      }
+
+      if (this._embodied) {
+        data.unregister()
+        data.destroy()
+
+        data = data.constructor as T
+
+        this._embodied = false
+      }
+    }
+
+    return data
+  }
+
+  public push(data: any, backpropagation: boolean = false): void {
     this.invalidate()
 
     this._invalid = false
 
     this.start()
 
+    data = this._embody(data)
+
     this._register = data
 
-    this.emit('data', data)
+    this.emit('data', data, backpropagation)
 
     if (this._ref) {
       //
@@ -167,6 +236,14 @@ export class Pin<T = any>
 
   public ref(value?: boolean): boolean {
     if (value !== undefined) {
+      if (this._register) {
+        if (value && !this._ref) {
+          this._register = this._embody(this._register)
+        } else if (!value && this._ref) {
+          this._register = this._disembody(this._register)
+        }
+      }
+
       this._ref = value
 
       this.emit('ref', this._ref)
@@ -189,11 +266,11 @@ export class Pin<T = any>
 
   public snapshot(): Pin_M<T> {
     return {
-      _register: isPrimitive(this._register) ? this._register : undefined,
-      _invalid: this._invalid,
-      _constant: this._constant,
-      _ignored: this._ignored,
-      _idle: this._idle,
+      _register: this._register instanceof $ ? undefined : this._register,
+      ...(this._invalid ? { _invalid: true } : {}),
+      ...(this._constant ? { _constant: true } : {}),
+      ...(this._ignored ? { _ignored: true } : {}),
+      ...(this._idle ? {} : { _idle: false }),
     }
   }
 
@@ -205,17 +282,19 @@ export class Pin<T = any>
     this._constant = _constant
     this._ignored = _ignored
     this._idle = _idle
-  }
 
-  async read(): Promise<any> {
-    if (this._register === undefined) {
-      throw new Error('empty')
+    if (_register instanceof $) {
+      this.emit('_data', _register)
     }
-
-    return this._register
   }
 
-  async write(data: any): Promise<void> {
+  read(callback: Callback<T>): void {
+    callback(this._register)
+  }
+
+  write(data: T, callback: Callback<undefined>): void {
     this.push(data)
+
+    callback()
   }
 }

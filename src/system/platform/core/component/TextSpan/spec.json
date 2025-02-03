@@ -7,8 +7,7 @@
           "unitId": "span",
           "pinId": "style"
         }
-      },
-      "type": "object"
+      }
     },
     "value": {
       "plug": {
@@ -16,8 +15,7 @@
           "unitId": "text",
           "pinId": "value"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {},
@@ -51,7 +49,8 @@
   },
   "merges": {},
   "metadata": {
-    "complexity": 87,
+    "icon": "square",
+    "description": "text inside a span",
     "tags": ["platform", "core", "component"]
   },
   "component": {
@@ -68,7 +67,6 @@
     "defaultHeight": 60
   },
   "id": "4ba86ad5-899b-4e8d-b5ce-3589dcfeaefd",
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

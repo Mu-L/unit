@@ -2,34 +2,24 @@ export function weakMerge<A extends object, B extends object>(
   a: A,
   b: B
 ): A & B {
-  const c = {}
-
-  return new Proxy(c, {
+  return new Proxy(b, {
     get(_, p) {
-      return c[p] ?? b[p] ?? a[p]
+      return b[p] ?? a[p]
     },
     set(_, p, v) {
-      c[p] = v
+      b[p] = v
 
       return true
     },
     has(_, p) {
-      return p in c || p in b || p in a
+      return p in b || p in a
     },
     deleteProperty(target, property) {
-      if (c[property] !== undefined) {
-        delete c[property]
-
-        return true
-      }
-
       if (b[property] !== undefined) {
         delete b[property]
 
         return true
-      }
-
-      if (a[property] !== undefined) {
+      } else if (a[property] !== undefined) {
         delete a[property]
 
         return true
@@ -42,7 +32,6 @@ export function weakMerge<A extends object, B extends object>(
         ...new Set([
           ...Object.getOwnPropertyNames(a),
           ...Object.getOwnPropertyNames(b),
-          ...Object.getOwnPropertyNames(c),
         ]),
       ]
     },

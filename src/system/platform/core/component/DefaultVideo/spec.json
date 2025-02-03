@@ -24,7 +24,8 @@
         },
         "style": {},
         "stream": {
-          "ignored": false
+          "ignored": false,
+          "icon": "circle-play"
         },
         "controls": {
           "ignored": false
@@ -60,8 +61,7 @@
           "unitId": "video",
           "pinId": "style"
         }
-      },
-      "type": "object"
+      }
     },
     "controls": {
       "plug": {
@@ -70,8 +70,7 @@
           "pinId": "controls"
         }
       },
-      "defaultIgnored": true,
-      "type": "boolean"
+      "defaultIgnored": true
     },
     "opt": {
       "plug": {
@@ -79,8 +78,7 @@
           "unitId": "defaultvideomedia",
           "pinId": "opt"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -91,14 +89,12 @@
           "pinId": "_self"
         }
       },
-      "ref": true,
-      "type": "`V`&`C`&`M`"
+      "ref": true
     }
   },
   "metadata": {
     "icon": "video",
     "description": "default video media",
-    "complexity": 62,
     "tags": ["platform", "core", "component"]
   },
   "component": {
@@ -113,7 +109,6 @@
     "defaultHeight": 240
   },
   "id": "68ee3bf2-7d57-4828-92ac-1070e988ffe7",
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

@@ -75,8 +75,7 @@
           "unitId": "toggle",
           "pinId": "init"
         }
-      },
-      "type": "boolean"
+      }
     },
     "element": {
       "plug": {
@@ -85,7 +84,6 @@
           "pinId": "element"
         }
       },
-      "type": "`C`",
       "ref": true
     },
     "toggle": {
@@ -94,7 +92,6 @@
           "mergeId": "0"
         }
       },
-      "type": "any",
       "ref": false,
       "defaultIgnored": true
     }
@@ -106,14 +103,12 @@
           "unitId": "toggle",
           "pinId": "value"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
     "icon": "square",
     "description": "toggle true/false on click",
-    "complexity": 18,
     "tags": ["platform", "core"]
   },
   "id": "9b2bdc7c-eb5d-11ea-bdb1-1760294f446b",

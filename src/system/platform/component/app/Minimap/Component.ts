@@ -1,7 +1,7 @@
 import { namespaceURI } from '../../../../../client/component/namespaceURI'
 import { Element } from '../../../../../client/element'
 import { segmentLinkId } from '../../../../../client/id'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { COLOR_NONE } from '../../../../../client/theme'
 import {
   describeCircle,
@@ -92,14 +92,16 @@ export default class Minimap extends Element<HTMLDivElement, Props> {
     const svg = new SVGSVG(
       {
         className: 'minimap',
-        width,
-        height,
+        attr: {
+          width: `${width}`,
+          height: `${height}`,
+          tabindex: `${-1}`,
+        },
         style: {
           ...DEFAULT_STYLE,
           ...style,
         },
         viewBox: '0 0 0 0',
-        tabIndex: -1,
       },
       this.$system
     )
@@ -194,6 +196,9 @@ export default class Minimap extends Element<HTMLDivElement, Props> {
               fill: COLOR_NONE,
               pointerEvents: 'none',
               strokeWidth: 'inherit',
+            },
+            attr: {
+              'stroke-linecap': 'normal',
             },
           },
           this.$system

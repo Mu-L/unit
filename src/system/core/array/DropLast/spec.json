@@ -78,8 +78,7 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "n": {
       "plug": {
@@ -87,8 +86,7 @@
           "unitId": "subtract",
           "pinId": "b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -98,17 +96,14 @@
           "unitId": "split",
           "pinId": "first"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "metadata": {
     "icon": "brackets",
     "description": "output list `a` containing all but the last `n` elements of the given list `ab`",
-    "complexity": 15,
     "tags": ["core", "array"]
   },
   "id": "6c2a2d48-fd23-11ea-b8c5-27de11375b8a",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

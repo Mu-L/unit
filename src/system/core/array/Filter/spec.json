@@ -119,7 +119,6 @@
   "metadata": {
     "icon": "brackets",
     "description": "filter a list `a`",
-    "complexity": 54,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -128,8 +127,7 @@
         "0": {
           "mergeId": "2"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "test": {
       "plug": {
@@ -137,8 +135,7 @@
           "unitId": "appendif",
           "pinId": "test"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -147,8 +144,7 @@
         "0": {
           "mergeId": "1"
         }
-      },
-      "type": "<A>"
+      }
     },
     "b": {
       "plug": {
@@ -156,8 +152,7 @@
           "unitId": "loop",
           "pinId": "final"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "test": {
       "plug": {
@@ -165,8 +160,7 @@
           "mergeId": "0"
         }
       },
-      "defaultIgnored": true,
-      "type": "boolean"
+      "defaultIgnored": true
     },
     "a": {
       "plug": {
@@ -175,8 +169,7 @@
           "pinId": "a"
         }
       },
-      "defaultIgnored": true,
-      "type": "<A>[]"
+      "defaultIgnored": true
     },
     "i": {
       "plug": {
@@ -185,11 +178,9 @@
           "pinId": "i"
         }
       },
-      "defaultIgnored": true,
-      "type": "number"
+      "defaultIgnored": true
     }
   },
   "id": "ea426391-2104-41fd-8963-626d21415d09",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

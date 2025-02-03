@@ -28,11 +28,9 @@
   "base": true,
   "metadata": {
     "icon": "image",
-    "complexity": 12,
     "description": "transform image to bitmap",
-    "tags": ["platform", "api", "media"],
+    "tags": ["platform", "api", "media", "image"],
     "globals": ["MediaRecorder"]
   },
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

@@ -3,8 +3,8 @@ import {
   ANIMATION_T_MS,
   ifLinearTransition,
 } from '../../../../../client/animation/animation'
-import classnames from '../../../../../client/classnames'
-import debounce from '../../../../../client/debounce'
+import { classnames } from '../../../../../client/classnames'
+import { debounce } from '../../../../../client/debounce'
 import { Element } from '../../../../../client/element'
 import { UnitPointerEvent } from '../../../../../client/event/pointer'
 import { makeClickListener } from '../../../../../client/event/pointer/click'
@@ -15,7 +15,7 @@ import { makePointerLeaveListener } from '../../../../../client/event/pointer/po
 import { makePointerMoveListener } from '../../../../../client/event/pointer/pointermove'
 import { makePointerUpListener } from '../../../../../client/event/pointer/pointerup'
 import { makeResizeListener } from '../../../../../client/event/resize'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { applyStyle, mergeStyle } from '../../../../../client/style'
 import { COLOR_NONE } from '../../../../../client/theme'
 import { System } from '../../../../../system'
@@ -94,7 +94,6 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
       {
         className: 'drawer-knob',
         icon,
-        active,
         style: {
           position: 'absolute',
           top: '0',
@@ -118,16 +117,6 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
       },
       this.$system
     )
-    knob.addEventListener(
-      makeClickListener({
-        onClick: this._on_knob_click,
-      })
-    )
-    knob.addEventListener(makePointerEnterListener(this._on_knob_pointer_enter))
-    knob.addEventListener(makePointerLeaveListener(this._on_knob_pointer_leave))
-    knob.addEventListener(makePointerDownListener(this._on_knob_pointer_down))
-    knob.preventDefault('mousedown')
-    knob.preventDefault('touchdown')
     this._knob = knob
 
     const tooltip = new Tooltip(
@@ -184,6 +173,82 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
     content.registerParentRoot(frame)
     this.content = content
 
+    const container = new Div(
+      {
+        className: 'drawer-column',
+        style: {
+          width: 'fit-content',
+          height: 'fit-content',
+        },
+      },
+      this.$system
+    )
+
+    const notch = new Div(
+      {
+        className: 'drawer-knob-notch-bottom',
+        style: {
+          position: 'absolute',
+          bottom: '0px',
+          left: '-30px',
+          top: '31px',
+          width: '27px',
+          height: '4px',
+          backgroundColor: 'none',
+          borderWidth: '0px 0px 1px 0px',
+          borderStyle: 'solid',
+          borderColor: 'currentColor',
+          boxSizing: 'border-box',
+          cursor: 'pointer',
+        },
+      },
+      this.$system
+    )
+
+    const notch0 = new Div(
+      {
+        className: 'drawer-knob-notch-bottom-left',
+        style: {
+          position: 'absolute',
+          bottom: '0px',
+          left: '-35px',
+          top: '31px',
+          width: '5px',
+          height: '4px',
+          backgroundColor: 'none',
+          borderWidth: '0px 0px 1px 1px',
+          borderBottomLeftRadius: '3px',
+          borderStyle: 'solid',
+          borderColor: 'currentColor',
+          boxSizing: 'border-box',
+          cursor: 'pointer',
+        },
+      },
+      this.$system
+    )
+
+    container.addEventListener(
+      makeClickListener({
+        onClick: this._on_knob_click,
+      })
+    )
+    container.addEventListener(
+      makePointerEnterListener(this._on_knob_pointer_enter)
+    )
+    container.addEventListener(
+      makePointerLeaveListener(this._on_knob_pointer_leave)
+    )
+    container.addEventListener(
+      makePointerDownListener(this._on_knob_pointer_down)
+    )
+
+    container.preventDefault('mousedown')
+    container.preventDefault('touchdown')
+
+    container.registerParentRoot(knob)
+    container.registerParentRoot(notch)
+    container.registerParentRoot(notch0)
+
     const column = new Div(
       {
         className: 'drawer-column',
@@ -224,47 +289,6 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
       this.$system
     )
 
-    const notch = new Div(
-      {
-        className: 'drawer-knob-notch-bottom',
-        style: {
-          position: 'absolute',
-          bottom: '0px',
-          left: '-30px',
-          top: '31px',
-          width: '27px',
-          height: '4px',
-          backgroundColor: 'none',
-          borderWidth: '0px 0px 1px 0px',
-          borderStyle: 'solid',
-          borderColor: 'currentColor',
-          boxSizing: 'border-box',
-        },
-      },
-      this.$system
-    )
-
-    const notch0 = new Div(
-      {
-        className: 'drawer-knob-notch-bottom-left',
-        style: {
-          position: 'absolute',
-          bottom: '0px',
-          left: '-35px',
-          top: '31px',
-          width: '5px',
-          height: '4px',
-          backgroundColor: 'none',
-          borderWidth: '0px 0px 1px 1px',
-          borderBottomLeftRadius: '3px',
-          borderStyle: 'solid',
-          borderColor: 'currentColor',
-          boxSizing: 'border-box',
-        },
-      },
-      this.$system
-    )
-
     const notch1 = new Div(
       {
         className: 'drawer-armpit-top-right',
@@ -296,12 +320,10 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
       this.$system
     )
     this.drawer = drawer
-    drawer.registerParentRoot(knob)
+    drawer.registerParentRoot(container)
     drawer.registerParentRoot(content)
     drawer.registerParentRoot(column)
     drawer.registerParentRoot(row)
-    drawer.registerParentRoot(notch)
-    drawer.registerParentRoot(notch0)
     notch.registerParentRoot(notch1)
 
     const $element = parentElement($system)
@@ -344,11 +366,9 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
 
       const { backgroundColor = COLOR_NONE } = style
 
-      // @ts-ignore
       this._knob.$slot['default'].$element.style.backgroundColor =
         backgroundColor
     } else if (prop === 'active') {
-      // this._setActive(current)
       this.setActive(current)
     } else if (prop === 'y') {
       this._y = current
@@ -358,7 +378,6 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
     } else if (prop === 'height') {
       this._resize()
     } else if (prop === 'hidden') {
-      // this._resize()
       this._translate()
     }
   }
@@ -406,18 +425,17 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
   }
 
   private _setActive = (active: boolean) => {
-    this._active = active
+    const {
+      api: {
+        window: { setTimeout },
+      },
+    } = this.$system
 
-    // mergeStyle(this.frame.$element, {
-    //   pointerEvents: 'none',
-    // })
+    this._active = active
 
     this._animate_transform(true)
 
     setTimeout(() => {
-      // mergeStyle(this.frame.$element, {
-      //   pointerEvents: 'auto',
-      // })
       this.dispatchEvent('activated', {})
     }, ANIMATION_T_MS + 100)
   }
@@ -522,11 +540,15 @@ export default class Drawer extends Element<HTMLDivElement, Props> {
     this.dispatchEvent('dragstart', { y: this._y })
   }
 
-  private _on_container_resize = debounce(() => {
-    if (this._active) {
-      this._resize()
-    }
-  }, 300)
+  private _on_container_resize = debounce(
+    this.$system,
+    () => {
+      if (this._active) {
+        this._resize()
+      }
+    },
+    300
+  )
 
   private _frame_listener: Unlisten
 

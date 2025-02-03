@@ -55,8 +55,7 @@
         "0": {
           "mergeId": "2"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -66,17 +65,14 @@
           "unitId": "floor",
           "pinId": "⌊a⌋"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "random",
     "description": "random natural `i` less than `max`",
-    "complexity": 11,
     "tags": ["core", "common"]
   },
   "id": "9569f78e-18d3-40a3-9373-c56afa0214f6",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

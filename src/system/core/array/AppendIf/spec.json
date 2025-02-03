@@ -69,7 +69,6 @@
   "metadata": {
     "icon": "chevrons-left",
     "description": "prepend element `b` to `a` if `test`",
-    "complexity": 17,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -80,8 +79,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "<A>"
+      "functional": true
     },
     "a": {
       "plug": {
@@ -90,8 +88,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "<A>[]"
+      "functional": true
     },
     "test": {
       "plug": {
@@ -99,8 +96,7 @@
           "mergeId": "0"
         }
       },
-      "functional": true,
-      "type": "boolean"
+      "functional": true
     }
   },
   "outputs": {
@@ -109,11 +105,9 @@
         "0": {
           "mergeId": "3"
         }
-      },
-      "type": "<A>[]"
+      }
     }
   },
   "id": "765114be-2c5e-4ac8-b04e-27dbcb60ac12",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

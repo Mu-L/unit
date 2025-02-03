@@ -9,7 +9,6 @@
   "metadata": {
     "icon": "atom-alt",
     "description": "\"get out\"",
-    "complexity": 47,
     "tags": ["platform", "component", "app"]
   },
   "id": "e39a2a34-c71a-11ea-9835-07964acf6760",
@@ -19,6 +18,5 @@
     "defaultHeight": 120
   },
   "type": "`U`&`C`&`V`&`J`",
-  "system": true,
   "render": true
 }

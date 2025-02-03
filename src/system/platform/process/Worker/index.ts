@@ -1,4 +1,4 @@
-import { AsyncWorkerS } from '../../../../AsyncWorker'
+import { AsyncWorker } from '../../../../AsyncWorker'
 import { Functional } from '../../../../Class/Functional'
 import { Done } from '../../../../Class/Functional/Done'
 import { workerPort } from '../../../../client/platform/web/port/worker'
@@ -16,8 +16,8 @@ export interface O {
   system: $S
 }
 
-export default class Worker extends Functional<I, O> {
-  private _client: RemoteClient
+export default class Worker_ extends Functional<I, O> {
+  private _worker: Worker
 
   constructor(system: System) {
     super(
@@ -35,14 +35,6 @@ export default class Worker extends Functional<I, O> {
       system,
       ID_WORKER
     )
-
-    this.addListener('destroy', () => {
-      if (this._client) {
-        this._client.terminate()
-
-        this._client = undefined
-      }
-    })
   }
 
   f({ init }: I, done: Done<O>) {
@@ -53,40 +45,38 @@ export default class Worker extends Functional<I, O> {
       },
     } = this.__system
 
-    if (!this._client) {
-      let worker
+    let worker: Worker
 
-      try {
-        worker = start()
-      } catch (err) {
-        done(undefined, err.message)
+    try {
+      worker = start()
+    } catch (err) {
+      done(undefined, err.message)
 
-        return
-      }
-
-      const port = workerPort(worker)
-
-      const client = new RemoteClient(port)
-
-      this._client = client
+      return
     }
 
-    this._client.init({})
+    const port = workerPort(worker)
 
-    const port = this._client.port()
+    const client = new RemoteClient(port)
 
-    const $system = AsyncWorkerS(port)
+    const remote = client.port()
+
+    const $system = AsyncWorker(remote, ['S'])
 
     const system = $wrap<$S>(this.__system, $system)
+
+    client.init({})
 
     done({
       system,
     })
   }
 
-  i() {
-    // if (name === 'spec') {
-    this._client.invalidate()
-    // }
+  d() {
+    if (this._worker) {
+      this._worker.terminate()
+
+      this._worker = undefined
+    }
   }
 }

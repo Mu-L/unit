@@ -13,24 +13,24 @@
     },
     "stream": {
       "type": "`MS`",
-      "ref": true
+      "ref": true,
+      "icon": "circle-play"
     }
   },
   "outputs": {
     "node": {
       "type": "`AN`",
-      "ref": true
+      "ref": true,
+      "icon": "audio-waveform"
     }
   },
   "metadata": {
     "icon": "activity",
     "description": "periodic waveform, such as a sine wave",
-    "complexity": 12,
     "tags": ["platform", "api", "media", "audio"],
     "globals": ["AudioContext"]
   },
   "id": "31408be3-cc2a-490a-b0d1-96e0028ca68e",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

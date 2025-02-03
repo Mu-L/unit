@@ -43,7 +43,6 @@
   "metadata": {
     "icon": "brackets",
     "description": "get all available device descriptions of `kind`",
-    "complexity": 87,
     "tags": ["platform", "core", "api", "media"]
   },
   "inputs": {
@@ -53,8 +52,7 @@
           "mergeId": "1"
         }
       },
-      "name": "kind",
-      "type": "any"
+      "name": "kind"
     }
   },
   "outputs": {
@@ -65,11 +63,9 @@
           "pinId": "b"
         }
       },
-      "name": "devices",
-      "type": "object[]"
+      "name": "devices"
     }
   },
   "id": "e98f03fc-0987-4d21-9642-9078b23183ed",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

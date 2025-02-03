@@ -119,7 +119,6 @@
   "metadata": {
     "icon": "palette",
     "description": "convert XYZ color to XY",
-    "complexity": 56,
     "tags": ["platform", "core", "color"]
   },
   "inputs": {
@@ -129,8 +128,7 @@
           "mergeId": "0"
         }
       },
-      "functional": true,
-      "type": "number[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -140,11 +138,9 @@
           "unitId": "pair",
           "pinId": "pair"
         }
-      },
-      "type": "number[]"
+      }
     }
   },
   "id": "31c06a15-ca1a-4175-b60a-0cb5dfff3a6c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -35,9 +35,8 @@
     }
   },
   "metadata": {
-    "icon": "brackets-curly",
+    "icon": "object-get",
     "description": "get `x` and `y` from `obj`",
-    "complexity": 6,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -46,8 +45,7 @@
         "0": {
           "mergeId": "0"
         }
-      },
-      "type": "{x:number,y:number}"
+      }
     }
   },
   "outputs": {
@@ -57,8 +55,7 @@
           "unitId": "prop0",
           "pinId": "value"
         }
-      },
-      "type": "number"
+      }
     },
     "x": {
       "plug": {
@@ -66,11 +63,9 @@
           "unitId": "get",
           "pinId": "value"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "5bf348b6-9776-4b23-9516-d802b6b3c846",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

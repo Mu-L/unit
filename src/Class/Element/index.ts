@@ -1,7 +1,9 @@
 import { Component } from '../../client/component'
+import { isComponentEvent } from '../../client/isComponentEvent'
 import {
   animate,
   appendChild,
+  appendChildren,
   appendParentChild,
   cancelAnimation,
   hasChild,
@@ -9,6 +11,7 @@ import {
   pushChild,
   refChild,
   refChildren,
+  refRoot,
   registerParentRoot,
   registerRoot,
   removeChild,
@@ -24,7 +27,7 @@ import { System } from '../../system'
 import { Dict } from '../../types/Dict'
 import { AnimationSpec, C_EE, ComponentSetup } from '../../types/interface/C'
 import { Component_, ComponentEvents } from '../../types/interface/Component'
-import { E } from '../../types/interface/E'
+import { E } from '../../types/interface/composed/E'
 import { UnitBundle } from '../../types/UnitBundle'
 import { Unlisten } from '../../types/Unlisten'
 import { forEach } from '../../util/array'
@@ -39,11 +42,11 @@ export type ElementEE<_EE extends Dict<any[]>> = StatefulEvents<
   Element_EE
 
 export class Element_<
-    I = any,
-    O = any,
+    I extends Dict<any> = any,
+    O extends Dict<any> = any,
     _J extends Dict<any> = {},
     _EE extends ElementEE<_EE> = ElementEE<Element_EE>,
-    _C extends Component = Component
+    _C extends Component = Component,
   >
   extends Stateful<I, O, {}, _EE>
   implements E
@@ -56,7 +59,6 @@ export class Element_<
   public _parent_children: Component_[] = []
   public _slot: Dict<Component_> = {}
   public _component: _C
-  public _state: Dict<any> = {}
   public _animations: AnimationSpec[] = []
   public _stopPropagation: Dict<number> = {}
   public _stopImmediatePropagation: Dict<number> = {}
@@ -82,6 +84,12 @@ export class Element_<
     this.addListener('play', this._play)
     this.addListener('pause', this._pause)
     this.addListener('set', (name: keyof I, data) => {
+      const {
+        api: {
+          window: { nextTick },
+        },
+      } = this.__system
+
       if (!this._forwarding) {
         if (data === undefined) {
           this._forwarding_empty = true
@@ -104,12 +112,11 @@ export class Element_<
       ) {
         this._backwarding = true
 
-        // TODO add to end of event queue
-        setTimeout(() => {
+        nextTick(() => {
           this._input?.[name]?.pull()
 
           this._backwarding = false
-        }, 0)
+        })
       }
     })
 
@@ -122,55 +129,70 @@ export class Element_<
     return true
   }
 
-  detach(): void {
-    throw new MethodNotImplementedError()
-  }
-
   registerRoot(component: Component_): void {
-    return registerRoot(this, this._root, component)
+    return registerRoot(this, this._root, component, true)
   }
 
   unregisterRoot(component: Component_): void {
-    return unregisterRoot(this, this._root, component)
+    return unregisterRoot(this, this._root, component, true)
   }
 
   reorderRoot(component: Component_<ComponentEvents>, to: number): void {
-    return reorderRoot(this, this._root, component, to)
+    return reorderRoot(this, this._root, component, to, true)
   }
 
-  registerParentRoot(component: Component_, slotName: string): void {
-    return registerParentRoot(this, this._parent_root, component, slotName)
+  registerParentRoot(
+    component: Component_,
+    slotName: string,
+    at?: number,
+    emit?: boolean
+  ): void {
+    return registerParentRoot(
+      this,
+      this._parent_root,
+      component,
+      slotName,
+      at,
+      emit
+    )
   }
 
   unregisterParentRoot(component: Component_): void {
-    return unregisterParentRoot(this, this._parent_root, component)
+    return unregisterParentRoot(this, this._parent_root, component, true)
   }
 
   reorderParentRoot(component: Component_<ComponentEvents>, to: number): void {
-    return reorderParentRoot(this, this._parent_root, component, to)
+    return reorderParentRoot(this, this._parent_root, component, to, true)
   }
 
   appendParentChild(component: Component_, slotName: string): void {
-    return appendParentChild(this, this._parent_children, component, slotName)
+    return appendParentChild(
+      this,
+      this._parent_children,
+      component,
+      slotName,
+      true
+    )
   }
 
   removeParentChild(component: Component_): void {
-    return removeParentChild(this, this._parent_children, component)
+    return removeParentChild(this, this._parent_children, component, true)
   }
 
-  appendChild(bundle: UnitBundle<Component_>): number {
+  appendChild(bundle: UnitBundle): number {
     return appendChild(this, this._children, bundle)
   }
 
-  insertChild(
-    Bundle: UnitBundle<Component_<ComponentEvents>>,
-    at: number
-  ): void {
+  appendChildren(bundles: UnitBundle[]): number {
+    return appendChildren(this, this._children, bundles)
+  }
+
+  insertChild(Bundle: UnitBundle, at: number): void {
     throw new MethodNotImplementedError()
   }
 
-  pushChild(Bundle: UnitBundle<Component_>): number {
-    return pushChild(this, this._children, Bundle)
+  pushChild(Bundle: UnitBundle): number {
+    return pushChild(this, this._children, Bundle)[0]
   }
 
   hasChild(at: number): boolean {
@@ -183,6 +205,10 @@ export class Element_<
 
   pullChild(at: number): Component_ {
     throw pullChild(this, this._children, at)
+  }
+
+  refRoot(at: number): Component_ {
+    return refRoot(this, this._children, at)
   }
 
   refChild(at: number): Component_ {
@@ -222,7 +248,7 @@ export class Element_<
   getSetup(): ComponentSetup {
     const setup: ComponentSetup = {
       animations: this._animations,
-      events: this.eventNames(),
+      events: this.eventNames().filter(isComponentEvent),
       stopPropagation: Object.keys(this._stopPropagation),
       stopImmediatePropagation: Object.keys(this._stopImmediatePropagation),
       preventDefault: Object.keys(this._preventDefault),

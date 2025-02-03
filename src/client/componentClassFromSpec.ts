@@ -1,22 +1,33 @@
+import { Memory } from '../Class/Unit/Memory'
 import { ComponentClass, System } from '../system'
 import { Specs } from '../types'
 import { Dict } from '../types/Dict'
 import { GraphSpec } from '../types/GraphSpec'
+import { $Component } from '../types/interface/async/$Component'
+import { $Graph } from '../types/interface/async/$Graph'
+import { clone } from '../util/clone'
+import { weakMerge } from '../weakMerge'
+import { IOElement } from './IOElement'
 import { Component } from './component'
 import { componentClassFromSpecId } from './componentClassFromSpecId'
-import parentElement from './platform/web/parentElement'
+import { parentElement } from './platform/web/parentElement'
 
-export function componentClassFromSpec(
+export function componentClassFromSpec<
+  E extends IOElement = any,
+  P = any,
+  U extends $Component | $Graph = any,
+>(
   spec: GraphSpec,
   specs: Specs,
-  sub_component_map: Dict<Component> = {}
-): ComponentClass {
+  sub_component_map: Dict<Component> = {},
+  memory?: Partial<Memory>
+): typeof Component<E, P, U> {
   const {
     id,
     name,
     units = {},
     component = { defaultWidth: 120, defaultHeight: 120 },
-  } = spec
+  } = clone(spec)
 
   const { children = [], subComponents = {}, slots = [] } = component
 
@@ -33,11 +44,13 @@ export function componentClassFromSpec(
         let childComponent = sub_component_map[unitId]
 
         if (!childComponent) {
+          const specs_ = weakMerge($system.specs, specs)
+
           const Class = componentClassFromSpecId(
             $system.components,
-            specs,
-            $system.classes,
-            id
+            specs_,
+            id,
+            memory?.memory?.unit?.[unitId] ?? unitSpec.memory
           )
 
           childComponent = new Class({}, $system)
@@ -70,12 +83,15 @@ export function componentClassFromSpec(
       let i = 0
       for (const _slot of slots) {
         const [slot, slotSlot] = _slot
+
         const subComponent = this.$subComponent[slot]
-        // AD HOC
+
         const slotName = i === 0 ? 'default' : `${i}`
+
         this.$slot[slotName] = subComponent.$slot[slotSlot]
         this.$slotId[slotName] = slot
         this.$slotTarget[slotName] = slotSlot
+
         i++
       }
 

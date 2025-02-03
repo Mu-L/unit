@@ -40,7 +40,6 @@
   "metadata": {
     "icon": "arrow-up",
     "description": "the biggest between size of `a` and size of `b`",
-    "complexity": 9,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -50,8 +49,7 @@
           "unitId": "length0",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "b": {
       "plug": {
@@ -59,8 +57,7 @@
           "unitId": "length",
           "pinId": "a"
         }
-      },
-      "type": "<B>[]"
+      }
     }
   },
   "outputs": {
@@ -70,11 +67,9 @@
           "unitId": "max",
           "pinId": "max"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "85343b1d-93db-4fc0-8fcf-655739dbd494",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

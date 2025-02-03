@@ -7,13 +7,36 @@
           "unitId": "input",
           "pinId": "name"
         }
+      },
+      "functional": true,
+      "metadata": {
+        "position": {
+          "0": {
+            "ext": {
+              "x": -118,
+              "y": -33
+            }
+          }
+        }
       }
     },
     "data": {
       "plug": {
         "0": {
           "unitId": "write",
-          "pinId": "data"
+          "pinId": "data",
+          "kind": "input"
+        }
+      },
+      "functional": true,
+      "metadata": {
+        "position": {
+          "0": {
+            "ext": {
+              "x": 119,
+              "y": -1
+            }
+          }
         }
       }
     },
@@ -24,15 +47,25 @@
           "pinId": "unit"
         }
       },
-      "ref": true
+      "ref": true,
+      "metadata": {
+        "position": {
+          "0": {
+            "ext": {
+              "x": -119,
+              "y": 33
+            }
+          }
+        }
+      }
     }
   },
   "outputs": {
-    "data": {
+    "done": {
       "plug": {
         "0": {
-          "unitId": "write",
-          "pinId": "data"
+          "unitId": "input",
+          "pinId": "done"
         }
       },
       "defaultIgnored": true
@@ -43,36 +76,64 @@
       "id": "98ab5ee1-0997-4ad2-bc77-776208b6bb25",
       "input": {
         "value": {},
-        "data": {}
+        "data": {
+          "metadata": {
+            "position": {
+              "x": 96,
+              "y": 0
+            }
+          }
+        }
       },
       "output": {
-        "data": {
+        "done": {
           "ignored": false
         }
       },
       "metadata": {
         "position": {
-          "x": 58,
-          "y": -1
+          "x": 47,
+          "y": 1
         }
       }
     },
     "input": {
       "id": "4ae69887-a087-4d37-8743-d83ca48184d1",
       "input": {
-        "unit": {},
-        "name": {},
+        "unit": {
+          "metadata": {
+            "position": {
+              "x": -101,
+              "y": 18
+            }
+          }
+        },
+        "name": {
+          "metadata": {
+            "position": {
+              "x": -100,
+              "y": -17
+            }
+          }
+        },
         "done": {
-          "ignored": true
+          "ignored": false
         }
       },
       "output": {
-        "pin": {}
+        "pin": {
+          "metadata": {
+            "position": {
+              "x": -2,
+              "y": 19
+            }
+          }
+        }
       },
       "metadata": {
         "position": {
-          "x": -59,
-          "y": 0
+          "x": -54,
+          "y": 1
         }
       }
     }
@@ -89,14 +150,37 @@
           "pin": true
         }
       }
+    },
+    "1": {
+      "write": {
+        "output": {
+          "done": true
+        }
+      },
+      "input": {
+        "input": {
+          "done": true
+        }
+      }
     }
   },
   "component": {},
   "metadata": {
     "icon": "object-set",
     "description": "write `data` to `unit` input `name`",
-    "complexity": 8,
-    "tags": ["platform", "core", "unit"]
+    "tags": ["platform", "core", "unit"],
+    "position": {
+      "merge": {
+        "1": {
+          "x": -2,
+          "y": -11
+        },
+        "2": {
+          "x": -80,
+          "y": -13
+        }
+      }
+    }
   },
   "id": "04953fed-157a-479d-91ac-005174b9b85e"
 }

@@ -96,7 +96,6 @@
   "metadata": {
     "icon": "edit-3",
     "description": "rotate `+` more every frame",
-    "complexity": 17,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -106,8 +105,7 @@
           "unitId": "loopadd",
           "pinId": "plus"
         }
-      },
-      "type": "number"
+      }
     },
     "d": {
       "plug": {
@@ -115,8 +113,7 @@
           "unitId": "translate",
           "pinId": "d"
         }
-      },
-      "type": "(number|string)[][]"
+      }
     }
   },
   "outputs": {
@@ -126,11 +123,9 @@
           "unitId": "translate0",
           "pinId": "d"
         }
-      },
-      "type": "(number|string)[][]"
+      }
     }
   },
   "id": "1b6923a6-b383-4909-af8f-85444aeb6aae",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -44,7 +44,6 @@
   "metadata": {
     "icon": "edit-3",
     "description": "a circle on canvas",
-    "complexity": 75,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -66,8 +65,7 @@
           "unitId": "canvas",
           "pinId": "style"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -94,7 +92,6 @@
     },
     "children": ["canvas"]
   },
-  "type": "`U`&`G`",
-  "render": true,
-  "system": true
+  "type": "`U`&`C`&`G`",
+  "render": true
 }

@@ -17,7 +17,7 @@ import {
   getTree,
   isCompositeType,
 } from '../spec/parser'
-import { clone } from './object'
+import { clone } from './clone'
 
 export const _keyUpdateTree = (
   root: TreeNode,
@@ -35,7 +35,7 @@ export const _keyUpdateTree = (
     nextSelectionStart: number
     nextSelectionEnd: number
     nextDirection?: 'forward' | 'backward' | 'none' | undefined
-  }
+  },
 ] => {
   const data = getTree(value)
 
@@ -55,9 +55,7 @@ export const _keyUpdateTree = (
   const moveLeft = () => {
     const parentPath = getParentPath(path)
 
-    const leftLeafPath =
-      _getNextLeafPath(root, path, -1) ||
-      (parentPath && _getNextLeafPath(root, parentPath, -1))
+    const leftLeafPath = _getNextLeafPath(root, path, -1)
 
     if (leftLeafPath) {
       preventDefault = true
@@ -68,16 +66,33 @@ export const _keyUpdateTree = (
         nextRoot = _removeNodeAt(nextRoot, path)
       }
 
+      let nextNode
+
       nextPath = leftLeafPath
+      nextNode = leftLeafNode
+
+      nextSelectionStart = leftLeafNode.value.length
+      nextSelectionEnd = nextSelectionStart
 
       if (!nextPath || !_getNodeAtPath(nextRoot, nextPath)) {
         const parentPath = getParentPath(path)
 
         nextPath = parentPath
-      }
+      } else {
+        if (
+          leftLeafNode.type === TreeNodeType.ArrayLiteral ||
+          leftLeafNode.type === TreeNodeType.ObjectLiteral
+        ) {
+          nextPath = [...nextPath, leftLeafNode.children.length]
 
-      nextSelectionStart = leftLeafNode.value.length
-      nextSelectionEnd = nextSelectionStart
+          if (!leftLeafNode.children.length) {
+            nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
+
+            nextSelectionStart = 0
+            nextSelectionEnd = nextSelectionStart
+          }
+        }
+      }
     } else {
       if (parentPath) {
         const parent = _getNodeAtPath(root, parentPath)
@@ -167,6 +182,10 @@ export const _keyUpdateTree = (
         ) {
           const grandParentPath = getParentPath(parentPath)
 
+          if (value === '') {
+            nextRoot = _removeNodeAt(nextRoot, path)
+          }
+
           if (grandParentPath) {
             const grandParent = _getNodeAtPath(root, grandParentPath)
 
@@ -176,8 +195,8 @@ export const _keyUpdateTree = (
                 grandParent.type === TreeNodeType.ObjectLiteral
               ) {
                 preventDefault = true
-                nextPath = [...grandParentPath, parentPath.length]
-                nextRoot = _insertNodeAt(root, nextPath, getTree(''))
+                nextPath = [...grandParentPath, grandParent.children.length]
+                nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
                 nextSelectionStart = 0
                 nextSelectionEnd = 0
               }
@@ -227,6 +246,7 @@ export const _keyUpdateTree = (
         preventDefault = true
         nextRoot = _removeNodeAt(root, path)
         nextPath = parentPath
+        invert = lastIndex === 0
       }
 
       let nextFocusNode = _getNodeAtPath(nextRoot, nextPath)
@@ -269,13 +289,25 @@ export const _keyUpdateTree = (
       if (parentPath) {
         const parent = _getNodeAtPath(root, parentPath)
         const parentLastIndex = parentPath[parentPath.length - 1]
-        const graphParentPath = getParentPath(parentPath)
 
         if (parent.type === TreeNodeType.KeyValue) {
           if (lastIndex === 0) {
             if (selectionStart === 0 && selectionEnd === 0) {
               if (parentLastIndex > 0) {
                 moveLeft()
+              }
+            } else {
+              if (
+                selectionEnd - selectionStart === value.length ||
+                (selectionStart === selectionEnd &&
+                  selectionStart === 1 &&
+                  value.length === 1)
+              ) {
+                preventDefault = true
+                nextRoot = _updateNodeAt(root, path, getTree(''))
+                nextPath = path
+                nextSelectionStart = 0
+                nextSelectionEnd = 0
               }
             }
           } else if (lastIndex === 1) {
@@ -346,19 +378,19 @@ export const _keyUpdateTree = (
       }
     }
   } else if (key === 'ArrowLeft') {
-    if (selectionStart === 0) {
+    if (selectionStart === 0 && selectionStart === selectionEnd) {
       moveLeft()
     }
   } else if (key === 'ArrowRight') {
-    if (selectionStart === value.length) {
+    if (selectionStart === value.length && selectionStart === selectionEnd) {
       moveRight()
     }
   } else if (key === 'ArrowUp') {
-    // TODO
+    //
   } else if (key === 'ArrowDown') {
-    // TODO
+    //
   } else if (key === 'Tab') {
-    // TODO
+    //
   } else if (key === ',') {
     const parentPath = getParentPath(path)
 
@@ -420,7 +452,9 @@ export const _keyUpdateTree = (
               nextRoot = _removeNodeAt(root, path)
             }
             nextPath = [...parentPath]
-            nextPath[nextPath.length - 1] += 1
+            if (selectionStart > 0 || selectionStart !== selectionEnd) {
+              nextPath[nextPath.length - 1] += 1
+            }
             nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
             nextSelectionStart = 0
             nextSelectionEnd = 0
@@ -428,108 +462,144 @@ export const _keyUpdateTree = (
         }
       }
     }
-  } else if ((key === ']' || key === '}') && (valid || value === '')) {
-    let parentPath = getParentPath(path)
-    if (parentPath) {
-      const parent = _getNodeAtPath(root, parentPath)
-      const grandpaPath = getParentPath(parentPath)
-      if (
-        (parent.type === TreeNodeType.ArrayLiteral && key === ']') ||
-        (parent.type === TreeNodeType.ObjectLiteral && key === '}')
-      ) {
+  } else if (key === ']' || key === '}') {
+    if (valid || value === '') {
+      let parentPath = getParentPath(path)
+      if (parentPath) {
+        const parent = _getNodeAtPath(root, parentPath)
+        const grandpaPath = getParentPath(parentPath)
+        if (
+          (parent.type === TreeNodeType.ArrayLiteral && key === ']') ||
+          (parent.type === TreeNodeType.ObjectLiteral && key === '}')
+        ) {
+          if (value === '') {
+            preventDefault = true
+            nextRoot = _removeNodeAt(nextRoot, path)
+          }
+          if (grandpaPath) {
+            const grandpa = _getNodeAtPath(nextRoot, grandpaPath)
+            if (
+              grandpa.type === TreeNodeType.ArrayLiteral ||
+              grandpa.type === TreeNodeType.ObjectLiteral
+            ) {
+              preventDefault = true
+              nextPath = [...parentPath]
+              nextPath[nextPath.length - 1] += 1
+              nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
+              nextSelectionStart = 0
+              nextSelectionEnd = 0
+            } else if (grandpa.type === TreeNodeType.KeyValue) {
+              preventDefault = true
+              nextPath = [...grandpaPath]
+              nextPath[nextPath.length - 1] += 1
+              nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
+              nextSelectionStart = 0
+              nextSelectionEnd = 0
+            }
+          } else {
+            preventDefault = true
+          }
+        } else if (parent.type === TreeNodeType.KeyValue && key === '}') {
+          const grangrandpaPath = getParentPath(grandpaPath)
+          if (grangrandpaPath) {
+            preventDefault = true
+            if (value === '') {
+              nextRoot = _removeNodeAt(root, path)
+            }
+            nextPath = [...grandpaPath]
+            nextPath[nextPath.length - 1] += 1
+
+            const grangrandpa = _getNodeAtPath(nextRoot, grangrandpaPath)
+            if (
+              grangrandpa.type === TreeNodeType.ArrayLiteral ||
+              grangrandpa.type === TreeNodeType.ObjectLiteral
+            ) {
+              preventDefault = true
+              nextPath = [...grandpaPath]
+              nextPath[nextPath.length - 1] += 1
+              nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
+              nextSelectionStart = 0
+              nextSelectionEnd = 0
+            } else if (grangrandpa.type === TreeNodeType.KeyValue) {
+              preventDefault = true
+              nextPath = [...grangrandpaPath]
+              nextPath[nextPath.length - 1] += 1
+              nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
+              nextSelectionStart = 0
+              nextSelectionEnd = 0
+            }
+          } else {
+            const node = _getNodeAtPath(root, path)
+
+            if (selectionStart === node.value.length) {
+              preventDefault = true
+            }
+          }
+        }
+      } else {
         if (value === '') {
           preventDefault = true
-          nextRoot = _removeNodeAt(nextRoot, path)
-        }
-        if (grandpaPath) {
-          const grandpa = _getNodeAtPath(nextRoot, grandpaPath)
-          if (
-            grandpa.type === TreeNodeType.ArrayLiteral ||
-            grandpa.type === TreeNodeType.ObjectLiteral
-          ) {
-            preventDefault = true
-            nextPath = [...parentPath]
-            nextPath[nextPath.length - 1] += 1
-            nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
-            nextSelectionStart = 0
-            nextSelectionEnd = 0
-          } else if (grandpa.type === TreeNodeType.KeyValue) {
-            preventDefault = true
-            nextPath = [...grandpaPath]
-            nextPath[nextPath.length - 1] += 1
-            nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
-            nextSelectionStart = 0
-            nextSelectionEnd = 0
-          }
-        } else {
-          preventDefault = true
-        }
-      } else if (parent.type === TreeNodeType.KeyValue && key === '}') {
-        const grangrandpaPath = getParentPath(grandpaPath)
-        if (grangrandpaPath) {
-          preventDefault = true
-          if (value === '') {
-            nextRoot = _removeNodeAt(root, path)
-          }
-          nextPath = [...grandpaPath]
-          nextPath[nextPath.length - 1] += 1
-
-          const grangrandpa = _getNodeAtPath(nextRoot, grangrandpaPath)
-          if (
-            grangrandpa.type === TreeNodeType.ArrayLiteral ||
-            grangrandpa.type === TreeNodeType.ObjectLiteral
-          ) {
-            preventDefault = true
-            nextPath = [...grandpaPath]
-            nextPath[nextPath.length - 1] += 1
-            nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
-            nextSelectionStart = 0
-            nextSelectionEnd = 0
-          } else if (grangrandpa.type === TreeNodeType.KeyValue) {
-            preventDefault = true
-            nextPath = [...grangrandpaPath]
-            nextPath[nextPath.length - 1] += 1
-            nextRoot = _insertNodeAt(nextRoot, nextPath, getTree(''))
-            nextSelectionStart = 0
-            nextSelectionEnd = 0
-          }
-        } else {
-          preventDefault = true
+          nextPath = [...path, 0]
+          nextRoot = _updateNodeAt(root, path, getTree(shiftKey ? '{}' : `[]`))
+          nextSelectionStart = 1
+          nextSelectionEnd = 1
         }
       }
-    } else {
-      if (value === '') {
-        preventDefault = true
-        nextPath = [...path, 0]
-        nextRoot = _updateNodeAt(root, path, getTree(shiftKey ? '{}' : `[]`))
-        nextSelectionStart = 1
-        nextSelectionEnd = 1
-      }
+    } else if (!valid) {
+      preventDefault = true
     }
   } else if (key === ':') {
     const parent = _getParent(root, path)
     const node = _getNodeAtPath(root, path)
 
-    if (parent && parent.type === TreeNodeType.ObjectLiteral) {
-      if (
-        node.type === TreeNodeType.StringLiteral &&
-        selectionStart === selectionEnd &&
-        selectionStart !== 0 &&
-        selectionStart !== value.length
-      ) {
-        //
-      } else {
-        const start = `${data.value.substring(0, selectionStart)}`
+    if (parent) {
+      if (parent.type === TreeNodeType.ObjectLiteral) {
+        if (node) {
+          if (
+            node.type === TreeNodeType.StringLiteral &&
+            selectionStart === selectionEnd &&
+            selectionStart !== 0 &&
+            selectionStart !== value.length
+          ) {
+            //
+          } else {
+            const start = `${data.value.substring(0, selectionStart)}`
 
-        const nextNode = getTree(
-          `${start}:${data.value.substring(selectionEnd)}`
-        )
+            const nextNode = getTree(
+              `${start}:${data.value.substring(selectionEnd)}`
+            )
 
-        if (_isValidObjKeyType(getTree(start, false, true))) {
+            if (_isValidObjKeyType(getTree(start, false, true))) {
+              preventDefault = true
+
+              nextRoot = _updateNodeAt(root, path, nextNode)
+              nextPath = [...path, 1]
+              nextSelectionStart = 0
+              nextSelectionEnd = 0
+            }
+          }
+        } else if (
+          parent.type === TreeNodeType.ObjectLiteral ||
+          parent.type === TreeNodeType.ArrayLiteral
+        ) {
+          const parentPath = getParentPath(path)
+
           preventDefault = true
+          nextPath = [...parentPath, 0, 1]
+          nextRoot = _updateNodeAt(root, path, getTree(':'))
+          nextSelectionStart = 0
+          nextSelectionEnd = 0
+        }
+      } else if (parent.type === TreeNodeType.KeyValue) {
+        if (
+          lastIndex === 0 &&
+          selectionStart === selectionEnd &&
+          selectionStart === value.length
+        ) {
+          const parentPath = getParentPath(path)
 
-          nextRoot = _updateNodeAt(root, path, nextNode)
-          nextPath = [...path, 1]
+          preventDefault = true
+          nextPath = [...parentPath, 1]
           nextSelectionStart = 0
           nextSelectionEnd = 0
         }
@@ -650,7 +720,7 @@ export const keyUpdateTree = (
     nextPath: number[]
     nextSelectionStart: number
     nextSelectionEnd: number
-  }
+  },
 ] => {
   const _root = getTree(root)
   const [

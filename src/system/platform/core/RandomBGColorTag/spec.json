@@ -25,7 +25,6 @@
   "metadata": {
     "icon": "palette",
     "description": "random HEX background color string tag",
-    "complexity": 58,
     "tags": ["platform", "core", "component"]
   },
   "inputs": {
@@ -36,8 +35,7 @@
           "pinId": "any"
         }
       },
-      "functional": true,
-      "type": "any"
+      "functional": true
     }
   },
   "outputs": {
@@ -47,11 +45,9 @@
           "unitId": "tagbackgroundcolor",
           "pinId": "{bc}"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "051d4600-42e5-403b-b12e-eb58ae78ef0b",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

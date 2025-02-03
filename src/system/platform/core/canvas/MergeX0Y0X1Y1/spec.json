@@ -94,7 +94,6 @@
   "metadata": {
     "icon": "brackets-curly",
     "description": "{ x0, y0, x1, y1 }",
-    "complexity": 19,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -105,8 +104,7 @@
           "pinId": "v"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "x1": {
       "plug": {
@@ -115,8 +113,7 @@
           "pinId": "v"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "y0": {
       "plug": {
@@ -125,8 +122,7 @@
           "pinId": "v"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "y1": {
       "plug": {
@@ -135,8 +131,7 @@
           "pinId": "v"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     }
   },
   "outputs": {
@@ -146,11 +141,9 @@
           "unitId": "merge4",
           "pinId": "abcd"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "2bd0d83a-bd19-425b-aa75-84a47c73fc81",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

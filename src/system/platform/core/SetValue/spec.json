@@ -8,7 +8,6 @@
           "pinId": "obj"
         }
       },
-      "type": "`J`",
       "ref": true,
       "metadata": {
         "position": {
@@ -26,7 +25,6 @@
           "pinId": "data"
         }
       },
-      "type": "any",
       "metadata": {
         "position": {
           "0": {
@@ -82,10 +80,8 @@
   "metadata": {
     "icon": "object-set",
     "description": "set property `value` of `obj`",
-    "complexity": 5,
     "tags": ["platform", "core", "component"]
   },
   "id": "ad68ca8e-ff63-467d-a770-3e6a7490f7fb",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

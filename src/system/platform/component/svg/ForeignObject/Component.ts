@@ -1,6 +1,5 @@
 import { namespaceURI } from '../../../../../client/component/namespaceURI'
-import { Element } from '../../../../../client/element'
-import { applyStyle } from '../../../../../client/style'
+import { SVGElement_ } from '../../../../../client/svg'
 import { System } from '../../../../../system'
 import { Dict } from '../../../../../types/Dict'
 
@@ -14,53 +13,42 @@ export interface Props {
   height?: number
 }
 
-export default class SVGForeignObject extends Element<
+export default class SVGForeignObject extends SVGElement_<
   SVGForeignObjectElement,
   Props
 > {
-  private _foreign_el: SVGForeignObjectElement
-
   constructor($props: Props, $system: System) {
-    super($props, $system)
-
-    const {
-      className,
-      style = {},
-      x = 0,
-      y = 0,
-      width = 100,
-      height = 100,
-    } = this.$props
-
-    const foreign_el = this.$system.api.document.createElementNS(
-      namespaceURI,
-      'foreignObject'
+    super(
+      $props,
+      $system,
+      $system.api.document.createElementNS(namespaceURI, 'foreignObject'),
+      $system.style['foreignobject'],
+      {},
+      {
+        x: (x: number | undefined = 0) => {
+          this.$element.setAttribute('x', `${x}`)
+        },
+        y: (y: number | undefined = 0) => {
+          this.$element.setAttribute('y', `${y}`)
+        },
+        width: (width: number | undefined = 0) => {
+          this.$element.setAttribute('width', `${width}`)
+        },
+        height: (height: number | undefined = 0) => {
+          this.$element.setAttribute('height', `${height}`)
+        },
+      }
     )
+
+    const { className, x = 0, y = 0, width = 100, height = 100 } = this.$props
+
     if (className !== undefined) {
-      foreign_el.classList.value = className
+      this.$element.classList.value = className
     }
-    foreign_el.setAttribute('x', `${x}`)
-    foreign_el.setAttribute('y', `${y}`)
-    foreign_el.setAttribute('width', `${width}`)
-    foreign_el.setAttribute('height', `${height}`)
-    applyStyle(foreign_el, style)
 
-    this._foreign_el = foreign_el
-
-    this.$element = foreign_el
-  }
-
-  onPropChanged(prop: string, current: any): void {
-    if (prop === 'style') {
-      applyStyle(this._foreign_el, current)
-    } else if (prop === 'x') {
-      this._foreign_el.setAttribute('x', `${current}`)
-    } else if (prop === 'y') {
-      this._foreign_el.setAttribute('y', `${current}`)
-    } else if (prop === 'width') {
-      this._foreign_el.setAttribute('width', `${current}`)
-    } else if (prop === 'height') {
-      this._foreign_el.setAttribute('height', `${current}`)
-    }
+    this.$element.setAttribute('x', `${x}`)
+    this.$element.setAttribute('y', `${y}`)
+    this.$element.setAttribute('width', `${width}`)
+    this.$element.setAttribute('height', `${height}`)
   }
 }

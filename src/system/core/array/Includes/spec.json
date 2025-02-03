@@ -16,7 +16,6 @@
           "pinId": "any"
         }
       },
-      "type": "<A>[]",
       "functional": true
     },
     "a": {
@@ -26,7 +25,6 @@
           "pinId": "init"
         }
       },
-      "type": "<A>",
       "functional": true
     }
   },
@@ -37,8 +35,7 @@
           "unitId": "loop",
           "pinId": "final"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "units": {
@@ -452,7 +449,6 @@
   "metadata": {
     "icon": "info-square",
     "description": "find whether array `a[]` contains an element of value `a`",
-    "complexity": 50,
     "tags": ["core", "array"],
     "position": {
       "merge": {
@@ -508,6 +504,5 @@
     }
   },
   "id": "8783e7de-6cde-11eb-bd74-574fd9c8b6aa",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -23,8 +23,7 @@
             "y": 45
           }
         }
-      },
-      "type": "object"
+      }
     },
     "disabled": {
       "plug": {
@@ -48,8 +47,7 @@
             "y": 16
           }
         }
-      },
-      "type": "boolean"
+      }
     },
     "graph": {
       "plug": {
@@ -75,8 +73,7 @@
           "unitId": "editor",
           "pinId": "fullwindow"
         }
-      },
-      "type": "boolean"
+      }
     },
     "frame": {
       "plug": {
@@ -85,7 +82,6 @@
           "pinId": "frame"
         }
       },
-      "type": "`U`",
       "ref": true
     }
   },
@@ -98,7 +94,16 @@
         }
       },
       "ref": true,
-      "type": "`U`&`G`",
+      "defaultIgnored": true
+    },
+    "state": {
+      "plug": {
+        "0": {
+          "unitId": "editor",
+          "pinId": "state"
+        }
+      },
+      "ref": true,
       "defaultIgnored": true
     }
   },
@@ -115,6 +120,7 @@
           }
         },
         "disabled": {
+          "ignored": false,
           "metadata": {
             "position": {
               "x": -352,
@@ -170,7 +176,14 @@
           }
         }
       },
-      "output": {},
+      "output": {
+        "graph": {
+          "ignored": false
+        },
+        "state": {
+          "ignored": false
+        }
+      },
       "metadata": {
         "position": {
           "x": 366,
@@ -285,7 +298,6 @@
   "metadata": {
     "icon": "atom-alt",
     "description": "editor + gui",
-    "complexity": 227,
     "tags": ["platform", "core", "component"],
     "position": {
       "merge": {
@@ -302,6 +314,5 @@
   },
   "id": "4181691b-4790-4191-9b03-86c6c968d1b8",
   "type": "`U`&`C`&`G`",
-  "render": true,
-  "system": true
+  "render": true
 }

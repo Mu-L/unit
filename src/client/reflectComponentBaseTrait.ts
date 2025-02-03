@@ -1,11 +1,197 @@
-import { joinLeafPath } from '../system/platform/component/app/Editor/joinLeafPath'
-import { LayoutBase } from '../system/platform/component/app/Editor/layout'
-import { Style } from '../system/platform/Style'
-import { Tree } from '../Tree'
+import { Style, Tag } from '../system/platform/Style'
+import { Tree } from '../tree'
 import { Dict } from '../types/Dict'
-import { Component } from './component'
+import { mapObjVK } from '../util/object'
 import { LayoutNode } from './LayoutNode'
+import { Component } from './component'
+import { joinPath } from './component/app/graph/joinLeafPath'
+import { LayoutBase } from './layout'
 import { rawExtractStyle } from './rawExtractStyle'
+
+export function buildTree(
+  prefix: string,
+  component: Component,
+  base: LayoutBase,
+  extractStyle: ExtractStyleFunction
+): { tree: Tree<Tag>[]; map: Dict<Tree<Tag>>; root: string[] } {
+  const tree: Tree<Tag>[] = []
+  const map: Dict<Tree<Tag>> = {}
+  const root: string[] = []
+
+  const all_slot_base: Dict<string[]> = {}
+  const all_leaf_parent_slot_id: Dict<string> = {}
+
+  const leaf_id_set = new Set(
+    base.map((leaf) => {
+      const leaf_path = joinPath(leaf[0])
+
+      return leaf_path
+    })
+  )
+
+  const add = (
+    leaf_id: string,
+    leaf_comp: Component,
+    leaf_slot_parent: Component
+  ) => {
+    const leaf_style = extractStyle(
+      prefix ? (leaf_id ? `${prefix}/${leaf_id}` : prefix) : leaf_id,
+      leaf_comp,
+      leaf_slot_parent
+    )
+
+    const tag = {
+      name: leaf_comp.$element.nodeName,
+      style: leaf_style,
+      textContent: leaf_comp.$element.textContent,
+    }
+
+    const node = {
+      value: tag,
+      children: [],
+    }
+
+    map[leaf_id] = node
+  }
+
+  for (const leaf of base) {
+    const [leaf_path] = leaf
+
+    const leaf_id = joinPath(leaf_path)
+
+    let leaf_slot_id_cursor = leaf_id
+    let leaf_slot_id_cursor_prev = null
+
+    while (leaf_slot_id_cursor) {
+      const leaf_slot_path = leaf_slot_id_cursor.split('/')
+
+      const leaf_slot_parent_path = leaf_slot_path.slice(0, -1)
+      const leaf_slot_sub_component_id =
+        leaf_slot_path[leaf_slot_path.length - 1]
+
+      const leaf_slot_parent = component.pathGetSubComponent(
+        leaf_slot_parent_path
+      )
+
+      const leaf_slot_sub_component = leaf_slot_parent.getSubComponent(
+        leaf_slot_sub_component_id
+      )
+
+      const leaf_slot_sub_component_parent_id =
+        leaf_slot_parent.getSubComponentParentId(leaf_slot_sub_component_id)
+
+      if (leaf_slot_sub_component_parent_id) {
+        const leaf_slot_sub_component_parent = leaf_slot_parent.getSubComponent(
+          leaf_slot_sub_component_parent_id
+        )
+        const leaf_slot_sub_component_parent_slot_name =
+          leaf_slot_parent.getParentRootSlotId(leaf_slot_sub_component) ??
+          'default'
+
+        const leaf_slot_sub_component_parent_slot_path =
+          leaf_slot_sub_component_parent.getSlotPath(
+            leaf_slot_sub_component_parent_slot_name
+          )
+
+        const leaf_slot_sub_component_parent_slot =
+          leaf_slot_sub_component_parent.pathGetSubComponent(
+            leaf_slot_sub_component_parent_slot_path
+          )
+
+        const parent_leaf_slot_id_cursor = joinPath([
+          ...leaf_slot_parent_path,
+          leaf_slot_sub_component_parent_id,
+          ...leaf_slot_sub_component_parent_slot_path,
+        ])
+
+        all_slot_base[parent_leaf_slot_id_cursor] =
+          all_slot_base[parent_leaf_slot_id_cursor] ?? []
+
+        const last_leaf_slot_id = leaf_slot_id_cursor_prev ?? leaf_id
+
+        if (
+          !map[parent_leaf_slot_id_cursor] &&
+          !leaf_slot_sub_component_parent_slot.isParent()
+        ) {
+          add(
+            parent_leaf_slot_id_cursor,
+            leaf_slot_sub_component_parent_slot,
+            leaf_slot_sub_component_parent_slot
+          )
+        }
+
+        if (
+          !all_slot_base[parent_leaf_slot_id_cursor].includes(last_leaf_slot_id)
+        ) {
+          all_slot_base[parent_leaf_slot_id_cursor].push(last_leaf_slot_id)
+          all_leaf_parent_slot_id[last_leaf_slot_id] =
+            parent_leaf_slot_id_cursor
+        }
+
+        leaf_slot_id_cursor_prev = parent_leaf_slot_id_cursor
+        leaf_slot_id_cursor = parent_leaf_slot_id_cursor
+      } else {
+        if (leaf_slot_parent_path.length > 0) {
+          leaf_slot_id_cursor = joinPath(leaf_slot_parent_path)
+        } else {
+          leaf_slot_id_cursor = null
+        }
+      }
+    }
+  }
+
+  for (const leaf of base) {
+    const [leaf_path, leaf_comp] = leaf
+
+    const leaf_id = joinPath(leaf_path)
+
+    const leaf_parent_slot_id = all_leaf_parent_slot_id[leaf_id] ?? ''
+    const leaf_parent_slot_path = leaf_parent_slot_id.split('/')
+    const leaf_parent_slot = component.pathGetSubComponent(
+      leaf_parent_slot_path
+    )
+
+    let p = all_leaf_parent_slot_id[leaf_id]
+
+    let is_root = !p || !leaf_id_set.has(p)
+
+    while (p) {
+      if (leaf_id_set.has(p)) {
+        is_root = false
+
+        break
+      }
+
+      p = all_leaf_parent_slot_id[p]
+    }
+
+    if (!map[leaf_id]) {
+      add(leaf_id, leaf_comp, leaf_parent_slot)
+    }
+
+    if (is_root) {
+      root.push(leaf_id)
+
+      const node = map[leaf_id]
+
+      tree.push(node)
+    }
+  }
+
+  for (const slot_id in all_slot_base) {
+    const slot_base = all_slot_base[slot_id]
+
+    const slot_node = map[slot_id]
+
+    for (const leaf_id of slot_base) {
+      const leaf_node = map[leaf_id]
+
+      slot_node.children.push(leaf_node)
+    }
+  }
+
+  return { tree, map, root }
+}
 
 export const getBaseStyle = (
   base: LayoutBase,
@@ -13,7 +199,7 @@ export const getBaseStyle = (
   extractStyle: (leafId: string, leafComp: Component) => Style
 ) => {
   const base_style = base.map(([leaf_path, leaf_comp]) => {
-    const leaf_id = joinLeafPath([...parentPath, ...leaf_path])
+    const leaf_id = joinPath([...parentPath, ...leaf_path])
 
     const leaf_style = extractStyle(leaf_id, leaf_comp)
 
@@ -38,439 +224,165 @@ export const getParentPath = (component: Component, root: Component) => {
   return parent_path
 }
 
-export type ExpandChildFunction = (
+export type ExtractStyleFunction = (
   leafId: string,
-  component: Component
+  component: Component,
+  parent: Component
 ) => Style
 
-export const expandSlot = (
-  root: Component,
+export const getChildLeaves = (
   component: Component,
-  slot_id: string,
-  path: number[],
-  parent_slot_base: Dict<string[]>,
-  extractStyle: ExpandChildFunction
-) => {
-  let slot_base_ids = parent_slot_base[slot_id]
+  expand: boolean
+): Component[] => {
+  let leaves: Component[] = []
 
-  let child_leaf_id = slot_id
-  let child_leaf_path = (slot_id && slot_id.split('/')) || []
+  const base = component.$parentChildren.reduce((acc, child) => {
+    const base = child.getRootLeaves()
 
-  if (!slot_base_ids) {
-    const sub_component = component.pathGetSubComponent(child_leaf_path)
+    return [...acc, ...base]
+  }, [])
 
-    let sub = sub_component
-
-    let j = 0
-
-    for (let i of path) {
-      if (j === 1) {
-        sub = sub.$parentRoot[i] ?? sub.$root[i]
-      } else if (j == 2) {
-        sub = sub.$parentRoot[i]
-      } else {
-        sub = sub.$parentChildren[i]
-      }
-
-      j++
-    }
-
-    if (!sub) {
-      return []
-    }
-
-    let base
-
-    if (path.length >= 1) {
-      const parent_path = getParentPath(sub, root)
-
-      base = sub.getRootBase().map(([leaf_path, leaf_comp]) => {
-        return [[...parent_path, ...leaf_path], leaf_comp]
-      })
-    } else {
-      base = sub.$parentChildren.reduce((acc, parentChild) => {
-        const sub_component_id =
-          parentChild.$parent.getSubComponentId(parentChild)
-
-        return [
-          ...acc,
-          ...parentChild
-            .getRootBase()
-            .map(([leaf_path, leaf_comp]) => [
-              [sub_component_id, ...leaf_path],
-              leaf_comp,
-            ]),
-        ]
-      }, [])
-
-      const base_style = getBaseStyle(base, [], extractStyle).concat(
-        sub.$mountParentChildren.reduce((acc, parentChild) => {
-          if (parentChild.$parent === null) {
-            const parentChildBase = parentChild.getRootBase()
-
-            for (const [leaf_path, leaf_comp] of parentChildBase) {
-              const leaf_style = rawExtractStyle(leaf_comp.$element)
-
-              acc.push(leaf_style)
-            }
-          }
-
-          return acc
-        }, [])
-      )
-
-      return base_style
-    }
-
-    const base_style = getBaseStyle(base, [], extractStyle)
-
-    return base_style
-  }
-
-  if (path.length === 0) {
-    const sub_component = component.pathGetSubComponent(child_leaf_path)
-
-    const base = sub_component.$parentChildren.reduce((acc, parentChild) => {
-      const sub_component_id =
-        parentChild.$parent.getSubComponentId(parentChild)
-
-      return [
-        ...acc,
-        ...parentChild
-          .getRootBase()
-          .map(([leaf_path, leaf_comp]) => [
-            [sub_component_id, ...leaf_path],
-            leaf_comp,
-          ]),
-      ]
-    }, [])
-
-    const base_style = base.map(([leaf_path, leaf_comp]) => {
-      const leaf_id = joinLeafPath(leaf_path)
-
-      const leaf_style = extractStyle(leaf_id, leaf_comp)
-
-      return leaf_style
-    })
-
-    return base_style
-  }
-
-  let children_style = []
-
-  for (const i of path) {
-    if (child_leaf_id === slot_base_ids[i]) {
-      return []
-    }
-
-    child_leaf_id = slot_base_ids[i]
-
-    if (!child_leaf_id) {
-      return []
-    }
-
-    child_leaf_path = child_leaf_id.split('/')
-
-    slot_base_ids = parent_slot_base[child_leaf_id]
-
-    if (!slot_base_ids) {
-      const child_leaf_comp = component.pathGetSubComponent(child_leaf_path)
-
-      slot_base_ids = child_leaf_comp.$parentChildren.reduce(
-        (acc, parentChild) => {
-          let i = 0
-
-          let parent_sub_component_id = null
-          let parent = parentChild.$parent
-          let child = parentChild
-          let parent_path = []
-
-          while (parent && parent !== component.$parent) {
-            parent_path.unshift(parent.getSubComponentId(child))
-
-            child = parent
-            parent = parent.$parent
-          }
-
-          while (!parent_sub_component_id && parent) {
-            parent_sub_component_id = component.getSubComponentId(parent)
-
-            parent_path.unshift
-
-            parent = parent.$parent
-
-            i++
-          }
-
-          return [
-            ...acc,
-            ...parentChild
-              .getRootBase()
-              .map(([leaf_path]) =>
-                joinLeafPath([...parent_path, ...leaf_path])
-              ),
-          ]
-        },
-        []
-      )
-
-      child_leaf_comp.$mountParentChildren.forEach((parentChild) => {
-        if (parentChild.$parent === null) {
-          const parentChildBase = parentChild.getRootBase()
-
-          for (const [leaf_path, leaf_comp] of parentChildBase) {
-            const leaf_style = rawExtractStyle(leaf_comp.$element)
-
-            children_style.push(leaf_style)
-          }
-        }
-      })
+  if (expand) {
+    for (const leaf_comp of base) {
+      leaves.push(leaf_comp)
     }
   }
 
-  const base_style = slot_base_ids
-    .map((leaf_id) => {
-      const leaf_path = leaf_id.split('/')
+  for (const child of component.$domChildren) {
+    if (!leaves.includes(child) && !base.includes(child)) {
+      leaves.push(child)
+    }
+  }
 
-      const leaf_comp = component.pathGetSubComponent(leaf_path)
-
-      const leaf_style = extractStyle(leaf_id, leaf_comp)
-
-      return leaf_style
-    })
-    .concat(children_style)
-
-  return base_style
+  return leaves
 }
 
-export const reflectStyleTreeTrait = (
+export const expandSlot = (
+  component: Component,
   trait: LayoutNode,
-  tree: Tree<Style>
-): Tree<LayoutNode> => {
-  return {
-    value: trait,
-    parent: null,
-    children: [],
+  slotId: string,
+  path: number[],
+  expand: boolean,
+  extractStyle: ExtractStyleFunction
+): Tag[] => {
+  const slot_path = slotId.split('/')
+
+  const slot = component.pathGetSubComponent(slot_path)
+
+  let parent = slot
+
+  for (let i of path) {
+    const all = getChildLeaves(parent, true)
+
+    parent = all[i]
+
+    if (!parent) {
+      return []
+    }
   }
+
+  const leaves = []
+  const styles: Tag[] = []
+
+  const sub_parent_path = getParentPath(parent, component)
+
+  const sub_sub_component_id = sub_parent_path[0]
+
+  // if (expand || path.length === 0) {
+  parent.$parentChildren.forEach((child) => {
+    const parent_path = getParentPath(child, component)
+
+    const child_sub_component_id = parent_path[0]
+
+    if (child_sub_component_id === sub_sub_component_id || expand) {
+      const base = child
+        .getRootBase()
+        .map(([leaf_path, leaf_comp]) => [
+          [...parent_path, ...leaf_path],
+          leaf_comp,
+        ]) as LayoutBase
+
+      for (const [leaf_path, leaf_comp] of base) {
+        leaves.push(leaf_comp)
+
+        const leaf_id = joinPath(leaf_path)
+        const leaf_style = extractStyle(leaf_id, leaf_comp, parent)
+
+        styles.push({
+          name: leaf_comp.$element.nodeName,
+          style: leaf_style,
+          textContent: leaf_comp.$element.textContent,
+        })
+      }
+    }
+  })
+  // }
+
+  for (const child of parent.$domChildren) {
+    if (!leaves.includes(child)) {
+      const style = rawExtractStyle(
+        child.$element,
+        trait,
+        component.$system.api.text.measureText
+      )
+
+      styles.push({
+        name: child.$element.nodeName,
+        style,
+        textContent: child.$element.textContent,
+      })
+    }
+  }
+
+  return styles
 }
 
 export const reflectComponentBaseTrait = (
   root: Component,
-  root_prefix: string,
-  prefix_leaf_id: string,
+  prefix: string,
   component: Component,
   base: LayoutBase,
-  style: Style,
   trait: LayoutNode,
-  extractStyle: (leafId: string, component: Component) => Style,
-  shouldExpandSlot: boolean = true
+  extractStyle: ExtractStyleFunction,
+  expand: boolean = true
 ): Dict<LayoutNode> => {
   const {
     api: {
-      layout: { reflectChildrenTrait },
+      layout: { reflectTreeTrait },
     },
   } = root.$system
 
-  const sub_component_id_slot: Dict<string> = {}
-
-  const root_sub_sub_component_id: string[] = []
-
-  const all_root_style = []
-
-  const root_leaf_id: string[] = []
-  const all_slot_base_id: Dict<Dict<string[]>> = {}
-
-  const all_leaf_style: Dict<Style> = {}
-  const all_slot_root_style: Dict<Dict<Style[]>> = {}
-  const all_leaf_trait: Dict<LayoutNode> = {}
-  const all_leaf_slot_path = {}
-  const all_slot_base: Dict<string[]> = {}
-
-  const expand_slot = (slot_id: string, path: number[]): Style[] => {
-    if (shouldExpandSlot) {
-      return expandSlot(
-        root,
-        component,
-        slot_id,
-        path,
-        all_slot_base,
-        (leaf_id, leaf_comp) => {
-          return extractStyle(
-            (root_prefix && `${root_prefix}/${leaf_id}`) || leaf_id,
-            leaf_comp
-          )
-        }
-      )
-    } else {
-      return []
-    }
-  }
-
-  for (const leaf of base) {
-    const [leaf_path, leaf_comp] = leaf
-
-    const leaf_id = joinLeafPath(leaf_path)
-
-    const sub_component_id = leaf_path[0]
-
-    const sub_component = component.getSubComponent(sub_component_id)
-
-    const leaf_parent_path = leaf_path.slice(0, leaf_path.length - 1)
-    const leaf_parent_sub_id = leaf_path[leaf_path.length - 1]
-
-    const leaf_parent_id = joinLeafPath(leaf_parent_path)
-
-    const sub_component_parent_id: string =
-      component.getSubComponentParentId(sub_component_id)
-
-    const leaf_parent_comp = component.pathGetSubComponent(leaf_parent_path)
-
-    const leaf_parent_parent_id =
-      leaf_parent_comp.getSubComponentParentId(leaf_parent_sub_id)
-
-    let leaf_parent_slot_path
-
-    if (sub_component_parent_id) {
-      const sub_component_parent = component.getSubComponent(
-        sub_component_parent_id
-      )
-
-      leaf_parent_slot_path = [sub_component_parent_id]
-
-      let c = sub_component
-      let p = sub_component_parent
-
-      let s = p.getParentRootSlotId(c)
-
-      while (p) {
-        const slot_sub_component_id = p.getSlotSubComponentId(s)
-        const slot_target = p.$slotTarget[s]
-
-        if (slot_sub_component_id) {
-          leaf_parent_slot_path.push(slot_sub_component_id)
-
-          p = p.getSubComponent(slot_sub_component_id)
-
-          s = slot_target
-        } else {
-          break
-        }
+  const expandSlot_ = (slot_id: string, path: number[]): Tag[] => {
+    return expandSlot(
+      root,
+      trait,
+      (prefix && slot_id && `${prefix}/${slot_id}`) || prefix || slot_id,
+      path,
+      expand,
+      (leaf_id, leaf_comp, leaf_parent) => {
+        return extractStyle(leaf_id, leaf_comp, leaf_parent)
       }
-    } else {
-      leaf_parent_slot_path = leaf_parent_parent_id
-        ? [...leaf_parent_path, leaf_parent_parent_id]
-        : leaf_parent_path
-    }
-
-    all_leaf_slot_path[leaf_id] = leaf_parent_slot_path
-
-    const leaf_slot_id = joinLeafPath(leaf_parent_slot_path)
-
-    const is_root = leaf_slot_id === leaf_parent_id
-
-    if (!is_root) {
-      all_slot_base[leaf_slot_id] = all_slot_base[leaf_slot_id] || []
-      all_slot_base[leaf_slot_id].push(leaf_id)
-    }
-
-    const leaf_style = extractStyle(
-      `${prefix_leaf_id}${
-        leaf_id === '' ? '' : `${prefix_leaf_id ? '/' : ''}${leaf_id}`
-      }`,
-      leaf_comp
     )
-
-    all_leaf_style[leaf_id] = leaf_style
-
-    if (sub_component_parent_id) {
-      const sub_component_parent = component.getSubComponent(
-        sub_component_parent_id
-      )
-
-      const sub_parent_root_index =
-        sub_component_parent.$parentRoot.indexOf(sub_component)
-      const sub_component_slot_name =
-        sub_component_parent.$parentRootSlotName[sub_parent_root_index]
-
-      sub_component_id_slot[sub_component_id] = sub_component_slot_name
-
-      all_slot_root_style[sub_component_parent_id] =
-        all_slot_root_style[sub_component_parent_id] || {}
-      all_slot_root_style[sub_component_parent_id][sub_component_slot_name] =
-        all_slot_root_style[sub_component_parent_id][sub_component_slot_name] ||
-        []
-      all_slot_root_style[sub_component_parent_id][
-        sub_component_slot_name
-      ].push(leaf_style)
-
-      all_slot_base_id[sub_component_parent_id] =
-        all_slot_base_id[sub_component_parent_id] || {}
-      all_slot_base_id[sub_component_parent_id][sub_component_slot_name] =
-        all_slot_base_id[sub_component_parent_id][sub_component_slot_name] || []
-      all_slot_base_id[sub_component_parent_id][sub_component_slot_name].push(
-        leaf_id
-      )
-    } else if (is_root) {
-      root_sub_sub_component_id.push(sub_component_id)
-
-      all_root_style.push(leaf_style)
-      root_leaf_id.push(leaf_id)
-    }
   }
 
-  const all_root_trait = reflectChildrenTrait(
-    trait,
-    style,
-    all_root_style,
-    [],
-    (path) => {
-      let children = root_leaf_id
+  const {
+    tree,
+    map,
+    root: root_,
+  } = buildTree(prefix, component, base, extractStyle)
 
-      const [head, ...tail] = path
+  reflectTreeTrait(trait, tree, (path) => {
+    const [head, ...tail] = path
 
-      const slot_id = children[head]
+    const slot_id = root_[head]
 
-      return expand_slot(slot_id, tail)
-    }
+    return expandSlot_(slot_id, tail)
+  })
+
+  const traits = mapObjVK(
+    map,
+    (node: Tree<Tag & { trait: LayoutNode }>) => node.value.trait
   )
 
-  let root_leaf_i = 0
-  for (const leaf_id of root_leaf_id) {
-    all_leaf_trait[leaf_id] = all_root_trait[root_leaf_i]
-
-    root_leaf_i++
-  }
-
-  for (const slot_id in all_slot_base) {
-    const slot_base = all_slot_base[slot_id]
-
-    const slot_style = all_leaf_style[slot_id] || {}
-    const slot_all_style = slot_base.map(
-      (leaf_id) => all_leaf_style[leaf_id],
-      []
-    )
-
-    const slot_trait: LayoutNode = all_leaf_trait[slot_id] || trait
-
-    const slot_base_trait = reflectChildrenTrait(
-      slot_trait,
-      slot_style,
-      slot_all_style,
-      [],
-      (path) => {
-        return expand_slot(slot_id, path)
-      }
-    )
-
-    let leaf_i = 0
-    for (const leaf_id of slot_base) {
-      const leaf_slot_trait = slot_base_trait[leaf_i]
-
-      all_leaf_trait[leaf_id] = leaf_slot_trait
-
-      leaf_i++
-    }
-  }
-
-  return all_leaf_trait
+  return traits
 }

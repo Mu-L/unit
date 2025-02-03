@@ -2,9 +2,9 @@ import { UnitPointerEvent } from '.'
 import { Dict } from '../../../types/Dict'
 import { Unlisten } from '../../../types/Unlisten'
 import { callAll } from '../../../util/call/callAll'
-import { Listenable } from '../../Listenable'
 import { Listener } from '../../Listener'
 import { addListener } from '../../addListener'
+import { Component } from '../../component'
 import { stopPropagation } from '../../stopPropagation'
 import { pointDistance } from '../../util/geometry'
 import { Position } from '../../util/geometry/types'
@@ -13,6 +13,7 @@ import {
   CLICK_TIMEOUT,
   LONG_CLICK_TIMEOUT,
   POINTER_CLICK_RADIUS,
+  POINTER_LONG_PRESS_MAX_DELTA,
 } from './constants'
 import { makePointerCancelListener } from './pointercancel'
 import { listenPointerDown } from './pointerdown'
@@ -31,13 +32,13 @@ export type Handlers = {
 }
 
 export function makeClickListener(handlers: Handlers): Listener {
-  return (component) => {
+  return (component: Component) => {
     return listenClick(component, handlers)
   }
 }
 
 export function listenClick(
-  component: Listenable,
+  component: Component,
   handlers: Handlers
 ): () => void {
   const { $element, $system } = component
@@ -60,7 +61,7 @@ export function listenClick(
   let pointerPosition: Dict<Position> = {}
   let pointerDownMaxDistance: Dict<number> = {}
   let lastTapPosition: Position
-
+  let longClickCancelPointerId = new Set<number>()
   let longPress: Dict<boolean> = {}
 
   let doubleClickTimeout: Unlisten = null
@@ -136,9 +137,10 @@ export function listenClick(
                 pointerDownCount === 1
               ) {
                 longPress[pointerId] = true
+
                 if (
                   pointerDownMaxDistance[pointerId] <
-                  POINTER_CLICK_RADIUS / 3
+                  POINTER_LONG_PRESS_MAX_DELTA
                 ) {
                   onLongPress && onLongPress(event, _event)
                 }
@@ -180,8 +182,6 @@ export function listenClick(
     }
   }
 
-  const longClickCancelPointerId = new Set<number>()
-
   const pointerMoveListener = (event: UnitPointerEvent) => {
     // console.log('pointerMoveListener')
 
@@ -190,17 +190,21 @@ export function listenClick(
     pointerPosition[pointerId] = { x: clientX, y: clientY }
 
     if (pointerDown[pointerId]) {
-      pointerDownMaxDistance[pointerId] = Math.max(
+      const d = Math.max(
         pointerDownMaxDistance[pointerId],
         pointDistance(pointerDown[pointerId], pointerPosition[pointerId])
       )
 
+      pointerDownMaxDistance[pointerId] = d
+
       if (
         !longClickCancelPointerId.has(pointerId) &&
-        pointerDownMaxDistance[pointerId] >= POINTER_CLICK_RADIUS / 3
+        d >= POINTER_LONG_PRESS_MAX_DELTA
       ) {
         longClickCancelPointerId.add(pointerId)
         onLongClickCancel && onLongClickCancel(event)
+      } else if (d >= POINTER_CLICK_RADIUS) {
+        onClickCancel && onClickCancel(event)
       }
     }
   }
@@ -270,7 +274,6 @@ export function listenClick(
             onClick && onClick(event, _event)
           }
         } else {
-          onClickCancel && onClickCancel(event)
         }
       }
 
@@ -315,6 +318,8 @@ export function listenClick(
 
       delete longPress[pointerId]
     }
+
+    longClickCancelPointerId.delete(pointerId)
   }
 
   $element.addEventListener('click', stopPropagation)

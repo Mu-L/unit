@@ -72,8 +72,7 @@
   },
   "metadata": {
     "icon": "ruler",
-    "description": "convert deg to rad",
-    "complexity": 14,
+    "description": "convert angle in degrees to radians",
     "tags": ["platform", "core", "geometry", "trigonometry"]
   },
   "inputs": {
@@ -83,8 +82,7 @@
           "unitId": "remainder",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -94,11 +92,9 @@
           "unitId": "multiply",
           "pinId": "a × b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "3a138358-cc25-45e3-a0ce-bbe54445736f",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

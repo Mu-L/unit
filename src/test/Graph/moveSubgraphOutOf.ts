@@ -5,7 +5,7 @@ import { ID_EMPTY, ID_IDENTITY, ID_RANDOM_COLOR_BOX } from '../../system/_ids'
 import { uuid } from '../../util/id'
 import { system } from '../util/system'
 
-const UNIT_ID_EMTPY = 'empty'
+const UNIT_ID_EMPTY = 'empty'
 const UNIT_ID_IDENTITY = 'identity'
 const UNIT_ID_IDENTITY_0 = 'identity0'
 const UNIT_ID_IDENTITY_1 = 'identity1'
@@ -29,6 +29,7 @@ composition0.addUnitSpec(UNIT_ID_RANDOM_COLOR_BOX, {
 composition0.moveSubgraphOutOf(
   UNIT_ID_RANDOM_COLOR_BOX,
   null,
+  null,
   uuid(),
   {
     merge: [],
@@ -51,6 +52,10 @@ composition0.moveSubgraphOutOf(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -58,7 +63,7 @@ assert.equal(composition0.getUnitCount(), 2)
 
 const spec1 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -94,7 +99,8 @@ false && watchUnitAndLog(composition1)
 false && watchGraphAndLog(composition1)
 
 composition1.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -130,13 +136,17 @@ composition1.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
 assert.equal(composition1.getUnitCount(), 2)
 assert.equal(composition1.getMergeCount(), 1)
 assert.deepEqual(composition1.getMergeSpec('0'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     input: {
       a: true,
     },
@@ -149,7 +159,8 @@ assert.deepEqual(composition1.getMergeSpec('0'), {
 })
 
 composition1.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -184,6 +195,10 @@ composition1.moveSubgraphOutOf(
     input: {},
     output: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -206,7 +221,7 @@ assert.deepEqual(composition1.getMergeSpec('0'), {
 
 const spec2 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -242,7 +257,8 @@ false && watchUnitAndLog(composition2)
 false && watchGraphAndLog(composition2)
 
 composition2.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -279,13 +295,17 @@ composition2.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
 assert.equal(composition2.getUnitCount(), 3)
 assert.equal(composition2.getMergeCount(), 2)
 assert.deepEqual(composition2.getMergeSpec('1'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     output: {
       a: true,
     },
@@ -298,7 +318,8 @@ assert.deepEqual(composition2.getMergeSpec('1'), {
 })
 
 composition2.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -335,6 +356,10 @@ composition2.moveSubgraphOutOf(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -343,7 +368,7 @@ assert.equal(composition2.getMergeCount(), 1)
 
 const spec3 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -379,7 +404,8 @@ false && watchUnitAndLog(composition3)
 false && watchGraphAndLog(composition3)
 
 composition3.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -418,13 +444,17 @@ composition3.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
 assert.equal(composition3.getUnitCount(), 3)
 assert.equal(composition3.getMergeCount(), 2)
 assert.deepEqual(composition3.getMergeSpec('2'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     input: {
       a: true,
     },
@@ -436,7 +466,7 @@ assert.deepEqual(composition3.getMergeSpec('2'), {
   },
 })
 assert.deepEqual(composition3.getMergeSpec('3'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     output: {
       a: true,
     },
@@ -448,7 +478,7 @@ assert.deepEqual(composition3.getMergeSpec('3'), {
   },
 })
 
-const empty4 = composition3.getGraph(UNIT_ID_EMTPY)
+const empty4 = composition3.getGraph(UNIT_ID_EMPTY)
 
 assert.deepEqual(empty4.getMergeSpec('0'), {})
 assert.deepEqual(empty4.getPlugSpec('input', 'a', '0'), {
@@ -459,7 +489,8 @@ assert.deepEqual(empty4.getPlugSpec('output', 'a', '0'), {
 })
 
 composition3.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -497,6 +528,10 @@ composition3.moveSubgraphOutOf(
     input: {},
     output: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -518,7 +553,7 @@ assert.deepEqual(composition3.getMergeSpec('0'), {
 
 const spec4 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -554,7 +589,8 @@ false && watchUnitAndLog(composition4)
 false && watchGraphAndLog(composition4)
 
 composition4.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -593,13 +629,17 @@ composition4.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
 assert.equal(composition4.getUnitCount(), 3)
 assert.equal(composition4.getMergeCount(), 2)
 assert.deepEqual(composition4.getMergeSpec('2'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     input: {
       a: true,
     },
@@ -611,7 +651,7 @@ assert.deepEqual(composition4.getMergeSpec('2'), {
   },
 })
 assert.deepEqual(composition4.getMergeSpec('3'), {
-  [UNIT_ID_EMTPY]: {
+  [UNIT_ID_EMPTY]: {
     output: {
       a: true,
     },
@@ -623,7 +663,7 @@ assert.deepEqual(composition4.getMergeSpec('3'), {
   },
 })
 
-const empty3 = composition4.getGraph(UNIT_ID_EMTPY)
+const empty3 = composition4.getGraph(UNIT_ID_EMPTY)
 
 assert.deepEqual(empty3.getMergeSpec('0'), {})
 assert.deepEqual(empty3.getPlugSpec('input', 'a', '0'), {
@@ -634,7 +674,8 @@ assert.deepEqual(empty3.getPlugSpec('output', 'a', '0'), {
 })
 
 composition4.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -672,6 +713,10 @@ composition4.moveSubgraphOutOf(
     input: {},
     output: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -693,7 +738,7 @@ assert.deepEqual(composition4.getMergeSpec('0'), {
 
 const spec5 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -739,7 +784,8 @@ false && watchUnitAndLog(composition5)
 false && watchGraphAndLog(composition5)
 
 composition5.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -769,6 +815,10 @@ composition5.moveSubgraphInto(
     input: {},
     output: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -779,12 +829,14 @@ assert.equal(composition5.getMergeCount(), 1)
 assert.deepEqual(composition5.getPlugSpec('input', 'a', '0'), {
   unitId: 'empty',
   pinId: 'a',
+  kind: 'input',
 })
 
-const empty5 = composition5.getGraph(UNIT_ID_EMTPY)
+const empty5 = composition5.getGraph(UNIT_ID_EMPTY)
 
 composition5.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -814,6 +866,10 @@ composition5.moveSubgraphOutOf(
     input: {},
     output: {},
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -839,7 +895,7 @@ assert.deepEqual(composition5.getPlugSpec('input', 'a', '0'), {
 
 const spec6 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
     [UNIT_ID_IDENTITY]: {
@@ -900,7 +956,8 @@ false && watchUnitAndLog(composition6)
 false && watchGraphAndLog(composition6)
 
 composition6.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -927,16 +984,21 @@ composition6.moveSubgraphInto(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
 assert.equal(composition6.getUnitCount(), 3)
 assert.equal(composition6.getMergeCount(), 2)
 
-const empty6 = composition6.getGraph(UNIT_ID_EMTPY)
+const empty6 = composition6.getGraph(UNIT_ID_EMPTY)
 
 composition6.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -977,6 +1039,10 @@ composition6.moveSubgraphOutOf(
     output: {},
   },
   {},
+  {},
+  {},
+  {},
+  {},
   {}
 )
 
@@ -997,7 +1063,7 @@ assert.deepEqual(composition6.getMergeSpec('0'), {
 
 const spec7 = system.newSpec({
   units: {
-    [UNIT_ID_EMTPY]: {
+    [UNIT_ID_EMPTY]: {
       id: ID_EMPTY,
     },
   },
@@ -1021,7 +1087,8 @@ false && watchUnitAndLog(composition7)
 false && watchGraphAndLog(composition7)
 
 composition7.moveSubgraphInto(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1045,6 +1112,10 @@ composition7.moveSubgraphInto(
       },
     },
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )
@@ -1052,12 +1123,13 @@ composition7.moveSubgraphInto(
 assert.equal(composition7.getUnitCount(), 1)
 assert.equal(composition7.getMergeCount(), 0)
 
-const empty7 = composition7.getGraph(UNIT_ID_EMTPY)
+const empty7 = composition7.getGraph(UNIT_ID_EMPTY)
 
 assert.equal(empty7.getInputCount(), 1)
 
 composition7.moveSubgraphOutOf(
-  UNIT_ID_EMTPY,
+  UNIT_ID_EMPTY,
+  null,
   null,
   uuid(),
   {
@@ -1081,6 +1153,10 @@ composition7.moveSubgraphOutOf(
       },
     },
   },
+  {},
+  {},
+  {},
+  {},
   {},
   {}
 )

@@ -18,8 +18,7 @@
           "unitId": "divide",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -29,16 +28,14 @@
           "unitId": "divide",
           "pinId": "a ÷ b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "half",
-    "complexity": 5,
+    "description": "divide number by 2",
     "tags": ["core", "common"]
   },
   "id": "49d04556-34fd-4231-a478-0e106b564e1c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

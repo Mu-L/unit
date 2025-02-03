@@ -1,8 +1,9 @@
 import { $, $Events } from '../../../../../Class/$'
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { Gamepad_, Gamepad_J } from '../../../../../client/event/gamepad'
 import { System } from '../../../../../system'
+import { Callback } from '../../../../../types/Callback'
 import { EE } from '../../../../../types/interface/EE'
 import { V } from '../../../../../types/interface/V'
 import { Unlisten } from '../../../../../types/Unlisten'
@@ -26,7 +27,7 @@ export type GamePad_EE = {
 
 export type GamepadEvents = $Events<GamePad_EE> & GamePad_EE
 
-export default class _Gamepad extends Semifunctional<I, O> {
+export default class _Gamepad extends Holder<I, O> {
   private _gamepad: Gamepad_
 
   private _connected: boolean
@@ -38,7 +39,6 @@ export default class _Gamepad extends Semifunctional<I, O> {
       {
         fi: ['i'],
         fo: [],
-        i: ['done'],
         o: ['state'],
       },
       {
@@ -110,12 +110,12 @@ export default class _Gamepad extends Semifunctional<I, O> {
         extends $<GamepadEvents>
         implements V<Gamepad_J>, EE<GamePad_EE>
       {
-        async read(): Promise<Gamepad_J> {
-          return gamepad_.state
+        read(callback: Callback<Gamepad_J>): void {
+          callback(gamepad_.state)
         }
 
-        async write(data: Gamepad_J): Promise<void> {
-          throw new Error('cannot write to gamepad state')
+        write(data: Gamepad_J, callback: Callback): void {
+          callback(undefined, 'cannot write to gamepad state')
         }
       })(this.__system)
 
@@ -132,15 +132,10 @@ export default class _Gamepad extends Semifunctional<I, O> {
   }
 
   d() {
-    this._unlisten()
-    this._unlisten = undefined
-  }
+    if (this._unlisten) {
+      this._unlisten()
 
-  onIterDataInputData(name: keyof I) {
-    // if (name === 'done') {
-    this._output.state.pull()
-    this._done()
-    this._input.done.pull()
-    // }
+      this._unlisten = undefined
+    }
   }
 }

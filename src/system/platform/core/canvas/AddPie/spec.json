@@ -9,7 +9,6 @@
         }
       },
       "functional": true,
-      "type": "any[][]",
       "metadata": {
         "position": {
           "0": {
@@ -27,7 +26,6 @@
         }
       },
       "functional": true,
-      "type": "number",
       "metadata": {
         "position": {
           "0": {
@@ -67,8 +65,7 @@
             "y": 280
           }
         }
-      },
-      "type": "number"
+      }
     },
     "y": {
       "plug": {
@@ -100,8 +97,7 @@
             "y": 287
           }
         }
-      },
-      "type": "number"
+      }
     },
     "r": {
       "plug": {
@@ -125,8 +121,7 @@
             "y": 216
           }
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -137,7 +132,6 @@
           "pinId": "d"
         }
       },
-      "type": "(number|string)[][]",
       "metadata": {
         "position": {
           "0": {
@@ -523,7 +517,6 @@
   "metadata": {
     "icon": "edit-3",
     "description": "add a pie to current sub-path",
-    "complexity": 47,
     "tags": ["platform", "core", "canvas"],
     "position": {
       "merge": {
@@ -563,6 +556,5 @@
     }
   },
   "id": "22db6e29-8884-43ea-8561-5dc145c192d6",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -7,7 +7,7 @@
       "id": "9988a56e-6bee-46c8-864c-e351d84bc7e2",
       "input": {
         "value": {
-          "constant": true,
+          "constant": false,
           "data": "'NOT HOVERED'"
         },
         "style": {
@@ -171,7 +171,8 @@
     }
   },
   "metadata": {
-    "complexity": 111,
+    "icon": "square",
+    "description": "text box showing whether it is hovered or not",
     "position": {
       "merge": {
         "qkzuxfdle": {
@@ -205,7 +206,6 @@
     "defaultWidth": 180,
     "defaultHeight": 90
   },
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

@@ -1,72 +1,77 @@
 import { Style } from '../system/platform/Style'
 import { Dict } from '../types/Dict'
-import { $Element } from '../types/interface/async/$Element'
 import { identity } from '../util/identity'
 import { Element } from './element'
-import { htmlPropHandler, inputPropHandler, PropHandler } from './propHandler'
-import { applyStyle } from './style'
+import HTMLElement_ from './html'
+import { inputPropHandler } from './propHandler'
 
 export type InputElement =
   | HTMLInputElement
   | HTMLTextAreaElement
   | HTMLSelectElement
+  | HTMLFieldSetElement
   | HTMLDivElement
 
-export function makeFieldInputEventHandler<E extends InputElement>(
+export function makeFieldInputEventHandler(
   component: Element,
   keyName: string = 'value',
-  processValue: (element: E, value: string) => any = identity
+  processValue: (value: string) => any = identity
 ) {
-  return function (event: InputEvent) {
-    const value = this[keyName]
+  return function (event: InputEvent, emit: boolean) {
+    const value = component.$element[keyName]
 
     event.preventDefault()
     event.stopImmediatePropagation()
 
-    const nextValue = processValue(component.$element, value)
+    const nextValue = processValue(value)
 
-    component.set('value', nextValue)
+    if (emit) {
+      component.set('value', nextValue)
+    }
+
     component.dispatchEvent(event.type, nextValue)
   }
 }
 
 export class Field<
   E extends InputElement = any,
-  P extends object = {},
-  U extends $Element = $Element
-> extends Element<E, P, U> {
-  private _prop_handler: PropHandler
-
+  P extends Dict<any> = Dict<any>,
+> extends HTMLElement_<E, P> {
   constructor(
     $props: any,
     $system: any,
     $element: E,
     opt: {
       valueKey: string
+      eventKey?: string
+      emit?: boolean
       defaultStyle?: Style
       defaultValue?: any
-      processValue?: ($element: E, value: string) => any
+      defaultAttr?: Dict<any>
+      processValue?: (value: any) => any
+      parseValue?: (value: string) => any
       propHandlers?: Dict<(value: any) => void>
+      emitOnChange?: boolean
     }
   ) {
-    super($props, $system)
-
     const {
       valueKey,
+      eventKey = valueKey,
+      emit = true,
       defaultStyle,
+      defaultAttr,
       defaultValue = '',
-      processValue = ($element, value) => value,
+      processValue = (value) => value,
+      parseValue = identity,
+      propHandlers,
+      emitOnChange = true,
     } = opt
 
-    let { style = {}, value = defaultValue } = $props
+    super($props, $system, $element, defaultStyle, defaultAttr, propHandlers)
 
-    style = { ...defaultStyle, ...style }
-
-    this.$element = $element
+    let { value = defaultValue } = $props
 
     this.$element[valueKey] = value
-
-    applyStyle($element, style)
 
     const isInput =
       $element instanceof HTMLInputElement ||
@@ -75,30 +80,33 @@ export class Field<
 
     const inputEventHandler = makeFieldInputEventHandler(
       this,
-      valueKey,
+      eventKey,
       processValue
     )
 
-    this.$element.addEventListener('change', inputEventHandler)
-    this.$element.addEventListener('input', inputEventHandler)
+    this.$element.addEventListener('input', (event) =>
+      inputEventHandler(event, emit)
+    )
+    this.$element.addEventListener('change', (event) =>
+      inputEventHandler(event, emit && emitOnChange)
+    )
 
-    this._prop_handler = {
-      ...htmlPropHandler(this, this.$element, defaultStyle),
+    this.$propHandler = {
+      ...this.$propHandler,
       ...(isInput
         ? inputPropHandler(
             this.$element as HTMLInputElement,
             valueKey,
-            defaultValue
+            defaultValue,
+            parseValue
           )
         : {
             value: (value: any | undefined) => {
-              this.$element[valueKey] = value
+              const value_ = parseValue(value)
+
+              this.$element[valueKey] = value_ ?? ''
             },
           }),
     }
-  }
-
-  onPropChanged(prop: string, current: any): void {
-    this._prop_handler[prop](current)
   }
 }

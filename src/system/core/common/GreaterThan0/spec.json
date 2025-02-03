@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "greater-than",
     "description": "output whether `a` is greater than 0",
-    "complexity": 5,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "greaterthan",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -36,11 +34,9 @@
           "unitId": "greaterthan",
           "pinId": "a > b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "id": "6f4ac2fa-e9bd-4c0e-8bda-75976f3e4e58",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -90,7 +90,6 @@
   "metadata": {
     "icon": "undo",
     "description": "iterate over `a` and `b`",
-    "complexity": 25,
     "tags": ["core", "loop"]
   },
   "inputs": {
@@ -100,8 +99,7 @@
           "unitId": "mergeab1",
           "pinId": "a"
         }
-      },
-      "type": "any"
+      }
     },
     "next b": {
       "plug": {
@@ -109,8 +107,7 @@
           "unitId": "mergeab1",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     },
     "inita": {
       "plug": {
@@ -118,8 +115,7 @@
           "unitId": "mergeab0",
           "pinId": "a"
         }
-      },
-      "type": "any"
+      }
     },
     "initb": {
       "plug": {
@@ -127,8 +123,7 @@
           "unitId": "mergeab0",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     },
     "test": {
       "plug": {
@@ -136,8 +131,7 @@
           "unitId": "for",
           "pinId": "test"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "outputs": {
@@ -147,8 +141,7 @@
           "unitId": "splitab0",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     },
     "locala": {
       "plug": {
@@ -156,8 +149,7 @@
           "unitId": "splitab0",
           "pinId": "a"
         }
-      },
-      "type": "any"
+      }
     },
     "finalb": {
       "plug": {
@@ -166,8 +158,7 @@
           "pinId": "b"
         }
       },
-      "defaultIgnored": true,
-      "type": "any"
+      "defaultIgnored": true
     },
     "finala": {
       "plug": {
@@ -176,8 +167,7 @@
           "pinId": "a"
         }
       },
-      "defaultIgnored": true,
-      "type": "any"
+      "defaultIgnored": true
     },
     "currenta": {
       "plug": {
@@ -185,8 +175,7 @@
           "unitId": "splitab2",
           "pinId": "a"
         }
-      },
-      "type": "any"
+      }
     },
     "currentb": {
       "plug": {
@@ -194,11 +183,9 @@
           "unitId": "splitab2",
           "pinId": "b"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "eee90e0f-522d-4ac4-a0f1-abf5d69a4e26",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }
