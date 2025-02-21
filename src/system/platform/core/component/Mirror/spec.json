@@ -58,8 +58,7 @@
           "unitId": "mergedefault",
           "pinId": "a"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -71,14 +70,12 @@
         }
       },
       "ref": true,
-      "type": "`C`&`V`",
       "defaultIgnored": true
     }
   },
   "metadata": {
     "icon": "video",
     "description": "default user media",
-    "complexity": 70,
     "tags": ["platform", "core", "component"]
   },
   "component": {
@@ -93,7 +90,6 @@
     "defaultHeight": 195
   },
   "id": "3a56b714-36d3-4a0a-b641-001db6f774e8",
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

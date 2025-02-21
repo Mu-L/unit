@@ -1,18 +1,21 @@
+import { Waiter } from './Waiter'
 import { IOElement } from './client/IOElement'
 import { LayoutNode } from './client/LayoutNode'
 import { Theme } from './client/theme'
-import { Rect, Size } from './client/util/geometry/types'
-import { Style } from './system/platform/Style'
+import { Rect } from './client/util/geometry/types'
+import { Tag } from './system/platform/Style'
+import { WebSocketShape } from './system/platform/api/network/WebSocket'
+import { MeasureTextFunction } from './text'
+import { Tree } from './tree'
 import { Dict } from './types/Dict'
 import { Unlisten } from './types/Unlisten'
 import {
   BluetoothDevice,
   BluetoothDeviceOpt,
 } from './types/global/BluetoothDevice'
-import { Channel, ChannelOpt } from './types/global/Channel'
 import { DownloadDataOpt as IDownloadTextOpt } from './types/global/DownloadData'
 import { DownloadURLOpt } from './types/global/DownloadURL'
-import { PositionObserverCostructor } from './types/global/PositionObserver'
+import { PositionObserverConstructor } from './types/global/PositionObserver'
 import {
   SpeechGrammarList,
   SpeechGrammarListOpt,
@@ -21,21 +24,78 @@ import {
   SpeechRecognition,
   SpeechRecognitionOpt,
 } from './types/global/SpeechRecognition'
-import { J } from './types/interface/J'
+import { SE } from './types/interface/SE'
+import { WSS } from './types/interface/WSS'
+
+export type RequestOpt = {
+  headers: Dict<string>
+  method: string
+  body: BodyInit
+  cors: boolean
+}
+
+export type ServerResponse = {
+  status: number
+  headers: Dict<string>
+  body: string | ReadableStream
+}
+
+export type ServerRequest = {
+  url: string
+  protocol: string
+  headers: Dict<string>
+  method: string
+  port: string
+  query: Dict<string>
+  path: string
+  search: string
+  hostname: string
+  origin: string
+  body: ReadableStream
+  _?: Dict<any>
+}
+
+export type ServerOpt = {}
+
+export type Server = SE
+
+export type ServerListener = {
+  opt: ServerOpt
+  handler: ServerHandler
+}
+
+export type InterceptOpt = {
+  urls: string[]
+}
+
+export type ServerInterceptor = {
+  opt: InterceptOpt
+  handler: ServerHandler
+}
+
+export type ServerSocket = {
+  send: (data: string | ArrayBufferLike | Blob | ArrayBufferView) => void
+  onmessage: (data: string | ArrayBufferLike | Blob | ArrayBufferView) => void
+}
+
+export type ServerHandler = (req: ServerRequest) => Promise<ServerResponse>
+
+export type WebSocketServer = WSS
 
 export type ImageCapture = any
 
 export type BasicHTTPResponse = {
   status: number
   headers: Dict<string>
-  body: string
 }
 
 export type BasicHTTPRequest = {
-  headers: Dict<string>
+  hostname: string
+  headers: Dict<string | string[]>
   method: string
   path: string
-  body: string
+  search: string
+  query: Dict<string>
 }
 
 export type BasicHTTPHandler = (
@@ -61,14 +121,67 @@ export type API = {
     requestAnimationFrame: (callback: FrameRequestCallback) => number
     cancelAnimationFrame: (frame: number) => void
   }
-  storage: { local: () => J }
   db: IDBFactory
   http: {
-    fetch: (url: string, opt: RequestInit) => Promise<Response>
-    listen: (port: number, handler: BasicHTTPHandler) => Unlisten
+    fetch: (
+      url: string,
+      opt: RequestInit,
+      servers: Dict<ServerListener>,
+      interceptors: ServerInterceptor[]
+    ) => Promise<Response>
+    createServer: (opt: ServerOpt, servers?: Dict<any>) => Server
+    handleUpgrade: (
+      request: ServerRequest,
+      response: Waiter<ServerResponse>,
+      ws: Dict<WebSocketShape>,
+      wss: Dict<ServerSocket>
+    ) => Promise<ServerSocket>
     EventSource: typeof EventSource
   }
-  channel: { local: (opt: ChannelOpt) => Channel }
+  crypto: {
+    generateKey: (
+      algorithm: AlgorithmIdentifier,
+      extractable: boolean,
+      keyUsages: string[]
+    ) => Promise<CryptoKey | CryptoKeyPair>
+    exportKey: <T extends KeyFormat>(
+      format: T,
+      key: CryptoKey
+    ) => Promise<ArrayBuffer | JsonWebKey>
+    encrypt: (
+      algorithm: AlgorithmIdentifier,
+      key: CryptoKey,
+      data: BufferSource
+    ) => Promise<ArrayBuffer>
+    decrypt: (
+      algorithm: AlgorithmIdentifier,
+      key: CryptoKey,
+      data: BufferSource
+    ) => Promise<ArrayBuffer>
+    sign: (
+      algorithm: AlgorithmIdentifier,
+      key: CryptoKey,
+      data: ArrayBuffer
+    ) => Promise<ArrayBuffer>
+    verify: (
+      algorithm: AlgorithmIdentifier,
+      key: CryptoKey,
+      signature: BufferSource,
+      data: BufferSource
+    ) => Promise<boolean>
+    importKey<T extends KeyFormat>(
+      format: T,
+      keyData: T extends 'jwk' ? JsonWebKey : BufferSource,
+      algorithm:
+        | AlgorithmIdentifier
+        | RsaHashedImportParams
+        | EcKeyImportParams
+        | HmacImportParams
+        | AesKeyAlgorithm,
+      extractable: boolean,
+      keyUsages: ReadonlyArray<KeyUsage>
+    ): Promise<CryptoKey>
+  }
   alert: {
     alert: (message: string) => void
     prompt: (message: string, defaultValue: string) => string
@@ -105,21 +218,20 @@ export type API = {
     encodeURIComponent?: (str: string) => string
   }
   layout: {
-    reflectChildrenTrait(
+    reflectTreeTrait(
       parentTrait: LayoutNode,
-      parentStyle: Style,
-      children: Style[],
-      path?: number[],
-      expandChild?: (path: number[]) => Style[]
-    ): LayoutNode[]
+      tree: Tree<Tag>[],
+      expandChild: (path: number[]) => Tag[]
+    ): void
   }
   speech: {
-    SpeechGrammarList: (opt: SpeechGrammarListOpt) => SpeechGrammarList
+    SpeechGrammarList: { new (opt: SpeechGrammarListOpt): SpeechGrammarList }
     SpeechRecognition: { new (opt: SpeechRecognitionOpt): SpeechRecognition }
     SpeechSynthesis: SpeechSynthesis
     SpeechSynthesisUtterance: { new (text?: string): SpeechSynthesisUtterance }
   }
   file: {
+    FileReader: { new (): FileReader }
     isSaveFilePickerSupported: () => boolean
     isOpenFilePickerSupported: () => boolean
     showSaveFilePicker: (opt: IFilePickerOpt) => Promise<FileSystemFileHandle>
@@ -172,20 +284,38 @@ export type API = {
     removeSelection: () => void
   }
   window: {
-    AudioContext: AudioContext
-    OscillatorNode: OscillatorNode
-    MediaStreamAudioSourceNode: MediaStreamAudioSourceNode
-    AnalyserNode: AnalyserNode
-    GainNode: GainNode
-    DelayNode: DelayNode
+    localStorage: Storage
+    sessionStorage: Storage
+    documentPictureInPicture: any
+    HTMLElement: typeof HTMLElement
+    SVGElement: typeof SVGElement
+    SVGSVGElement: typeof SVGSVGElement
+    Text: typeof Text
+    Notification: typeof Notification
+    AudioContext: typeof AudioContext
+    OscillatorNode: typeof OscillatorNode
+    MediaStreamAudioSourceNode: typeof MediaStreamAudioSourceNode
+    AnalyserNode: typeof AnalyserNode
+    GainNode: typeof GainNode
+    DelayNode: typeof DelayNode
     ImageCapture: ImageCapture
+    Audio: { new (): HTMLAudioElement }
+    Image: { new (): HTMLImageElement }
     CompressionStream: { new (format: CompressionFormat): CompressionStream }
     DecompressionStream: {
       new (format: CompressionFormat): DecompressionStream
     }
-    ReadableStream: ReadableStream
+    ReadableStream: typeof ReadableStream
+    OffscreenCanvas: typeof OffscreenCanvas
+    BroadcastChannel: typeof BroadcastChannel
+    WebSocket: typeof WebSocket
     open: (url: string, target: string, features: string) => Window
     getComputedStyle: (element: Element) => CSSStyleDeclaration
+    setTimeout(callback: () => any, ms: number): any
+    setInterval(callback: () => any, ms: number): any
+    nextTick(callback: () => any): any
+    clearTimeout(timer: any): void
+    clearInterval(timer: any): void
   }
   document: {
     createElement<K extends keyof HTMLElementTagNameMap>(
@@ -199,11 +329,13 @@ export type API = {
     elementsFromPoint(x: number, y: number): Element[]
     elementFromPoint(x: number, y: number): Element
     exitPictureInPicture(): Promise<void>
+    canSelectShadowDom(): boolean
     getSelection(): Selection
     createRange(): Range
     exitPictureInPicture(): Promise<void>
+    pictureInPictureElement: Element
     MutationObserver: { new (callback: MutationCallback): MutationObserver }
-    PositionObserver: PositionObserverCostructor
+    PositionObserver: PositionObserverConstructor
     ResizeObserver: { new (callback: ResizeObserverCallback): ResizeObserver }
     IntersectionObserver: {
       new (
@@ -217,7 +349,9 @@ export type API = {
     parse: (str: string) => Dict<any>
   }
   text: {
-    measureText: (text: string, fontSize: number) => Size
+    TextEncoder: typeof TextEncoder
+    TextDecoder: typeof TextDecoder
+    measureText: MeasureTextFunction
   }
   worker: {
     start(): Worker

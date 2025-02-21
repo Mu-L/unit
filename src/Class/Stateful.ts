@@ -1,40 +1,39 @@
 import { MethodNotImplementedError } from '../exception/MethodNotImplementedError'
 import { ObjectUpdateType } from '../ObjectUpdateType'
-import { Primitive, PrimitiveEvents } from '../Primitive'
-import { State } from '../State'
 import { System } from '../system'
+import isEqual from '../system/f/comparison/Equals/f'
+import { Callback } from '../types/Callback'
 import { Dict } from '../types/Dict'
 import { J } from '../types/interface/J'
 import { V } from '../types/interface/V'
 import { Unlisten } from '../types/Unlisten'
 import { $ } from './$'
+import { Component__, ComponentEE } from './Component'
 import { ION, Opt } from './Unit'
 
-export type Stateful_EE = {
-  set: [string, any]
+export type Stateful_EE<I extends Dict<any> = any> = {
+  set: [keyof I, I[keyof I]]
 }
 
-export type StatefulEvents<_EE extends Dict<any[]>> = PrimitiveEvents<
+export type StatefulEvents<_EE extends Dict<any[]>> = ComponentEE<
   _EE & Stateful_EE
 > &
   Stateful_EE
 
 export class Stateful<
-    I = any,
-    O = any,
+    I extends Dict<any> = any,
+    O extends Dict<any> = any,
     _J extends Dict<any> = {},
-    _EE extends StatefulEvents<_EE> = StatefulEvents<Stateful_EE>
+    _EE extends StatefulEvents<_EE> = StatefulEvents<Stateful_EE>,
   >
-  extends Primitive<I, O, _EE>
-  implements J, V
+  extends Component__<I, O, _EE>
+  implements J<I>, V
 {
   __ = ['U', 'J', 'V']
 
-  public stateful = true
+  protected _defaultState: Partial<Record<keyof I, any>> = {}
 
-  protected _defaultState: State = {}
-
-  protected _state: Dict<any> = {}
+  protected _state: Partial<Record<keyof I, any>> = {}
 
   constructor(
     { i = [], o = [] }: ION<I, O>,
@@ -68,11 +67,11 @@ export class Stateful<
 
   public _set_from_input: boolean = false
 
-  onDataInputData(name: string, data: any): void {
+  onDataInputData<K extends keyof I>(name: K, data: any): void {
     this.set(name, data, true)
   }
 
-  onDataInputDrop(name: string): void {
+  onDataInputDrop<K extends keyof I>(name: K): void {
     this._set_from_input = false
 
     if (!this._backwarding) {
@@ -94,21 +93,22 @@ export class Stateful<
     }
   }
 
-  public async get(name: string): Promise<any> {
+  public async get<K extends keyof I>(name: K): Promise<any> {
     return this._state[name] ?? this._defaultState[name]
   }
 
-  public async read(): Promise<any> {
-    return this._state
+  public read(callback: Callback<any>): void {
+    callback(this._state)
   }
 
-  public write(data: any): Promise<void> {
+  public write(data: any, callback: Callback): void {
     this._state = data
-    return
+
+    callback()
   }
 
-  public async set(
-    name: string,
+  public async set<K extends keyof I>(
+    name: K,
     data: any,
     auto: boolean = false
   ): Promise<void> {
@@ -120,11 +120,11 @@ export class Stateful<
     this.emit(name, data)
   }
 
-  hasKey(name: string): Promise<boolean> {
+  hasKey<K extends keyof I>(name: K): Promise<boolean> {
     throw new MethodNotImplementedError()
   }
 
-  delete(name: string): Promise<void> {
+  delete<K extends keyof I>(name: K): Promise<void> {
     delete this._state[name]
 
     return
@@ -146,11 +146,15 @@ export class Stateful<
     throw new MethodNotImplementedError()
   }
 
+  setPinIgnored(): void {
+    //
+  }
+
   snapshotSelf(): Dict<any> {
-    const _state = {}
+    const _state: Partial<Record<keyof I, any>> = {}
 
     for (const key in this._state) {
-      const value = this._state[key]
+      const value = this._state[key] as any
 
       if (value instanceof $) {
         _state[key] = null
@@ -161,7 +165,7 @@ export class Stateful<
 
     return {
       ...super.snapshotSelf(),
-      _state,
+      ...(!isEqual(this._state, this._defaultState) ? { _state } : {}),
     }
   }
 

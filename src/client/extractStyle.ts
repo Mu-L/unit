@@ -1,306 +1,90 @@
 import { isFrameRelativeValue } from '../isFrameRelative'
 import { Style } from '../system/platform/Style'
-import { getPathBoundingBox } from '../util/svg'
+import { MeasureTextFunction } from '../text'
 import { Component } from './component'
-import { DEFAULT_FONT_SIZE } from './DEFAULT_FONT_SIZE'
-import { extractTrait } from './extractTrait'
+import { camelToDashed } from './id'
 import { IOElement } from './IOElement'
-import { isContentEditable } from './isTextLike'
+import { isContentEditable } from './isContentEditable'
 import { LayoutNode } from './LayoutNode'
 import { rawExtractStyle } from './rawExtractStyle'
-import { expandSlot } from './reflectComponentBaseTrait'
-import { rectsBoundingRect } from './util/geometry'
-import { Size } from './util/geometry/types'
-import { parseFontSize } from './util/style/getFontSize'
 
-export function measureChildren(
-  root: Component,
-  component: Component,
-  style: Style,
-  fallbackTrait: LayoutNode,
-  measureText: (text: string, fontSize: number) => Size,
-  fitContent: boolean,
-  getLeafStyle: (
-    parent_trait: LayoutNode,
-    leaf_path: string[],
-    leaf_comp: Component
-  ) => Style = (parent_trait, leaf_path, leaf_comp) =>
-    extractStyle(root, leaf_comp, parent_trait, measureText, fitContent)
-) {
-  const { $system } = component
-
-  const {
-    api: {
-      layout: { reflectChildrenTrait },
-    },
-  } = $system
-
-  const parentChildren = component.$parentChildren
-
-  const base = parentChildren.reduce((acc, child) => {
-    const childBase = child.getRootBase()
-
-    let child_path: string[] = []
-    let c: Component = child
-    let p = child.$parent
-
-    while (p) {
-      let z = component
-
-      let drop = false
-
-      while (z) {
-        if (c.getSubComponentId(component.$parent)) {
-          drop = true
-
-          break
-        }
-
-        z = z.$parent
-      }
-
-      if (drop) {
-        break
-      }
-
-      const subComponentId = p.getSubComponentId(c)
-
-      child_path.unshift(subComponentId)
-
-      c = p
-
-      p = p.$parent
-    }
-
-    return [
-      ...acc,
-      ...childBase.map(([leaf_path, leaf_comp]) => [
-        [...child_path, ...leaf_path],
-        leaf_comp,
-      ]),
-    ]
-  }, [])
-
-  const base_style = base.map(([leaf_path, leaf_comp]) => {
-    return getLeafStyle(fallbackTrait, leaf_path, leaf_comp)
-  })
-
-  const relative_base_style = base_style.filter(({ position }) => {
-    return position !== 'fixed' && position !== 'absolute'
-  }, [])
-
-  const trait = extractTrait(component, measureText)
-
-  const reflected_children_trait = reflectChildrenTrait(
-    trait,
-    style,
-    relative_base_style,
-    [],
-    (path) => {
-      return expandSlot(root, component, '', path, {}, (leaf_id, leaf_comp) => {
-        return getLeafStyle(fallbackTrait, leaf_id.split('/'), leaf_comp)
-      })
-    }
-  )
-
-  const size = rectsBoundingRect(reflected_children_trait)
-
-  return size
-}
+export const LAYOUT_STYLE_ATTRS = [
+  'position',
+  'boxSizing',
+  'margin',
+  'marginLeft',
+  'marginTop',
+  'marginBottom',
+  'marginRight',
+  'top',
+  'left',
+  'right',
+  'bottom',
+  'width',
+  'height',
+  'opacity',
+  'fontSize',
+  'transform',
+  'aspectRatio',
+  'color',
+  'object-fit',
+]
 
 export function extractStyle(
-  root: Component,
   component: Component,
-  fallbackTrait: LayoutNode,
-  measureText: (text: string, fontSize: number) => Size,
-  fitContent: boolean = false,
-  getLeafStyle: (
-    parent_trait: LayoutNode,
-    leaf_path: string[],
-    leaf_comp: Component
-  ) => Style = (parent_trait, leaf_path, leaf_comp) =>
-    extractStyle(root, leaf_comp, parent_trait, measureText, fitContent)
+  trait: LayoutNode,
+  measureText: MeasureTextFunction
 ): Style {
   const { $node } = component
 
-  return _extractStyle(
-    root,
-    component,
-    $node,
-    fallbackTrait,
-    measureText,
-    fitContent,
-    getLeafStyle
-  )
+  return _extractStyle(component, $node, trait, measureText)
 }
 
 export function _extractStyle(
-  root: Component,
   component: Component,
   element: IOElement,
-  fallbackTrait: LayoutNode,
-  measureText: (text: string, fontSize: number) => Size,
-  fitContent: boolean = false,
-  getLeafStyle: (
-    parent_trait: LayoutNode,
-    leaf_path: string[],
-    leaf_comp: Component
-  ) => Style = (parent_trait, leaf_path, leaf_comp) =>
-    extractStyle(root, leaf_comp, parent_trait, measureText, fitContent)
+  trait: LayoutNode,
+  measureText: MeasureTextFunction
 ): Style {
-  const style = rawExtractStyle(element)
+  const style = rawExtractStyle(element, trait, measureText)
 
-  const fitWidth = style['width'] === 'fit-content'
-  const fitHeight = style['height'] === 'fit-content'
-
-  if (element instanceof Text) {
-    const fontSize = component.getFontSize()
-
-    const { textContent } = component.$element
-
-    const { width, height } = measureText(textContent, fontSize)
-
-    return {
-      width: `${width}px`,
-      height: `${height}px`,
-    }
-  }
-
-  if (
-    element instanceof HTMLDivElement &&
-    element.getAttribute('contenteditable') === 'true' &&
-    (fitWidth || fitHeight)
-  ) {
-    const fontSize = component.getFontSize()
-
-    const { textContent } = component.$element
-
-    const { width, height } = measureText(textContent, fontSize)
-
-    if (fitWidth) {
-      style['width'] = `${width}px`
-    }
-
-    if (fitHeight) {
-      style['height'] = `${height}px`
-    }
-  }
-
-  if (style['display'] === 'contents') {
-    return {
-      width: '100%',
-      height: '100%',
-    }
-  }
-
-  if (element instanceof HTMLCanvasElement) {
-    const treatProp = (name: 'width' | 'height') => {
-      const prop = component.getProp(name)
-
-      if (prop !== undefined) {
-        if (typeof prop === 'string') {
-          if (isFrameRelativeValue(prop)) {
-            const prop_num = prop.substring(0, prop.length - 2)
-
-            style[name] = `${prop_num}%`
-          } else {
-            // TODO
-          }
-        } else {
-          style[name] = `${prop}px`
-        }
-      } else {
-        style[name] = `${element[name]}px`
-      }
-    }
-
-    treatProp('width')
-    treatProp('height')
-  }
-
-  if (element instanceof HTMLInputElement) {
-    if (
-      element.type === 'text' ||
-      element.type === 'number' ||
-      element.type === 'password'
-    ) {
-      if (style.height === 'fit-content') {
-        const { value } = element
-
-        const fontSize = element.style.fontSize
-
-        const fontSizeNum = parseFontSize(fontSize) ?? DEFAULT_FONT_SIZE
-
-        const { height } = measureText(value, fontSizeNum)
-
-        style.height = `${height}px`
-      }
-    }
-
-    if (element.type === 'range') {
-      style.height = '18px'
-    }
-  } else if (element instanceof HTMLSelectElement) {
-    style.height = '18px'
-  }
-
-  if (element instanceof SVGPathElement) {
-    const d = element.getAttribute('d')
-
-    const bb = getPathBoundingBox(d)
-
-    style['width'] = `${bb.width}px`
-    style['height'] = `${bb.height}px`
-
-    // TODO
-  }
-
-  if (element instanceof SVGRectElement) {
-    style['width'] = `${element.width.animVal.value}px`
-    style['height'] = `${element.height.animVal.value}px`
-
-    // TODO
-  }
-
-  if (element instanceof SVGCircleElement) {
-    const r = element.r.animVal.value
-
-    const width = 2 * r
-    const height = width
-
-    style['width'] = `${width}px`
-    style['height'] = `${height}px`
-
-    // TODO
-  }
-
-  return style
+  return _extractFromRawStyle(component, element, style, trait, measureText)
 }
 
-export function extractFromRawStyle(
-  root: Component,
+export function extractLayoutStyle(style: Style) {
+  const style_ = {}
+
+  for (const attr of LAYOUT_STYLE_ATTRS) {
+    style_[attr] = style[attr] ?? style[camelToDashed(attr)] ?? ''
+  }
+
+  return style_
+}
+
+export function _extractFromRawStyle(
   component: Component,
   element: IOElement,
   style: Style,
-  fallbackTrait: LayoutNode,
-  measureText: (text: string, fontSize: number) => Size,
-  fitContent: boolean = false,
-  getLeafStyle: (
-    parent_trait: LayoutNode,
-    leaf_path: string[],
-    leaf_comp: Component
-  ) => Style = (parent_trait, leaf_path, leaf_comp) =>
-    extractStyle(root, leaf_comp, parent_trait, measureText, fitContent)
+  trait: LayoutNode,
+  measureText: MeasureTextFunction
 ): Style {
+  const {
+    api: {
+      window: { getComputedStyle },
+    },
+  } = component.$system
+
   const fitWidth = style['width'] === 'fit-content'
   const fitHeight = style['height'] === 'fit-content'
 
   if (element instanceof Text) {
-    const fontSize = component.getFontSize()
-
     const { textContent } = component.$element
 
-    const { width, height } = measureText(textContent, fontSize)
+    const { width, height } = measureText(
+      textContent,
+      trait.fontSize,
+      trait.width
+    )
 
     return {
       width: `${width}px`,
@@ -308,24 +92,30 @@ export function extractFromRawStyle(
     }
   }
 
-  if (isContentEditable(element) && (fitWidth || fitHeight)) {
+  const contentEditable = isContentEditable(element)
+
+  if (contentEditable && (fitWidth || fitHeight)) {
     const fontSize = component.getFontSize()
 
     const { textContent } = component.$element
 
-    const { width, height } = measureText(textContent, fontSize)
+    let { width, height } = measureText(textContent, fontSize, trait.width)
 
     if (fitWidth) {
       style['width'] = `${width}px`
     }
 
     if (fitHeight) {
+      if (contentEditable && !textContent) {
+        ;({ height } = measureText('|', fontSize, trait.width))
+      }
+
       style['height'] = `${height}px`
     }
   }
 
   if (style['display'] === 'contents') {
-    return {
+    style = {
       width: '100%',
       height: '100%',
     }
@@ -335,20 +125,35 @@ export function extractFromRawStyle(
     const treatProp = (name: 'width' | 'height') => {
       const prop = component.getProp(name)
 
+      style[name] = '100%'
+
       if (prop !== undefined) {
         if (typeof prop === 'string') {
           if (isFrameRelativeValue(prop)) {
             const prop_num = prop.substring(0, prop.length - 2)
 
-            style[name] = `${prop_num}%`
+            style[`max-${name}`] = `${prop_num}%`
           } else {
-            // TODO
+            //
           }
         } else {
-          style[name] = `${prop}px`
+          style[`max-${name}`] = `${prop}px`
         }
       } else {
-        style[name] = `${element[name]}px`
+        style[`max-${name}`] = `${element[name]}px`
+      }
+    }
+
+    style['aspect-ratio'] = '1 / 1'
+
+    treatProp('width')
+    treatProp('height')
+  }
+
+  if (element instanceof SVGElement) {
+    const treatProp = (name: 'width' | 'height') => {
+      if (style[name] === undefined) {
+        style[name] = '100%'
       }
     }
 
@@ -357,81 +162,11 @@ export function extractFromRawStyle(
   }
 
   if (element instanceof HTMLInputElement) {
-    if (
-      element.type === 'text' ||
-      element.type === 'number' ||
-      element.type === 'password'
-    ) {
-      if (style.height === 'fit-content') {
-        const { value } = element
-
-        const fontSize = element.style.fontSize
-
-        const fontSizeNum = parseFontSize(fontSize) ?? DEFAULT_FONT_SIZE
-
-        const { height } = measureText(value, fontSizeNum)
-
-        style.height = `${height}px`
-      }
-    }
-
     if (element.type === 'range') {
       style.height = '18px'
     }
   } else if (element instanceof HTMLSelectElement) {
     style.height = '18px'
-  }
-
-  if (element instanceof SVGPathElement) {
-    const d = element.getAttribute('d')
-
-    const bb = getPathBoundingBox(d)
-
-    style['width'] = `${bb.width}px`
-    style['height'] = `${bb.height}px`
-
-    // TODO
-  }
-
-  if (element instanceof SVGRectElement) {
-    style['width'] = `${element.width.animVal.value}px`
-    style['height'] = `${element.height.animVal.value}px`
-
-    // TODO
-  }
-
-  if (element instanceof SVGCircleElement) {
-    const r = element.r.animVal.value
-
-    const width = 2 * r
-    const height = width
-
-    style['width'] = `${width}px`
-    style['height'] = `${height}px`
-
-    // TODO
-  }
-
-  if (fitContent) {
-    if (fitWidth || fitHeight) {
-      const { width, height } = measureChildren(
-        root,
-        component,
-        style,
-        fallbackTrait,
-        measureText,
-        fitContent,
-        getLeafStyle
-      )
-
-      if (fitWidth) {
-        style['width'] = `${width}px`
-      }
-
-      if (fitHeight) {
-        style['height'] = `${height}px`
-      }
-    }
   }
 
   return style

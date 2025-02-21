@@ -24,13 +24,17 @@
     "dy": {
       "type": "string",
       "optional": true
+    },
+    "attr": {
+      "type": "object",
+      "optional": true,
+      "defaultIgnored": true
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "square",
     "description": "SVG text",
-    "complexity": 43,
     "tags": ["platform", "component", "svg"]
   },
   "id": "49ef122e-b4d1-11ea-b45e-b73d8ee2aae8",
@@ -40,6 +44,5 @@
     "defaultHeight": 60
   },
   "type": "`U`&`C`&`V`&`J`",
-  "system": true,
   "render": true
 }

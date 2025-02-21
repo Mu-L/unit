@@ -29,8 +29,7 @@
           "unitId": "half",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -40,17 +39,14 @@
           "unitId": "floor",
           "pinId": "⌊a⌋"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "half",
     "description": "build a list of size n",
-    "complexity": 10,
     "tags": ["core", "common"]
   },
   "id": "86e310b3-4b84-4be2-a87a-e4ebcc5d3a0c",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -1,14 +1,20 @@
+import { $ } from '../../../../../Class/$'
 import { Element_ } from '../../../../../Class/Element'
 import { Graph } from '../../../../../Class/Graph'
-import { emptySpec, newSpecId } from '../../../../../client/spec'
+import { SnapshotOpt } from '../../../../../Class/Unit'
 import { Zoom } from '../../../../../client/zoom'
 import { fromBundle } from '../../../../../spec/fromBundle'
 import { fromSpec } from '../../../../../spec/fromSpec'
+import { emptySpec, newSpecId } from '../../../../../spec/util'
 import { System } from '../../../../../system'
+import { BundleSpec } from '../../../../../types/BundleSpec'
 import { Dict } from '../../../../../types/Dict'
-import { GraphClass } from '../../../../../types/GraphClass'
 import { G } from '../../../../../types/interface/G'
+import { J } from '../../../../../types/interface/J'
+import { wrapObject } from '../../../../../wrap/Object'
 import { ID_EDITOR } from '../../../../_ids'
+import { firstGlobalComponentPromise } from '../../../../globalComponent'
+import EditorComponent from './Component'
 
 export interface I<T> {
   style: Dict<string>
@@ -21,14 +27,14 @@ export interface I<T> {
 }
 
 export interface O<T> {
-  graph: G | GraphClass
+  graph: G
+  state: J & $
 }
 
 export default class Editor<T> extends Element_<I<T>, O<T>> {
-  __ = ['U', 'C', 'V', 'J', 'G']
+  __ = ['U', 'C', 'V', 'J', 'G', 'EE']
 
   private _fallback_graph: Graph
-
   private _graph: Graph
 
   constructor(system: System) {
@@ -45,7 +51,7 @@ export default class Editor<T> extends Element_<I<T>, O<T>> {
           'config',
           'attr',
         ],
-        o: ['graph'],
+        o: ['graph', 'state'],
       },
       {
         input: {
@@ -60,23 +66,58 @@ export default class Editor<T> extends Element_<I<T>, O<T>> {
           graph: {
             ref: true,
           },
+          state: {
+            ref: true,
+          },
         },
       },
       system,
       ID_EDITOR
     )
 
-    const { specs, classes } = system
+    this._fallback()
 
-    const spec = system.newSpec(emptySpec({ id: newSpecId(specs) }))
+    this._input.graph.push(this._fallback_graph)
+
+    this.register()
+    ;(async () => {
+      const component = (await firstGlobalComponentPromise(
+        this.__system,
+        this.__global_id
+      )) as EditorComponent
+
+      const state = wrapObject(
+        {
+          get bundle(): BundleSpec {
+            return component.getBundle()
+          },
+          get zoom(): Zoom {
+            return component.getZoom()
+          },
+          set zoom(zoom: Zoom) {
+            component.setZoom(zoom)
+          },
+        },
+        this.__system
+      )
+
+      this._output.state.push(state)
+    })()
+  }
+
+  private _fallback = () => {
+    const { specs, classes } = this.__system
+
+    const id = newSpecId(specs)
+
+    const spec = this.__system.newSpec(emptySpec({ id }))
+
+    this.__system.lockSpec(id)
 
     const Class = fromSpec(spec, specs, classes, {})
 
-    const fallback_graph = new Class(system)
+    const fallback_graph = new Class(this.__system)
     this._fallback_graph = fallback_graph
-
-    this._input.graph.push(this._fallback_graph)
-    this._output.graph.push(this._fallback_graph)
 
     this._fallback_graph.play()
   }
@@ -96,6 +137,16 @@ export default class Editor<T> extends Element_<I<T>, O<T>> {
 
     if (name === 'graph') {
       this._graph = data as Graph
+
+      data.addListener('destroy', (path: string[]) => {
+        if (path.length > 0) {
+          return
+        }
+
+        if (this._graph === this._fallback_graph) {
+          this._fallback()
+        }
+      })
 
       this._output.graph.push(data)
     }
@@ -117,8 +168,8 @@ export default class Editor<T> extends Element_<I<T>, O<T>> {
     // console.log('Editor', 'onRefOutputData', name, data)
   }
 
-  public snapshotSelf(): Dict<any> {
-    const bundle = this._fallback_graph.getUnitBundleSpec()
+  public snapshotSelf(opt: SnapshotOpt = {}): Dict<any> {
+    const bundle = this._fallback_graph.getUnitBundleSpec(opt)
 
     return {
       ...super.snapshotSelf(),

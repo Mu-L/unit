@@ -6,8 +6,8 @@
       "input": {},
       "metadata": {
         "component": {
-          "width": 210,
-          "height": 120
+          "width": 180,
+          "height": 270
         }
       }
     },
@@ -17,7 +17,7 @@
         "a": {},
         "default": {
           "constant": true,
-          "data": "{display:'flex',flexDirection:'row',height:'100%',width:\"100%\"}"
+          "data": "{display:'flex',flexDirection:'row',overflow:'auto'}"
         }
       },
       "output": {
@@ -46,15 +46,13 @@
           "unitId": "mergedefault",
           "pinId": "a"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "square",
-    "description": "row flexbox",
-    "complexity": 53,
+    "description": "flex row div",
     "tags": ["platform", "core", "component"]
   },
   "component": {
@@ -68,8 +66,7 @@
     },
     "children": ["div"]
   },
-  "id": "ad5a2fcc-fdee-11ea-a34f-77e9c48dbe57",
-  "type": "`U`&`C`&`V`&`J`",
-  "system": true,
+  "id": "7d6383c6-9791-4f2a-8f9a-e80415551f15",
+  "type": "`U`&`G`&`C`",
   "render": true
 }

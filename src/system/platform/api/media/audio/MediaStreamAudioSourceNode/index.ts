@@ -46,19 +46,11 @@ export default class MediaStreamAudioSourceNode_ extends Functional<I, O> {
       system,
       ID_MEDIA_STREAM_AUDIO_SOURCE_NODE
     )
-
-    this.addListener('destroy', () => {
-      this._destroy()
-    })
   }
 
-  private _destroy = () => {
-    if (this._node) {
-      this._node = undefined
-    }
-  }
+  private _destroy = () => {}
 
-  f({ node: sourceNode, stream, opt }: I, done: Done<O>) {
+  async f({ node: sourceNode, stream, opt }: I, done: Done<O>): Promise<void> {
     let _node: MediaStreamAudioSourceNode
 
     const {
@@ -72,40 +64,38 @@ export default class MediaStreamAudioSourceNode_ extends Functional<I, O> {
     if (sourceNode.__.includes('AC')) {
       sourceNode = sourceNode as AC & $
 
-      context = sourceNode.get()
+      context = sourceNode.audioContext()
     } else {
       sourceNode = sourceNode as AN & $
 
       context = sourceNode.getContext()
     }
 
-    stream.mediaStream((mediaStream: MediaStream) => {
-      try {
-        // @ts-ignore
-        _node = new MediaStreamAudioSourceNode(context, {
-          mediaStream,
-        })
-      } catch (err) {
-        done(undefined, err.message.toLowerCase())
+    const mediaStream = await stream.mediaStream()
 
-        return
-      }
-
-      this._node = _node
-
-      const node = wrapAudioNode(_node, this.__system)
-
-      done({
-        node,
+    try {
+      // @ts-ignore
+      _node = new MediaStreamAudioSourceNode(context, {
+        mediaStream,
       })
+    } catch (err) {
+      done(undefined, err.message.toLowerCase())
+
+      return
+    }
+
+    this._node = _node
+
+    const node = wrapAudioNode(_node, this.__system)
+
+    done({
+      node,
     })
   }
 
-  i(name) {
-    this._destroy()
-  }
-
   d() {
-    this._destroy()
+    if (this._node) {
+      this._node = undefined
+    }
   }
 }

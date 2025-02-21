@@ -1,7 +1,7 @@
 import { addListeners } from '../../../../../client/addListener'
 import { ANIMATION_C } from '../../../../../client/animation/ANIMATION_C'
 import { ANIMATION_T_S } from '../../../../../client/animation/ANIMATION_T_S'
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Element } from '../../../../../client/element'
 import { LONG_CLICK_TIMEOUT } from '../../../../../client/event/pointer/constants'
 import { makePointerDownListener } from '../../../../../client/event/pointer/pointerdown'
@@ -12,7 +12,7 @@ import {
   IOFrameResizeEvent,
   makeResizeListener,
 } from '../../../../../client/event/resize'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import {
   DIM_OPACITY,
   whenInteracted,
@@ -29,6 +29,7 @@ export interface Props {
   className?: string
   style?: Dict<string>
   down?: boolean
+  hidden?: boolean
 }
 
 export const TRANSCEND_WIDTH = 33
@@ -60,12 +61,9 @@ export const DEFAULT_STYLE = {
   transition: `opacity ${ANIMATION_T_S}s linear`,
 }
 
-let i = 0
-
 export default class Transcend extends Element<HTMLDivElement, Props> {
   public _container: Div
   public _icon: Icon
-  public _id: string = `${i++}`
 
   private _tooltip: Tooltip
 
@@ -80,10 +78,13 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
 
   private _pointer_down_id: number
 
+  private _hidden: boolean = true
+  private _down: boolean = false
+
   constructor($props: Props, $system: System) {
     super($props, $system)
 
-    const { style = {}, down } = this.$props
+    const { style = {}, down = false, hidden = true } = this.$props
 
     const icon = new Icon(
       {
@@ -91,7 +92,7 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
         style: {
           transform: down
             ? `rotate3d(1, 0, 0, 180deg)`
-            : `rotate3d(1, 0, 0, 180deg)`,
+            : `rotate3d(1, 0, 0, 0deg)`,
           width: '24px',
           height: '24px',
           alignSelf: 'end',
@@ -102,7 +103,11 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
     )
     this._icon = icon
 
+    this._hidden = hidden
+
     const left = this._get_style_left()
+
+    this._y = this._hidden ? -TRANSCEND_HEIGHT : 0
 
     const container = new Div(
       {
@@ -110,6 +115,7 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
           ...DEFAULT_STYLE,
           ...style,
           left,
+          y: `${-TRANSCEND_HEIGHT}px`,
         },
         title: 'transcend',
       },
@@ -350,13 +356,15 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
     this._translate(this._x, this._y)
   }
 
-  private _hidden: boolean = false
-
-  private _down: boolean = false
-
   public up(animate: boolean = true) {
     // console.log('Transcend', 'up')
+
+    if (!this._down) {
+      return
+    }
+
     this._down = false
+
     mergePropStyle(this._icon, {
       transform: `rotate3d(1, 0, 0, 0deg)`,
       transition: animate ? `transform ${ANIMATION_T_S}s linear` : '',
@@ -365,6 +373,11 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
 
   public down(animate: boolean = true) {
     // console.log('Transcend', 'down')
+
+    if (this._down) {
+      return
+    }
+
     this._down = true
 
     mergePropStyle(this._icon, {
@@ -393,7 +406,7 @@ export default class Transcend extends Element<HTMLDivElement, Props> {
     const anim = () => {
       const dy = this._y_target - this._y
 
-      const k = dy / (2 * ANIMATION_C)
+      const k = dy / (6 * ANIMATION_C)
 
       if (Math.abs(dy) >= 1) {
         this._y += k

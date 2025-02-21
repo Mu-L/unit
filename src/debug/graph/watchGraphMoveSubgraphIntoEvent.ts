@@ -19,15 +19,10 @@ export function watchGraphMoveSubgraphEvent(
   const listener = (
     ...[
       graphId,
-      graphBundle,
-      nextSpecId,
-      nodeIds,
-      nextIdMap,
-      nextPinIdMap,
-      nextMergePinId,
-      nextPlugSpec,
-      nextSubComponentParentMap,
-      nextSubComponentChildrenMap,
+      spec,
+      selection,
+      mapping,
+      moves,
       path,
     ]: G_EE['move_subgraph_into']
   ) => {
@@ -36,17 +31,10 @@ export function watchGraphMoveSubgraphEvent(
       event,
       data: {
         graphId,
-        graphBundle,
-        nodeIds,
-        nextSpecId,
-        nextIdMap,
-        nextPinIdMap,
-        nextMergePinId,
-        nextPlugSpec,
-        nextSubComponentParentMap,
-        nextSubComponentChildrenMap,
-        nextSubComponentIndexMap: {}, // TODO
-        nextUnitPinMergeMap: {},
+        spec,
+        selection,
+        mapping,
+        moves,
         path,
       },
     })

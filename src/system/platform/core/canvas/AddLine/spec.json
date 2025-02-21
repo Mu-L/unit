@@ -106,7 +106,6 @@
   "metadata": {
     "icon": "edit-3",
     "description": "draw a circle to the canvas",
-    "complexity": 22,
     "tags": ["platform", "core", "canvas"]
   },
   "inputs": {
@@ -116,8 +115,7 @@
           "unitId": "beginpath",
           "pinId": "d"
         }
-      },
-      "type": "any[][]"
+      }
     },
     "line": {
       "plug": {
@@ -125,8 +123,7 @@
           "unitId": "propx0y0x1y1",
           "pinId": "{x0,y0,x1,y1}"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -136,11 +133,9 @@
           "unitId": "stroke",
           "pinId": "d"
         }
-      },
-      "type": "any[][]"
+      }
     }
   },
   "id": "90dc2942-52fa-4e09-bcef-43fa97cc0b72",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

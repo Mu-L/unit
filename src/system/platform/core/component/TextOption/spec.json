@@ -62,9 +62,8 @@
   },
   "outputs": {},
   "metadata": {
-    "icon": "question",
-    "description": "text option",
-    "complexity": 86
+    "icon": "square",
+    "description": "text option"
   },
   "render": true,
   "component": {

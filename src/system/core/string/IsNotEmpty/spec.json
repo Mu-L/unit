@@ -25,7 +25,6 @@
   "metadata": {
     "icon": "question",
     "description": "check whether array `a` is not empty",
-    "complexity": 13,
     "tags": ["core", "string"]
   },
   "inputs": {
@@ -35,8 +34,7 @@
           "unitId": "isempty",
           "pinId": "a"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {
@@ -46,11 +44,9 @@
           "unitId": "not",
           "pinId": "!a"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "id": "5f5b12b5-c3b9-460e-a84b-3db4f5d9c483",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

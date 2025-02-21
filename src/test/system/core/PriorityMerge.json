@@ -20,8 +20,7 @@
             "unitId": "prioritymergefrom",
             "pinId": "a"
           }
-        },
-        "type": "number[]"
+        }
       },
       "b": {
         "plug": {
@@ -29,8 +28,7 @@
             "unitId": "prioritymergefrom",
             "pinId": "b"
           }
-        },
-        "type": "number[]"
+        }
       }
     },
     "outputs": {
@@ -40,8 +38,7 @@
             "unitId": "prioritymergefrom",
             "pinId": "ab"
           }
-        },
-        "type": "number[]"
+        }
       }
     },
     "metadata": {
@@ -51,8 +48,7 @@
       "tags": ["core", "common"]
     },
     "id": "e2e634dc-8eeb-11ea-8a3c-93ebd81881bc",
-    "type": "`U`&`G`",
-    "system": true
+    "type": "`U`&`G`"
   },
   "specs": {
     "cd9d76f0-8eee-11ea-96c8-e3ee1362938c": {
@@ -107,8 +103,7 @@
               "pinId": "a"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         },
         "b": {
           "plug": {
@@ -117,8 +112,7 @@
               "pinId": "b"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         },
         "from": {
           "plug": {
@@ -127,8 +121,7 @@
               "pinId": "init"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         }
       },
       "outputs": {
@@ -138,8 +131,7 @@
               "unitId": "arraybuilderfrom",
               "pinId": "a[]"
             }
-          },
-          "type": "number[]"
+          }
         }
       },
       "metadata": {
@@ -306,8 +298,7 @@
               "pinId": "init"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         },
         "b": {
           "plug": {
@@ -316,8 +307,7 @@
               "pinId": "init"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         }
       },
       "outputs": {
@@ -327,16 +317,14 @@
               "unitId": "priorityhead",
               "pinId": "head"
             }
-          },
-          "type": "number"
+          }
         },
         "next": {
           "plug": {
             "0": {
               "mergeId": "5"
             }
-          },
-          "type": "boolean"
+          }
         }
       },
       "metadata": {
@@ -358,8 +346,7 @@
               "pinId": "a"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         },
         "a": {
           "plug": {
@@ -368,8 +355,7 @@
               "pinId": "a"
             }
           },
-          "functional": true,
-          "type": "number[]"
+          "functional": true
         }
       },
       "outputs": {
@@ -379,8 +365,7 @@
               "unitId": "prependif",
               "pinId": "a"
             }
-          },
-          "type": "number[]"
+          }
         },
         "a": {
           "plug": {
@@ -388,8 +373,7 @@
               "unitId": "prependifnot",
               "pinId": "a"
             }
-          },
-          "type": "number[]"
+          }
         },
         "head": {
           "plug": {
@@ -397,8 +381,7 @@
               "unitId": "picklesser",
               "pinId": "lesser"
             }
-          },
-          "type": "number"
+          }
         }
       },
       "units": {

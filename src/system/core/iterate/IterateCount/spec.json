@@ -19,7 +19,6 @@
   "metadata": {
     "icon": "sort-desc",
     "description": "iteratively increment `count` starting from 0",
-    "complexity": 15,
     "tags": ["core", "iterate"]
   },
   "inputs": {
@@ -29,8 +28,7 @@
           "unitId": "iteratecountfrom",
           "pinId": "any"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -40,11 +38,9 @@
           "unitId": "iteratecountfrom",
           "pinId": "current"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "fb5bb9ea-bf24-4150-b12d-bc4873a153a2",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

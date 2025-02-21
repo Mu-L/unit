@@ -21,15 +21,13 @@
   "metadata": {
     "icon": "square",
     "description": "HTML div element",
-    "complexity": 43,
     "tags": ["platform", "component"]
   },
   "id": "b61f5cc6-37e9-45e1-965b-02940820f7ce",
   "base": true,
   "component": {
-    "defaultWidth": 120,
-    "defaultHeight": 120
+    "defaultWidth": 90,
+    "defaultHeight": 60
   },
-  "system": true,
   "render": true
 }

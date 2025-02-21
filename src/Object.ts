@@ -1,6 +1,7 @@
 import { EventEmitter_ } from './EventEmitter'
 import { ObjectUpdateType } from './ObjectUpdateType'
 import { keys } from './system/f/object/Keys/f'
+import { Callback } from './types/Callback'
 import { Dict } from './types/Dict'
 import { J } from './types/interface/J'
 import { V } from './types/interface/V'
@@ -12,7 +13,7 @@ export type ObjectNode = {
   children: Dict<ObjectNode>
 }
 
-export class Object_<T extends Object> implements J<T>, V<T> {
+export class Object_<T extends Dict<any> = Dict<any>> implements J<T>, V<T> {
   private _obj: T
   private _node: ObjectNode = {
     emitter: new EventEmitter_(),
@@ -21,6 +22,15 @@ export class Object_<T extends Object> implements J<T>, V<T> {
 
   constructor(obj: T) {
     this._obj = obj
+  }
+
+  public dispatch = (
+    type: ObjectUpdateType,
+    path: string[],
+    key: string,
+    value: any
+  ) => {
+    return this._dispatch(type, path, key, value)
   }
 
   private _obj_at_path(path: string[]): Dict<any> {
@@ -118,8 +128,8 @@ export class Object_<T extends Object> implements J<T>, V<T> {
     this._dispatch('set', parent_path, key, data)
   }
 
-  private _delete = async (name: string): Promise<void> => {
-    this._delete_path([name])
+  private _delete = async <K extends keyof T>(name: K): Promise<void> => {
+    this._delete_path([name] as string[])
     return
   }
 
@@ -133,20 +143,22 @@ export class Object_<T extends Object> implements J<T>, V<T> {
 
     delete obj[key]
 
-    this._dispatch('delete', parent_path, key, value)
+    if (obj[key] === undefined) {
+      this._dispatch('delete', parent_path, key, value)
+    }
   }
 
-  public async read(): Promise<T> {
-    return this._obj
+  public read(callback: Callback<T>): void {
+    callback(this._obj)
   }
 
-  public write(data: T): Promise<void> {
+  public write(data: T, callback: Callback<undefined>): void {
     this._obj = data
 
-    return
+    callback()
   }
 
-  public async get(name: string): Promise<any> {
+  public async get<K extends keyof T>(name: K): Promise<any> {
     const value = this._obj[name]
 
     if (value === undefined) {
@@ -156,15 +168,15 @@ export class Object_<T extends Object> implements J<T>, V<T> {
     return this._obj[name]
   }
 
-  public async set(name: string, data: any): Promise<void> {
-    this._set_path([name], data)
+  public async set<K extends keyof T>(name: K, data: any): Promise<void> {
+    this._set_path([name] as string[], data)
   }
 
   public async hasKey(name: string): Promise<boolean> {
     return this._obj[name] !== undefined
   }
 
-  public async delete(name: string): Promise<void> {
+  public async delete<K extends keyof T>(name: K): Promise<void> {
     return this._delete(name)
   }
 

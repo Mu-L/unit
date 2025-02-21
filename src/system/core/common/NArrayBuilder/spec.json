@@ -9,7 +9,14 @@
           "data": "[]"
         }
       },
-      "output": {}
+      "output": {
+        "acc": {
+          "ignored": false
+        },
+        "test": {
+          "ignored": false
+        }
+      }
     }
   },
   "merges": {},
@@ -20,8 +27,7 @@
           "unitId": "buildarrayfrom",
           "pinId": "n"
         }
-      },
-      "type": "number"
+      }
     },
     "a": {
       "plug": {
@@ -29,8 +35,7 @@
           "unitId": "buildarrayfrom",
           "pinId": "a"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "outputs": {
@@ -40,8 +45,7 @@
           "unitId": "buildarrayfrom",
           "pinId": "a[]"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "test": {
       "plug": {
@@ -50,7 +54,6 @@
           "pinId": "test"
         }
       },
-      "type": "boolean",
       "defaultIgnored": true
     },
     "acc": {
@@ -60,17 +63,14 @@
           "pinId": "acc"
         }
       },
-      "type": "<A>[]",
       "defaultIgnored": true
     }
   },
   "metadata": {
     "icon": "array",
     "description": "build a list of size n",
-    "complexity": 26,
     "tags": ["core", "common"]
   },
   "id": "38033fcc-aa28-4df3-abc8-d4ece231028b",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

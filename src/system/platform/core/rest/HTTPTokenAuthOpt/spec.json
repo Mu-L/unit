@@ -52,7 +52,6 @@
   "metadata": {
     "icon": "send",
     "description": "build HTTP token auth header options",
-    "complexity": 13,
     "tags": ["platform", "core", "rest"]
   },
   "inputs": {
@@ -62,8 +61,7 @@
           "unitId": "httptokenauth",
           "pinId": "token"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {
@@ -73,11 +71,9 @@
           "unitId": "tag",
           "pinId": "kv"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "id": "ba70dd41-d533-4f8f-b476-c76274141468",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

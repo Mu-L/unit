@@ -46,9 +46,8 @@
     }
   },
   "metadata": {
-    "icon": "question",
-    "description": "% + a",
-    "complexity": 5
+    "icon": "percent",
+    "description": "% + a"
   },
   "id": "72a186fe-a18b-44ca-b36b-c014ee44003a"
 }

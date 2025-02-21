@@ -1,17 +1,17 @@
-import { GraphPinSpec, GraphPinsSpec, GraphSubPinSpec } from '..'
-import { GraphMoveSubGraphData } from '../../Class/Graph/interface'
+import { GraphPinsSpec, GraphSubPinSpec } from '..'
+import { MoveMapping } from '../../Class/Graph/buildMoveMap'
+import { Moves } from '../../Class/Graph/buildMoves'
 import Merge from '../../Class/Merge'
-import { Unit } from '../../Class/Unit'
+import { SnapshotOpt, Unit } from '../../Class/Unit'
 import { Pin } from '../../Pin'
 import { PinOpt } from '../../PinOpt'
-import { State } from '../../State'
 import { Action } from '../Action'
 import { BundleSpec } from '../BundleSpec'
 import { Dict } from '../Dict'
 import { GraphMergeSpec } from '../GraphMergeSpec'
 import { GraphMergesSpec } from '../GraphMergesSpec'
+import { GraphPinSpec } from '../GraphPinSpec'
 import { GraphSpec } from '../GraphSpec'
-import { GraphState } from '../GraphState'
 import { GraphUnitSpec } from '../GraphUnitSpec'
 import { GraphUnitsSpec } from '../GraphUnitsSpec'
 import { IO } from '../IO'
@@ -30,8 +30,14 @@ export type GraphSelection = {
     type: IO
     pinId: string
     subPinId: string
+    template?: boolean
   }[]
   data?: string[]
+}
+
+export type GraphSelectionData = {
+  pin?: Dict<IOOf<Dict<string>>>
+  plug?: Dict<IOOf<Dict<string>>>
 }
 
 export type GraphSelectionSpec = {
@@ -43,18 +49,18 @@ export type GraphSelectionSpec = {
 
 export type G_MoveSubgraphIntoArgs = [
   string,
-  BundleSpec,
-  string,
+  GraphSpec,
   GraphSelection,
-  GraphMoveSubGraphData['nextIdMap'],
-  GraphMoveSubGraphData['nextPinIdMap'],
-  GraphMoveSubGraphData['nextMergePinId'],
-  GraphMoveSubGraphData['nextPlugSpec'],
-  Dict<string | null>,
-  Dict<string[]>
+  MoveMapping,
+  Moves,
+  ...any[],
 ]
 
-export interface G<I = any, O = any, U_ = any> {
+export interface G<
+  I extends Dict<any> = Dict<any>,
+  O extends Dict<any> = Dict<any>,
+  U_ = any,
+> {
   exposePinSet(
     type: IO,
     pinId: string,
@@ -79,10 +85,10 @@ export interface G<I = any, O = any, U_ = any> {
   ): void
   unplugPin(type: IO, pinId: string, subPinId: string, ...extra: any[]): void
   getSpec(): GraphSpec
-  getBundleSpec(deep: boolean): BundleSpec
+  getBundleSpec(opt: SnapshotOpt): BundleSpec
   getSubPinSpec(type: IO, pinId: string, subPinId: string): GraphSubPinSpec
-  getExposedInputPin(pinId: string): Pin<I[keyof I]>
-  getExposedOutputPin(pinId: string): Pin<O[keyof O]>
+  getExposedInputPin<K extends keyof I>(pinId: K): Pin<I[K]>
+  getExposedOutputPin<K extends keyof O>(pinId: K): Pin<O[K]>
   getExposedPinSpec(type: IO, pinId: string): GraphPinSpec
   getExposedInputSpec(pinId: string): GraphPinSpec
   getExposedOutputSpec(pinId: string): GraphPinSpec
@@ -96,8 +102,6 @@ export interface G<I = any, O = any, U_ = any> {
   ): { input: Dict<any>; output: Dict<any> }
   getUnitInput(unitId: string, pinId: string): Pin<any>
   getUnitOutput(unitId: string, pinId: string): Pin<any>
-  getUnitState(unitId: string): State
-  getGraphState(): GraphState
   getGraphChildren(): Dict<any>
   getGraphPinData(): object
   getUnitInputData(unitId: string): Dict<any>
@@ -109,9 +113,13 @@ export interface G<I = any, O = any, U_ = any> {
   getMergePinCount(mergeId: string): number
   getMergesSpec(): GraphMergesSpec
   getMergeSpec(mergeId: string): GraphMergeSpec
-  addUnitSpecs(units: GraphUnitsSpec): void
   addUnitSpec(unitId: string, unit: UnitBundleSpec, ...extra: any[]): void
-  addUnit(unitId: string, unit: U_, ...extra: any[]): void
+  addUnit(
+    unitId: string,
+    unit: U_,
+    bundle?: UnitBundleSpec,
+    ...extra: any[]
+  ): void
   removeUnit(unitId: string, destroy: boolean, ...extra: any[]): void
   removeRoot(subComponentId: string): void
   removeMerge(mergeId: string, ...extra: any[]): void
@@ -122,25 +130,7 @@ export interface G<I = any, O = any, U_ = any> {
     pinId: string,
     ...extra: any[]
   ): void
-  removeUnitGhost(
-    unitId: string,
-    nextUnitId: string,
-    spec: GraphSpec,
-    ...extra: any[]
-  ): { specId: string; bundle: UnitBundleSpec }
-  addUnitGhost(
-    unitId: string,
-    nextUnitId: string,
-    nextUnitBundle: UnitBundleSpec,
-    nextUnitPinMap: IOOf<Dict<string>>
-  ): void
-  addMerges(merges: GraphMergesSpec): void
-  addMerge(
-    mergeSpec: GraphMergeSpec,
-    mergeId: string,
-    emit: boolean,
-    ...extra: any[]
-  ): void
+  addMerge(mergeSpec: GraphMergeSpec, mergeId: string, ...extra: any[]): void
   addPinToMerge(
     mergeId: string,
     unitId: string,
@@ -151,6 +141,7 @@ export interface G<I = any, O = any, U_ = any> {
   takeUnitErr(unitId: string): string | null
   setPinSetId(type: IO, pinId: string, nextPinId: string): void
   setPinSetFunctional(type: IO, name: string, functional: boolean): void
+  setPinSetDefaultIgnored(type: IO, name: string, ignored: boolean): void
   setUnitSize(unitId: string, width: number, height: number): void
   setSubComponentSize(unitId: string, width: number, height: number): void
   setComponentSize(unitId: string, width: number, height: number): void
@@ -174,11 +165,23 @@ export interface G<I = any, O = any, U_ = any> {
     pinId: string,
     ignored: boolean
   ): void
-  setUnitPinData(unitId: string, type: IO, pinId: string, data: any): void
+  setUnitPinData(
+    unitId: string,
+    type: IO,
+    pinId: string,
+    data: any,
+    ...extra: any[]
+  ): void
+  setMergeData(mergeId: string, data: any, ...extra: any[]): void
   getUnitPinData(unitId: string, type: IO, pinId: string): any
   isUnitPinRef(unitId: string, type: IO, pinId: string): boolean
   isUnitPinConstant(unitId: string, type: IO, pinId: string): boolean
-  removeUnitPinData(unitId: string, type: IO, pinId: string): any
+  removeUnitPinData(
+    unitId: string,
+    type: IO,
+    pinId: string,
+    ...extra: any[]
+  ): any
   removeMergeData(mergeId: string): any
   setUnitId(
     unitId: string,
@@ -191,9 +194,9 @@ export interface G<I = any, O = any, U_ = any> {
   moveSubComponentRoot(
     subComponentId: string | null,
     children: string[],
-    slotMap: Dict<string>
+    slotMap: Dict<string>,
+    index: number
   ): void
-  moveUnit(unitId: string, toUnitId: string, toInputId: string): void
   moveSubgraphInto(...args: G_MoveSubgraphIntoArgs): void
   moveSubgraphOutOf(...args: G_MoveSubgraphIntoArgs): void
   reorderSubComponent(
@@ -201,19 +204,9 @@ export interface G<I = any, O = any, U_ = any> {
     childId: string,
     to: number
   ): void
-  explodeUnit(
-    unitId: string,
-    mapUnitId: Dict<string>,
-    mapMergeId: Dict<string>,
-    mapPlugId: IOOf<Dict<Dict<string>>>
-  ): void
   hasUnit(unitId: string): boolean
   hasMerge(mergeId: string): boolean
   hasMergePin(mergeId: string, unitId: string, type: IO, pinId: string): boolean
-  isExposedInput(pin: GraphSubPinSpec): boolean
-  isExposedOutput(pin: GraphSubPinSpec): boolean
-  isExposedInputPinId(pinId: string): boolean
-  isExposedOutputPinId(pinId: string): boolean
   isElement(): boolean
   getUnits(): Dict<U_>
   getUnit(unitId: string): U_
@@ -229,6 +222,7 @@ export interface G<I = any, O = any, U_ = any> {
     slotName: string
   ): void
   hasPlug(type: IO, pinId: string, subPinId: string): boolean
+  setPlugData(type: IO, pinId: string, subPinId: string, data: any): void
   removePinOrMerge(
     mergeId: string,
     unitId: string,
@@ -236,15 +230,17 @@ export interface G<I = any, O = any, U_ = any> {
     pinId: string,
     ...extra: any[]
   ): void
-  startTransaction(): void
-  endTransaction(): void
   fork(): void
+  setName(name: string): void
+  setSlot(slotName: string, subComponentId: string): void
+  getSlot(slotName: string): string
 }
 
 export type G_J = {}
 
 export type G_EE = {
-  fork: [string, GraphSpec, string[]]
+  fork: [string, GraphSpec, boolean, string[]]
+  set_name: [string, string[]]
   element: [string[]]
   not_element: [string[]]
   set_exposed_sub_pin: [IO, string, string, Pin, PinOpt, string[]]
@@ -255,10 +251,10 @@ export type G_EE = {
   cover_pin: [IO, string, string, GraphSubPinSpec, string[]]
   unplug_pin: [IO, string, string, GraphSubPinSpec, string[]]
   set_pin_set_functional: [IO, string, boolean, string[]]
+  set_pin_set_default_ignored: [IO, string, boolean, string[]]
   before_remove_unit: [string, Unit, string[]]
   before_add_unit: [string, Unit, string[]]
   add_unit: [string, UnitBundleSpec, Unit, string[]]
-  clone_unit: [string, string, Unit, string[]]
   remove_unit: [string, UnitBundleSpec, Unit, string[]]
   move_unit: [string, string, string, string[]]
   remove_unit_from_merge: [string, string, string[]]
@@ -273,9 +269,10 @@ export type G_EE = {
     string | null,
     Dict<string>,
     string[],
+    number,
     Dict<string>,
     Dict<string>,
-    string[]
+    string[],
   ]
   reorder_sub_component: [string | null, string, number, string[]]
   move_subgraph_into: [...G_MoveSubgraphIntoArgs, string[]]
@@ -285,15 +282,17 @@ export type G_EE = {
   set_unit_pin_ignored: [string, IO, string, boolean, string[]]
   set_unit_pin_data: [string, IO, string, any, string[]]
   set_unit_pin_set_id: [string, IO, string, string, string[]]
+  set_plug_pin_data: [IO, string, string, string[]]
   remove_unit_pin_data: [string, IO, string, string[]]
   set_unit_pin_functional: [string, IO, string, boolean, string[]]
-  metadata: [{ path: string[]; data: any }, string[]]
+  set_metadata: [{ path: string[]; data: any }, string[]]
   component_append: [string, GraphUnitSpec, string[]]
   component_remove: [string, string[]]
   set_pin_set_id: [IO, string, string, string[]]
-  set_unit_id: [string, string, string, string, string[]]
-  add_unit_ghost: [string, string, BundleSpec, string[]]
-  remove_unit_ghost: [string, string, BundleSpec, string[]]
-  bulk_edit: [Action[], boolean, string[]]
-  edit: [string, any[]]
+  set_unit_id: [string, string, string, string[]]
+  set_unit_size: [string, number, number, string[]]
+  set_sub_component_size: [string, number, number, string[]]
+  set_component_size: [number, number, string[]]
+  bulk_edit: [Action[], string[]]
+  edit: any[]
 }

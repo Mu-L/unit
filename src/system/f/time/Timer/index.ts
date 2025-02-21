@@ -1,5 +1,6 @@
 import { Functional } from '../../../../Class/Functional'
 import { Done } from '../../../../Class/Functional/Done'
+import { APINotSupportedError } from '../../../../exception/APINotImplementedError'
 import { System } from '../../../../system'
 import { ID_TIMER } from '../../../_ids'
 
@@ -24,25 +25,38 @@ export default class Timer extends Functional<I, O> {
       system,
       ID_TIMER
     )
-
-    this.addListener('reset', this._reset)
-    this.addListener('destroy', this._reset)
-  }
-
-  private _reset() {
-    if (this._timer !== null) {
-      clearTimeout(this._timer)
-      this._timer = null
-    }
   }
 
   public f({ ms }: I, done: Done<O>): void {
-    this._reset()
+    const {
+      api: {
+        window: { setTimeout },
+      },
+    } = this.__system
+
+    if (!setTimeout) {
+      throw new APINotSupportedError('setTimeout')
+    }
 
     // @ts-ignore
     this._timer = setTimeout(() => {
       this._timer = null
+
       done({ ms })
     }, ms)
+  }
+
+  d() {
+    const {
+      api: {
+        window: { clearTimeout },
+      },
+    } = this.__system
+
+    if (this._timer !== null) {
+      clearTimeout(this._timer)
+
+      this._timer = undefined
+    }
   }
 }

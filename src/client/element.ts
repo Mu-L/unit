@@ -2,7 +2,7 @@ import { Moment } from '../debug/Moment'
 import { NOOP } from '../NOOP'
 import { evaluate } from '../spec/evaluate'
 import { stringify } from '../spec/stringify'
-import { GlobalRefSpec } from '../types/GlobalRefSpec'
+import { Dict } from '../types/Dict'
 import { $Element } from '../types/interface/async/$Element'
 import { Unlisten } from '../types/Unlisten'
 import { Component } from './component'
@@ -26,28 +26,15 @@ import { Listener } from './Listener'
 
 export class Element<
   E extends IOElement = any,
-  P extends object = {},
-  U extends $Element = $Element
+  P extends Dict<any> = Dict<any>,
+  U extends $Element = $Element,
 > extends Component<E, P, U> {
   private _element_unlisten: Unlisten
 
   public $preventLoad: boolean = false
+  public $input: Dict<string[]>
 
   onConnected($unit: $Element) {
-    const setRef = <K extends keyof P>(
-      name: K,
-      { globalId }: GlobalRefSpec
-    ): void => {
-      const ref = $unit.$refGlobalObj({ globalId }) as unknown
-
-      // @ts-ignore
-      this.setProp(name, ref)
-    }
-
-    const dropRef = <K extends keyof P>(name: K): void => {
-      this.setProp(name, undefined)
-    }
-
     const handler = {
       unit: (moment: Moment) => {
         const { specs, classes } = this.$system
@@ -57,13 +44,13 @@ export class Element<
         if (event_event === 'set') {
           const { name, data } = event_data
 
-          // console.log('Element', 'set', name, data)
-
           if (data !== undefined) {
             const _data = evaluate(data, specs, classes, (url) => {
               const globalId = url.slice(7)
 
-              return this.$unit.$refGlobalObj({ globalId })
+              const __ = this.$input[name] ?? []
+
+              return this.$unit.$refGlobalObj({ globalId, __ })
             })
 
             this.setProp(name, _data)
@@ -81,7 +68,7 @@ export class Element<
     }
 
     const element_unlisten = this.$unit.$watch(
-      { events: ['set', 'call' /**, 'ref_input' */] },
+      { events: ['set', 'call'] },
       element_listener
     )
 
@@ -91,18 +78,24 @@ export class Element<
       $unit.$read({}, (state) => {
         const { specs, classes } = this.$system
 
-        const _state = evaluate(state, specs, classes, (url) => {
-          if (url.startsWith('unit://')) {
-            const globalId = url.slice(7)
-
-            return $unit.$refGlobalObj({ globalId })
-          } else {
-            throw new Error('resolver not implemented')
-          }
+        state = evaluate(state, specs, classes, (url) => {
+          return url
         })
 
-        for (const name in _state) {
-          const data = _state[name]
+        for (const name in this.$input) {
+          const url = state[name]
+
+          if (url) {
+            const globalId = url.slice(7)
+
+            const __ = this.$input[name]
+
+            state[name] = this.$unit.$refGlobalObj({ globalId, __ })
+          }
+        }
+
+        for (const name in state) {
+          const data = state[name]
 
           this.setProp(name as keyof P, data)
         }
@@ -111,7 +104,6 @@ export class Element<
   }
 
   onDisconnected() {
-    // console.log('Element', 'onDisconnected')
     this._element_unlisten()
   }
 

@@ -42,8 +42,7 @@
           "pinId": "c"
         }
       },
-      "functional": true,
-      "type": "boolean"
+      "functional": true
     },
     "obj": {
       "plug": {
@@ -51,8 +50,7 @@
           "mergeId": "1"
         }
       },
-      "functional": true,
-      "type": "object"
+      "functional": true
     },
     "key": {
       "plug": {
@@ -61,8 +59,7 @@
           "pinId": "key"
         }
       },
-      "functional": true,
-      "type": "string"
+      "functional": true
     },
     "value": {
       "plug": {
@@ -71,8 +68,7 @@
           "pinId": "value"
         }
       },
-      "functional": true,
-      "type": "any"
+      "functional": true
     }
   },
   "outputs": {
@@ -82,17 +78,14 @@
           "unitId": "pick",
           "pinId": "a"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "metadata": {
-    "icon": "brackets-curly",
+    "icon": "object-set",
     "description": "set value at `key` to `value` if `test` is true",
-    "complexity": 16,
     "tags": ["platform", "core"]
   },
   "id": "946701f6-7dd4-11ea-a1aa-67938c0c6214",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

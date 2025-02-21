@@ -67,7 +67,6 @@
   "metadata": {
     "icon": "send",
     "description": "build HTTP basic auth header value",
-    "complexity": 10,
     "tags": ["platform", "core", "rest"]
   },
   "inputs": {
@@ -77,8 +76,7 @@
           "unitId": "concat",
           "pinId": "a"
         }
-      },
-      "type": "string"
+      }
     },
     "password": {
       "plug": {
@@ -86,8 +84,7 @@
           "unitId": "concat0",
           "pinId": "b"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "outputs": {
@@ -97,11 +94,9 @@
           "unitId": "concat1",
           "pinId": "ab"
         }
-      },
-      "type": "string"
+      }
     }
   },
   "id": "081b1edf-f66c-4e0a-9aaf-c20b4088d1ec",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

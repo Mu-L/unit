@@ -4,4 +4,6 @@ export interface A<T = any> {
   at(i: number): Promise<any>
   length(): Promise<number>
   indexOf(a: T): Promise<number>
+  pop(): Promise<T>
+  shift(): Promise<T>
 }

@@ -1,13 +1,10 @@
 import { Graph } from '../../Class/Graph'
 import { GraphMoveSubComponentRootData } from '../../Class/Graph/interface'
-import { Dict } from '../../types/Dict'
 import { G_EE } from '../../types/interface/G'
 import { Moment } from '../Moment'
 
 export interface GraphMoveSubComponentRootMomentData
   extends GraphMoveSubComponentRootData {
-  prevParentIdMap: Dict<string>
-  prevSlotMap: Dict<string>
   path?: string[]
 }
 
@@ -24,6 +21,7 @@ export function watchGraphMoveSubComponentRoot(
       parentId,
       prevParentIdMap,
       children,
+      index,
       slotMap,
       prevSlotMap,
       path,
@@ -36,6 +34,7 @@ export function watchGraphMoveSubComponentRoot(
         parentId,
         prevParentIdMap,
         children,
+        index,
         slotMap,
         prevSlotMap,
         path,

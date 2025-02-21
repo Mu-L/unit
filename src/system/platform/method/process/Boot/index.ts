@@ -1,27 +1,30 @@
 import { Done } from '../../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../../Class/Semifunctional'
+import { Holder } from '../../../../../Class/Holder'
 import { BootOpt, System } from '../../../../../system'
 import { $S } from '../../../../../types/interface/async/$S'
 import { Async } from '../../../../../types/interface/async/Async'
+import { clone } from '../../../../../util/clone'
 import { wrapSystem } from '../../../../../wrap/System'
 import { ID_BOOT } from '../../../../_ids'
 
 export interface I {
   init: BootOpt
-  done: unknown
+  done: any
 }
 
 export interface O {
   system: $S
 }
 
-export default class Boot extends Semifunctional<I, O> {
+export default class Boot extends Holder<I, O> {
+  private _system: System
+
   constructor(system: System) {
     super(
       {
         fi: ['init'],
         fo: ['system'],
-        i: ['done'],
+        i: [],
         o: [],
       },
       {
@@ -37,23 +40,27 @@ export default class Boot extends Semifunctional<I, O> {
   }
 
   f({ init }: I, done: Done<O>): void {
-    const { path } = init
-
     const _system = this.__system.boot({
-      path,
-      specs: this.__system.specs,
+      specs: clone(this.__system.specs),
       classes: this.__system.classes,
       components: this.__system.components,
+      ...init,
     })
 
-    const system = wrapSystem(_system, this.__system)
+    this._system = _system
 
-    const $system = Async(system, ['S'])
+    const system_ = wrapSystem(_system, this.__system)
+
+    const system = Async(system_, ['S'], this.__system.async) as $S
 
     done({
-      system: $system,
+      system,
     })
   }
-}
 
-export function createSubSystem(system: System, path: string) {}
+  d() {
+    if (this._system) {
+      this._system = undefined
+    }
+  }
+}

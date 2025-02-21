@@ -1,9 +1,8 @@
-import { Element } from '../../../../../client/element'
-import { htmlPropHandler, PropHandler } from '../../../../../client/propHandler'
-import { applyStyle } from '../../../../../client/style'
+import HTMLElement_ from '../../../../../client/html'
 import { APINotSupportedError } from '../../../../../exception/APINotImplementedError'
 import { System } from '../../../../../system'
 import { Dict } from '../../../../../types/Dict'
+import { CS } from '../../../../../types/interface/CS'
 import { $MS } from '../../../../../types/interface/async/$MS'
 
 export interface Props {
@@ -11,90 +10,71 @@ export interface Props {
   style?: Dict<string>
   src?: string
   stream?: $MS
-  autoplay?: boolean
   controls?: boolean
+  attr?: Dict<string>
 }
 
-export const DEFAULT_STYLE = {
-  height: '100%',
-  width: '100%',
-  boxSizing: 'border-box',
-  display: 'flex',
-  // outline: 'none',
-}
-
-export default class VideoComp extends Element<HTMLVideoElement, Props> {
-  private prop_handler: PropHandler
+export default class Video_
+  extends HTMLElement_<HTMLVideoElement, Props>
+  implements CS
+{
+  public $input: Dict<string[]> = {
+    stream: ['MS'],
+  }
 
   constructor($props: Props, $system: System) {
-    super($props, $system)
+    super(
+      $props,
+      $system,
+      $system.api.document.createElement('video'),
+      $system.style['video'],
+      {
+        autoplay: true,
+        controls: true,
+      },
+      {
+        src: (src: string | undefined) => {
+          if (src === undefined) {
+            this.$element.pause()
+            this.$element.removeAttribute('src') // empty source
+            this.$element.load()
+          } else {
+            this.$element.src = src
+          }
+        },
+        stream: (stream: $MS | undefined): void => {
+          if (stream === undefined) {
+            this.$element.srcObject = null
+          } else {
+            stream.$mediaStream({}, (_stream: MediaStream) => {
+              this.$element.srcObject = _stream
+            })
+          }
+        },
+        controls: (controls: boolean | undefined): void => {
+          if (controls === undefined) {
+            this.$element.removeAttribute('controls')
+          } else {
+            this.$element.controls = controls
+          }
+        },
+        currentTime: (t: number | undefined): void => {
+          if (t === undefined) {
+            //
+          } else {
+            this.$element.currentTime = t
+          }
+        },
+      }
+    )
 
-    const {
-      className,
-      style = {},
-      src,
-      autoplay = true,
-      controls = true,
-    } = this.$props
-
-    this.$element = this.$system.api.document.createElement('video')
+    const { src, controls = true } = this.$props
 
     this.$element.controls = controls
-
-    if (className) {
-      this.$element.className = className
-    }
 
     if (src) {
       this.$element.src = src
     }
-
-    this.$element.autoplay = autoplay
-
-    applyStyle(this.$element, { ...DEFAULT_STYLE, ...style })
-
-    this.prop_handler = {
-      ...htmlPropHandler(this, this.$element, DEFAULT_STYLE),
-
-      src: (src: string | undefined) => {
-        if (src === undefined) {
-          this.$element.pause()
-          this.$element.removeAttribute('src') // empty source
-          this.$element.load()
-        } else {
-          this.$element.src = src
-        }
-      },
-      stream: (stream: $MS | undefined): void => {
-        if (stream === undefined) {
-          this.$element.srcObject = null
-        } else {
-          stream.$get({}, (_stream: MediaStream) => {
-            this.$element.srcObject = _stream
-          })
-        }
-      },
-      controls: (controls: boolean | undefined): void => {
-        if (controls === undefined) {
-          this.$element.removeAttribute('controls')
-        } else {
-          this.$element.controls = controls
-        }
-      },
-      currentTime: (t: number | undefined): void => {
-        if (t === undefined) {
-          //
-        } else {
-          this.$element.currentTime = t
-        }
-      },
-    }
-  }
-
-  onPropChanged(prop: string, current: any): void {
-    // console.log('onPropChanged', prop, current)
-
-    this.prop_handler[prop](current)
   }
 
   async captureStream({
@@ -111,10 +91,10 @@ export default class VideoComp extends Element<HTMLVideoElement, Props> {
     }
   }
 
-  async requestPictureInPicture(): Promise<any> {
+  async requestPictureInPicture(): Promise<HTMLVideoElement> {
     if (this.$element.requestPictureInPicture) {
       try {
-        return await this.$element.requestPictureInPicture()
+        return this.$element
       } catch (err) {
         switch (err.name) {
           case 'InvalidStateError':
@@ -138,5 +118,12 @@ export default class VideoComp extends Element<HTMLVideoElement, Props> {
 
   pause(): void {
     this.$element.pause()
+  }
+
+  reset(): void {
+    super.reset()
+
+    this.$element.pause()
+    this.$element.currentTime = 0
   }
 }

@@ -15,7 +15,6 @@
   "metadata": {
     "icon": "x",
     "description": "duplicate `a`",
-    "complexity": 5,
     "tags": ["core", "common"]
   },
   "inputs": {
@@ -25,8 +24,7 @@
           "unitId": "multiply",
           "pinId": "a"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -36,11 +34,9 @@
           "unitId": "multiply",
           "pinId": "a × b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "id": "51630f7a-fffb-42d7-8cf6-5a5924ec4774",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

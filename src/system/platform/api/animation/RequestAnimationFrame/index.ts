@@ -1,6 +1,8 @@
 import { Functional } from '../../../../../Class/Functional'
 import { Done } from '../../../../../Class/Functional/Done'
+import { apiNotSupportedError } from '../../../../../exception/APINotImplementedError'
 import { System } from '../../../../../system'
+import { Dict } from '../../../../../types/Dict'
 import { ID_REQUEST_ANIMATION_FRAME } from '../../../../_ids'
 
 export interface I {
@@ -12,6 +14,8 @@ export interface O {
 }
 
 export default class RequestAnimationFrame extends Functional<I, O> {
+  private _frame: number | undefined = undefined
+
   constructor(system: System) {
     super(
       {
@@ -22,17 +26,29 @@ export default class RequestAnimationFrame extends Functional<I, O> {
       system,
       ID_REQUEST_ANIMATION_FRAME
     )
+  }
 
-    this.addListener('reset', () => {
-      this._reset()
-    })
+  public f({ a }: I, done: Done<O>): void {
+    const {
+      api: {
+        animation: { requestAnimationFrame },
+      },
+    } = this.__system
 
-    this.addListener('destroy', () => {
-      this._reset()
+    if (!requestAnimationFrame) {
+      done(undefined, apiNotSupportedError('Request Animation Frame'))
+
+      return
+    }
+
+    this._frame = requestAnimationFrame(() => {
+      this._frame = undefined
+
+      done({ a })
     })
   }
 
-  private _reset(): void {
+  d() {
     const {
       api: {
         animation: { cancelAnimationFrame },
@@ -46,25 +62,24 @@ export default class RequestAnimationFrame extends Functional<I, O> {
     }
   }
 
-  private _frame: number | undefined = undefined
+  public snapshotSelf(): Dict<any> {
+    return {
+      ...super.snapshotSelf(),
+      ...(this._frame !== undefined ? { _frame: this._frame } : {}),
+    }
+  }
 
-  public f({ a }: I, done: Done<O>): void {
-    const {
-      api: {
-        animation: { requestAnimationFrame },
-      },
-    } = this.__system
+  public restoreSelf(state: Dict<any>): void {
+    const { _frame, ...rest } = state
 
-    if (requestAnimationFrame) {
-      this._reset()
+    super.restoreSelf(rest)
 
+    if (_frame !== undefined) {
       this._frame = requestAnimationFrame(() => {
         this._frame = undefined
 
-        done({ a })
+        this._done({ a: this._i.a })
       })
-    } else {
-      done(undefined, 'request animation frame not supported')
     }
   }
 }

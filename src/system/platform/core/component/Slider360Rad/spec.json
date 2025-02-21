@@ -16,8 +16,7 @@
             "y": -1
           }
         }
-      },
-      "type": "number"
+      }
     }
   },
   "units": {
@@ -74,7 +73,6 @@
   "metadata": {
     "icon": "sliders",
     "description": "360 rad slider current value",
-    "complexity": 61,
     "position": {
       "merge": {
         "hgtjcyd": {
@@ -96,7 +94,6 @@
     "defaultWidth": 120,
     "defaultHeight": 30
   },
-  "type": "`U`&`G`",
-  "system": true,
+  "type": "`U`&`C`&`G`",
   "render": true
 }

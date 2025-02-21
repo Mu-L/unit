@@ -41,11 +41,9 @@
   "metadata": {
     "icon": "square",
     "description": "draw an image `bitmap` on `canvas`",
-    "complexity": 3,
     "tags": ["platform", "api", "canvas"]
   },
   "id": "82cf909e-a78f-4f3e-b87a-976458c8e15d",
   "base": true,
-  "type": "`U`",
-  "system": true
+  "type": "`U`"
 }

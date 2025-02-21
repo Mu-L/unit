@@ -168,11 +168,10 @@
       }
     }
   },
-  "system": true,
   "type": "`U`&`G`",
   "metadata": {
     "icon": "tag",
-    "complexity": 23,
+    "description": "{transform: translate(x, y)}",
     "tags": ["platform", "core", "canvas"]
   },
   "id": "f08860e0-f393-4159-80da-510ff95adb21"

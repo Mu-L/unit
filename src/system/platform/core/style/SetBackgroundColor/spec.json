@@ -24,8 +24,7 @@
           "unitId": "set",
           "pinId": "obj"
         }
-      },
-      "type": "object"
+      }
     },
     "value": {
       "plug": {
@@ -33,8 +32,7 @@
           "unitId": "set",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "outputs": {
@@ -44,17 +42,14 @@
           "unitId": "set",
           "pinId": "obj"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "metadata": {
-    "icon": "brackets-curly",
+    "icon": "object-set",
     "description": "set `obj` background-color property to `value`",
-    "complexity": 5,
     "tags": ["platform", "core", "style"]
   },
   "id": "0ca54c4f-148e-49e5-bedf-d24276200f66",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

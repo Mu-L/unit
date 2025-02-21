@@ -3,16 +3,10 @@
   "units": {
     "div": {
       "id": "66698a97-15c5-4602-9925-11a1aeb03710",
-      "input": {
-        "style": {
-          "constant": true,
-          "data": "{width:\"100%\"}"
-        }
-      },
       "metadata": {
         "component": {
-          "width": 120,
-          "height": 210
+          "width": 240,
+          "height": 240
         }
       }
     },
@@ -22,7 +16,7 @@
         "a": {},
         "default": {
           "constant": true,
-          "data": "{display:'flex',flexDirection:'column',flexWrap:'wrap',alignContent:'start'}"
+          "data": "{display:'flex',flexDirection:'column',flexWrap:'wrap',alignContent:'start',height:'100%'}"
         }
       },
       "output": {
@@ -51,15 +45,13 @@
           "unitId": "mergedefault",
           "pinId": "a"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {},
   "metadata": {
     "icon": "square",
     "description": "grid flexbox",
-    "complexity": 53,
     "tags": ["platform", "core", "component"]
   },
   "component": {
@@ -75,6 +67,5 @@
   },
   "id": "cac87386-de49-480e-87ec-80c306aa5eec",
   "type": "`U`&`G`&`C`",
-  "system": true,
   "render": true
 }

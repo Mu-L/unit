@@ -95,8 +95,7 @@
           "mergeId": "1"
         }
       },
-      "functional": true,
-      "type": "any"
+      "functional": true
     },
     "c[i]": {
       "plug": {
@@ -104,8 +103,7 @@
           "unitId": "arraybuilderfrom",
           "pinId": "a"
         }
-      },
-      "type": "<B>"
+      }
     },
     "a": {
       "plug": {
@@ -113,8 +111,7 @@
           "mergeId": "3"
         }
       },
-      "functional": true,
-      "type": "<A>[]"
+      "functional": true
     }
   },
   "outputs": {
@@ -124,8 +121,7 @@
           "unitId": "foreach1",
           "pinId": "a[i]"
         }
-      },
-      "type": "<B>"
+      }
     },
     "c": {
       "plug": {
@@ -133,8 +129,7 @@
           "unitId": "arraybuilderfrom",
           "pinId": "a[]"
         }
-      },
-      "type": "<B>[]"
+      }
     },
     "a[i]": {
       "plug": {
@@ -142,17 +137,14 @@
           "unitId": "foreach",
           "pinId": "a[i]"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "metadata": {
-    "icon": "map",
+    "icon": "array",
     "description": "map elements of arrays `a` and `b` to a new array `c`",
-    "complexity": 46,
     "tags": ["core", "array"]
   },
   "id": "57880ebc-bf8a-42da-b2b1-01ae188aa1fa",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

@@ -1,17 +1,18 @@
 import { Done } from '../../../../Class/Functional/Done'
-import { Semifunctional } from '../../../../Class/Semifunctional'
+import { Holder } from '../../../../Class/Holder'
 import { System } from '../../../../system'
-import { ID_TIMER } from '../../../_ids'
+import { ID_INTERVAL } from '../../../_ids'
 
 export interface I {
   ms: number
+  done: any
 }
 
 export interface O {
   ms: number
 }
 
-export default class Interval extends Semifunctional<I, O> {
+export default class Interval extends Holder<I, O> {
   private _interval: number | null = null
 
   constructor(system: System) {
@@ -19,27 +20,20 @@ export default class Interval extends Semifunctional<I, O> {
       {
         fi: ['ms'],
         o: ['ms'],
-        i: ['done'],
+        i: [],
       },
       {},
       system,
-      ID_TIMER
+      ID_INTERVAL
     )
-
-    this.addListener('reset', this._reset)
-    this.addListener('destroy', this._reset)
   }
 
-  private _reset() {
-    if (this._interval !== null) {
-      clearInterval(this._interval)
-
-      this._interval = null
-    }
-  }
-
-  public f({ ms }: I, done: Done<O>): void {
-    this._reset()
+  f({ ms }: I, done: Done<O>): void {
+    const {
+      api: {
+        window: { setInterval },
+      },
+    } = this.__system
 
     // @ts-ignore
     this._interval = setInterval(() => {
@@ -47,16 +41,19 @@ export default class Interval extends Semifunctional<I, O> {
     }, ms)
   }
 
-  public d() {
-    this._reset()
+  d() {
+    const {
+      api: {
+        window: { clearInterval },
+      },
+    } = this.__system
+
+    if (this._interval !== null) {
+      clearInterval(this._interval)
+
+      this._interval = undefined
+    }
 
     this._forward_all_empty()
-  }
-
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
-    this._reset()
-    this._done({})
-    // }
   }
 }

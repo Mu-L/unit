@@ -6,54 +6,34 @@ export interface Props {
   className?: string
   style?: Dict<any>
   value?: string
-  disabled?: boolean
   maxLength?: number
-  tabIndex?: number
-}
-
-export const DEFAULT_STYLE = {
-  height: 'fit-content',
-  width: '100%',
-  color: 'inherit',
-  backgroundColor: '#00000000',
-  padding: '0',
-  // outlineColor: '#00000000',
-  border: 'none',
-  borderRadius: '0',
+  attr?: Dict<any>
 }
 
 export default class TextField extends Field<HTMLInputElement, Props> {
   constructor($props: Props, $system: System) {
     super($props, $system, $system.api.document.createElement('input'), {
       valueKey: 'value',
-      defaultStyle: DEFAULT_STYLE,
+      defaultStyle: $system.style['textfield'],
       defaultValue: '',
+      defaultAttr: {
+        type: 'text',
+        spellcheck: false,
+        autocomplete: 'off',
+        autocapitalize: 'off',
+        inputmode: $system.flags.defaultInputModeNone ? 'none' : 'text',
+      },
+      propHandlers: {
+        maxLength: (maxLength: number | undefined) => {
+          this.$element.maxLength = maxLength
+        },
+      },
     })
 
-    const {
-      flags: { defaultInputModeNone },
-    } = $system
-
-    const { maxLength, tabIndex } = $props
-
-    this.$element.type = 'text'
-    this.$element.spellcheck = false
-    this.$element.autocomplete = 'off'
-    // this.$element.autocomplete = 'disabled'
-    // this.$element.autocorrect = 'off'
-    this.$element.autocapitalize = 'off'
-    this.$element.inputMode = 'text'
-    // this.$element.autofocus = false
-
-    if (defaultInputModeNone) {
-      this.$element.inputMode = 'none'
-    }
+    const { maxLength } = $props
 
     if (maxLength !== undefined) {
       this.$element.maxLength = maxLength
-    }
-    if (tabIndex !== undefined) {
-      this.$element.tabIndex = tabIndex
     }
   }
 

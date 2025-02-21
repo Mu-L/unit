@@ -31,7 +31,6 @@
   "metadata": {
     "icon": "send",
     "description": "fetch + get body",
-    "complexity": 8,
     "tags": ["platform", "core", "rest"]
   },
   "inputs": {
@@ -41,8 +40,7 @@
           "unitId": "fetch",
           "pinId": "url"
         }
-      },
-      "type": "string"
+      }
     },
     "opt": {
       "plug": {
@@ -50,8 +48,7 @@
           "unitId": "fetch",
           "pinId": "opt"
         }
-      },
-      "type": "{body?:string|null,headers?:object,method?:string}"
+      }
     }
   },
   "outputs": {
@@ -61,11 +58,9 @@
           "unitId": "get",
           "pinId": "value"
         }
-      },
-      "type": "any"
+      }
     }
   },
   "id": "7ba3db14-6f80-434b-b9dc-bd38462b20fc",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

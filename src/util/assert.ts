@@ -1,4 +1,4 @@
-import isEqual from '../system/f/comparisson/Equals/f'
+import isEqual from '../system/f/comparison/Equals/f'
 
 export function assert(test: boolean, message: string = ''): void {
   if (!test) {
@@ -6,8 +6,8 @@ export function assert(test: boolean, message: string = ''): void {
   }
 }
 
-export function equal<T>(a: T, b: T): void {
-  return assert(a === b)
+export function equal<T>(a: T, b: T, message: string = ''): void {
+  return assert(a === b, message)
 }
 
 export function deepEqual<T>(a: T, b: T): void {
@@ -23,5 +23,3 @@ export function deepEqual<T>(a: T, b: T): void {
 
 assert.equal = equal
 assert.deepEqual = deepEqual
-
-export default assert

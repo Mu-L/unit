@@ -104,7 +104,6 @@
   "metadata": {
     "icon": "brackets",
     "description": "get array `a` element at position `at` or `d` if not present",
-    "complexity": 23,
     "tags": ["core", "array"]
   },
   "inputs": {
@@ -114,8 +113,7 @@
           "mergeId": "1"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "a": {
       "plug": {
@@ -123,8 +121,7 @@
           "mergeId": "2"
         }
       },
-      "functional": true,
-      "type": "<A>[]"
+      "functional": true
     },
     "d": {
       "plug": {
@@ -133,8 +130,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "<A>"
+      "functional": true
     }
   },
   "outputs": {
@@ -143,11 +139,9 @@
         "0": {
           "mergeId": "jgunro"
         }
-      },
-      "type": "<A>"
+      }
     }
   },
   "id": "f962de3a-b87c-4018-bcb6-71921f93ce1d",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

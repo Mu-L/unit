@@ -1,13 +1,8 @@
-import { GraphMoveSubGraphData } from '../../Class/Graph/interface'
-import { getSpec } from '../../client/spec'
 import { SELF } from '../../constant/SELF'
-import deepGet from '../../deepGet'
+import { deepSet_ } from '../../deepSet'
 import forEachValueKey from '../../system/core/object/ForEachKeyValue/f'
 import { keyCount } from '../../system/core/object/KeyCount/f'
-import { keys } from '../../system/f/object/Keys/f'
 import {
-  GraphPinSpec,
-  GraphPinsSpec,
   GraphPlugOuterSpec,
   GraphSubPinSpec,
   PinSpec,
@@ -18,23 +13,21 @@ import { Dict } from '../../types/Dict'
 import { GraphMergeSpec } from '../../types/GraphMergeSpec'
 import { GraphMergeUnitSpec } from '../../types/GraphMergeUnitSpec'
 import { GraphMergesSpec } from '../../types/GraphMergesSpec'
+import { GraphPinSpec } from '../../types/GraphPinSpec'
 import { GraphSpec } from '../../types/GraphSpec'
-import { GraphUnitMerges } from '../../types/GraphUnitMerges'
 import { GraphUnitPlugs } from '../../types/GraphUnitPlugs'
 import { GraphUnitSpec } from '../../types/GraphUnitSpec'
 import { IO } from '../../types/IO'
 import { IOOf } from '../../types/IOOf'
-import { GraphSelection } from '../../types/interface/G'
 import {
   _keyCount,
-  clone,
   deepGetOrDefault,
+  deepPush,
   deepSet,
   getObjSingleKey,
-  isEmptyObject,
-  mapObjVK,
   reduceObj,
 } from '../../util/object'
+import { getSpec, isComponentId } from '../util'
 
 export function isValidSpecName(name: string) {
   return !!/^[A-Za-z_ ][A-Za-z\d_ ]*$/g.exec(name)
@@ -50,17 +43,112 @@ export function isUnitPinConstant(
   type: IO,
   pinId: string
 ): boolean {
-  return deepGetOrDefault(spec, [unitId, type, pinId, 'constant'], false)
+  return deepGetOrDefault(
+    spec,
+    ['units', unitId, type, pinId, 'constant'],
+    false
+  )
+}
+
+export function isUnitPinIgnored(
+  spec: GraphSpec,
+  unitId: string,
+  type: IO,
+  pinId: string
+): boolean {
+  return deepGetOrDefault(
+    spec,
+    ['units', unitId, type, pinId, 'ignored'],
+    false
+  )
+}
+
+export function isUnitComponent(
+  specs: Specs,
+  spec: GraphSpec,
+  unitId: string
+): boolean {
+  const { units } = spec
+
+  const unit = units[unitId]
+
+  return isComponentId(specs, unit.id)
 }
 
 export const isPinRef = (
-  { type, pinId }: { type: IO; pinId: string },
-  spec: Spec
+  specs: Specs,
+  spec: Spec,
+  type: IO,
+  pinId: string,
+  visited: Set<string> = new Set()
 ) => {
-  return (
-    deepGetOrDefault(spec, [`${type}s`, pinId, 'ref'], false) ||
-    (type === 'output' && pinId === SELF)
-  )
+  if (isSelfPin(type, pinId)) {
+    return true
+  }
+
+  const key = `${spec.id}/${type}/${pinId}`
+
+  if (visited.has(key)) {
+    return false
+  }
+
+  visited.add(key)
+
+  const pinSpec = deepGetOrDefault(spec, [`${type}s`, pinId], {})
+
+  let { ref } = pinSpec
+
+  if (ref === undefined) {
+    const { plug = {} } = pinSpec
+
+    for (const subPinId in plug) {
+      const subPin = plug[subPinId]
+
+      if (isSubPinSpecRef(specs, spec as GraphSpec, type, subPin, visited)) {
+        ref = true
+
+        break
+      }
+    }
+  }
+
+  return ref
+}
+
+export const isMergeRef = (
+  specs: Specs,
+  spec: GraphSpec,
+  mergeId: string,
+  visited: Set<string> = new Set()
+) => {
+  let ref = false
+
+  const merge = getMerge(spec, mergeId)
+
+  forEachPinOnMerge(merge, (unitId, type, pinId) => {
+    ref = ref || isUnitPinRef(specs, spec, unitId, type, pinId, visited)
+  })
+
+  return ref
+}
+
+export const isUnitPinRef = (
+  specs: Specs,
+  spec: GraphSpec,
+  unitId: string,
+  type: IO,
+  pinId: string,
+  visited: Set<string> = new Set()
+) => {
+  const unit = getUnit(spec, unitId)
+
+  const unitSpec = getSpec(specs, unit.id)
+
+  return isPinRef(specs, unitSpec, type, pinId, visited)
+}
+
+export const isSelfPin = (type: IO, pinId: string): boolean => {
+  return type === 'output' && pinId === SELF
 }
 
 export function getInputNodeId(unitId: string, pinId: string): string {
@@ -121,10 +209,15 @@ export const getUnitExposedPins = (
     for (const subPinId in plug) {
       const subPinSpec = plug[subPinId]
 
-      const { unitId: unitId_, pinId: pinId_, mergeId, kind } = subPinSpec
+      const {
+        unitId: unitId_,
+        pinId: pinId_,
+        mergeId,
+        kind = type,
+      } = subPinSpec
 
       if (unitId_ === unitId) {
-        deepSet(pins, [type, pinId_], {
+        deepSet(pins, [kind, pinId_], {
           type,
           kind,
           pinId,
@@ -140,11 +233,85 @@ export const getUnitExposedPins = (
 }
 
 export const getPinSpec = (
-  graph: GraphSpec,
+  graph: Spec,
   type: IO,
   pinId: string
 ): GraphPinSpec => {
   return deepGetOrDefault(graph, [`${type}s`, pinId], null)
+}
+
+export const getSpecPinIcon = (
+  specs: Specs,
+  graph: Spec,
+  type: IO,
+  pinId: string
+): string | null => {
+  let pin_icon_name: string | null = null
+
+  if (isSelfPin(type, pinId)) {
+    return graph.metadata.icon
+  }
+
+  const pin_spec = getPinSpec(graph, type, pinId)
+
+  const { plug, icon } = pin_spec
+
+  if (icon) {
+    pin_icon_name = icon
+  } else if (plug) {
+    const sub_pin_id = getObjSingleKey(plug)
+    const sub_pin = plug[sub_pin_id]
+
+    const { unitId, pinId, mergeId, kind = type } = sub_pin
+    const { units = {}, merges = {} } = graph as GraphSpec
+
+    let plugUnitId: string
+    let plugPinId: string
+
+    if (unitId && pinId) {
+      plugUnitId = unitId
+      plugPinId = pinId
+    } else {
+      const merge = merges[mergeId]
+
+      for (const unitId in merge) {
+        const mergeUnit = merge[unitId]
+
+        const { output = {} } = mergeUnit
+
+        for (const output_id in output) {
+          plugUnitId = unitId
+          plugPinId = output_id
+
+          break
+        }
+      }
+    }
+
+    const unit = units[plugUnitId]
+
+    if (unit) {
+      const { id } = unit
+
+      const unit_spec = getSpec(specs, id)
+
+      if (type === 'output' && pinId === SELF) {
+        pin_icon_name = unit_spec.metadata?.icon ?? null
+      } else {
+        pin_icon_name = unit_spec?.[`${type}s`][plugPinId]?.icon ?? null
+      }
+
+      if (!pin_icon_name) {
+        return getSpecPinIcon(specs, unit_spec, kind, plugPinId)
+      }
+    }
+  } else {
+    const { icon } = pin_spec
+
+    pin_icon_name = icon || 'triangle'
+  }
+
+  return pin_icon_name
 }
 
 export const getPlugSpecs = (spec: GraphSpec) => {
@@ -174,7 +341,7 @@ export const getSubPinSpec = (
   return deepGetOrDefault(graph, [`${type}s`, pinId, 'plug', subPinId], null)
 }
 
-export const findPinMerge = (
+export const findPinMergeId = (
   spec: GraphSpec,
   unitId: string,
   type: IO,
@@ -395,7 +562,7 @@ export const hasMergePin = (
   )
 }
 
-export const hasPinNamed = (spec: Spec, type: IO, pinId: string): boolean => {
+export const hasPin = (spec: Spec, type: IO, pinId: string): boolean => {
   return !!deepGetOrDefault(spec, [`${type}s`, pinId], false)
 }
 
@@ -433,13 +600,15 @@ export const findMergePlugs = (
     const { plug = {} } = pinSpec
 
     for (const subPinId in plug) {
-      const subPin = plug[subPinId]
+      const subPinSpec = plug[subPinId]
 
-      if (subPin.mergeId === mergeId) {
+      if (subPinSpec.mergeId === mergeId) {
         mergePlugs[type].push({
           pinId,
           type,
           subPinId,
+          pinSpec,
+          subPinSpec,
         })
       }
     }
@@ -468,13 +637,15 @@ export const findUnitPinPlug = (
     const { plug = {} } = pinSpec
 
     for (const subPinId in plug) {
-      const subPin = plug[subPinId]
+      const subPinSpec = plug[subPinId]
 
-      if (subPin.unitId === unitId && subPin.pinId === pinId) {
+      if (subPinSpec.unitId === unitId && subPinSpec.pinId === pinId) {
         pinPlug = {
           pinId: _pinId,
           type,
           subPinId,
+          pinSpec,
+          subPinSpec,
         }
       }
     }
@@ -484,7 +655,7 @@ export const findUnitPinPlug = (
 }
 
 export function findUnitPlugs(spec: GraphSpec, unitId: string): GraphUnitPlugs {
-  const plugs: GraphUnitPlugs = {
+  const unitPlugs: GraphUnitPlugs = {
     input: {},
     output: {},
   }
@@ -493,16 +664,18 @@ export function findUnitPlugs(spec: GraphSpec, unitId: string): GraphUnitPlugs {
     spec,
     (type, pinId, pinSpec, subPinId, subPinSpec) => {
       if (subPinSpec.unitId === unitId) {
-        deepSet(plugs, [subPinSpec.kind ?? type, subPinSpec.pinId], {
+        deepPush(unitPlugs, [subPinSpec.kind ?? type, subPinSpec.pinId], {
           type,
           pinId,
+          pinSpec,
           subPinId,
+          subPinSpec,
         })
       }
     }
   )
 
-  return plugs
+  return unitPlugs
 }
 
 export const findSpecAtPath = (
@@ -515,12 +688,18 @@ export const findSpecAtPath = (
   } else {
     const [unitId, ...rest] = path
 
-    const unit = (spec as GraphSpec).units[unitId]
-
-    const unitSpec = getSpec(specs, unit.id)
+    const unitSpec = getUnitSpec(specs, spec, unitId)
 
     return findSpecAtPath(specs, unitSpec, rest)
   }
+}
+
+export const getUnitSpec = (specs: Specs, spec: Spec, unitId: string): Spec => {
+  const unit = (spec as GraphSpec).units[unitId]
+
+  const unitSpec = getSpec(specs, unit.id)
+
+  return unitSpec
 }
 
 export const findUnitAtPath = (
@@ -570,42 +749,55 @@ export function isSubPinSpecRef(
   specs: Specs,
   spec: GraphSpec,
   type: IO,
-  subPinSpec: GraphSubPinSpec
+  subPinSpec: GraphSubPinSpec,
+  visited: Set<string>
 ) {
   let ref = false
 
   if (subPinSpec.unitId && subPinSpec.pinId) {
+    const { kind = type } = subPinSpec
+
     const unit = spec.units[subPinSpec.unitId]
 
-    const unit_spec = getSpec(specs, unit.id)
+    const unitSpec = getSpec(specs, unit.id)
 
-    ref = isPinRef({ type, pinId: subPinSpec.pinId }, unit_spec)
+    ref = isPinRef(specs, unitSpec, kind, subPinSpec.pinId, visited)
   } else if (subPinSpec.mergeId) {
     const merge = spec.merges[subPinSpec.mergeId]
 
     forEachPinOnMerge(merge, (unitId, type, pinId) => {
       const unit = spec.units[unitId]
 
-      const unit_spec = getSpec(specs, unit.id)
+      const unitSpec = getSpec(specs, unit.id)
 
       if (ref === true) {
         return
       }
 
-      ref = isPinRef({ type, pinId: subPinSpec.pinId }, unit_spec)
+      ref = isPinRef(specs, unitSpec, type, pinId, visited)
     })
   }
 
   return ref
 }
 
-export function isPinSpecRef(specs: Specs, spec: GraphSpec, type: IO, pinSpec) {
-  const { plug = {} } = pinSpec
+export function isPinSpecRef(
+  specs: Specs,
+  spec: GraphSpec,
+  type: IO,
+  pinSpec: GraphPinSpec,
+  visited: Set<string>
+) {
+  const { plug = {}, ref } = pinSpec
+
+  if (ref !== undefined) {
+    return ref
+  }
 
   for (const subPinId in plug) {
     const subPinSpec = plug[subPinId]
 
-    if (isSubPinSpecRef(specs, spec, type, subPinSpec)) {
+    if (isSubPinSpecRef(specs, spec, type, subPinSpec, visited)) {
       return true
     }
   }
@@ -613,300 +805,7 @@ export function isPinSpecRef(specs: Specs, spec: GraphSpec, type: IO, pinSpec) {
   return false
 }
 
-export function makeFullSpecCollapseMap(
-  unitId: string,
-  spec: GraphSpec,
-  unitIdMap: Dict<string>,
-  mergeIdMap: Dict<string>,
-  plugIdMap: IOOf<Dict<Dict<string>>>,
-  {
-    getUnitMerges,
-    getUnitPlugs,
-    getMerge,
-    getPinMergeId,
-  }: {
-    getUnitMerges: (unitId: string) => GraphUnitMerges
-    getUnitPlugs: (unitId: string) => GraphUnitPlugs
-    getMerge: (mergeId: string) => GraphMergeSpec
-    getPinMergeId: (unitId: string, type: IO, pinId: string) => string
-  }
-): GraphMoveSubGraphData {
-  const { units = {}, merges = {}, inputs = {}, outputs = {} } = spec
-
-  const nodeIds: GraphSelection = {
-    unit: keys(units),
-    merge: keys(merges),
-    link: [],
-    plug: [],
-  }
-
-  const unitMerges = getUnitMerges(unitId)
-  const unitPlugs = getUnitPlugs(unitId)
-
-  const nextIdMap: GraphMoveSubGraphData['nextIdMap'] = {
-    unit: unitIdMap,
-    merge: mergeIdMap,
-    plug: mapObjVK(plugIdMap, (pinMap) =>
-      mapObjVK(pinMap, (subPinMap) =>
-        mapObjVK(subPinMap, (nextSubPinId) => ({
-          subPinId: nextSubPinId,
-        }))
-      )
-    ),
-  }
-  const nextPinIdMap: GraphMoveSubGraphData['nextPinIdMap'] = {}
-  const nextMergePinId: GraphMoveSubGraphData['nextMergePinId'] = {}
-  const nextPlugSpec: GraphMoveSubGraphData['nextPlugSpec'] = {}
-  const nextUnitPinMergeMap: GraphMoveSubGraphData['nextUnitPinMergeMap'] = {}
-
-  forEachPinOnMerges(
-    merges,
-    (mergeId, mergeUnitId, mergeUnitType, mergePinId) => {
-      const nextMergeId = mergeIdMap[mergeId] ?? mergeId
-
-      deepSet(
-        nextUnitPinMergeMap,
-        [mergeUnitId, mergeUnitType, mergePinId],
-        nextMergeId
-      )
-    }
-  )
-
-  const processPins = (type: IO, pins: GraphPinsSpec) => {
-    for (const pinId in pins) {
-      const pin = pins[pinId]
-
-      processPin(type, pinId, pin)
-    }
-  }
-
-  const processPin = (type: IO, pinId: string, pin: GraphPinSpec) => {
-    const { plug, ref, defaultIgnored } = pin
-
-    const mergeId = getPinMergeId(unitId, type, pinId)
-
-    const merged = !!mergeId
-
-    const outerPlug = deepGetOrDefault(unitPlugs, [type, pinId], null)
-
-    for (const subPinId in plug) {
-      const subPinSpec = plug[subPinId]
-
-      if (
-        shouldExposePin(
-          type,
-          pinId,
-          pin,
-          subPinId,
-          subPinSpec,
-          merged,
-          outerPlug
-        )
-      ) {
-        nodeIds.plug.push({ type, pinId, subPinId })
-
-        let nextSubPinSpec = {}
-
-        if (subPinSpec.unitId && subPinSpec.pinId) {
-          const nextUnitId =
-            nextIdMap.unit[subPinSpec.unitId] ?? subPinSpec.unitId
-
-          nextSubPinSpec = {
-            unitId: nextUnitId,
-            pinId: subPinSpec.pinId,
-          }
-        } else {
-          const nextMergeId =
-            nextIdMap.merge[subPinSpec.mergeId] ?? subPinSpec.mergeId
-
-          nextSubPinSpec = {
-            mergeId: nextMergeId,
-          }
-        }
-
-        deepSet(nextPlugSpec, [type, pinId, subPinId], nextSubPinSpec)
-      }
-
-      if (subPinSpec.unitId && subPinSpec.pinId) {
-        forEachPinOnMerges(
-          unitMerges,
-          (mergeId, mergeUnitId, mergeUnitType, mergeUnitPinId) => {
-            const merge = getMerge(mergeId)
-            const merge_clone = clone(merge)
-
-            delete merge_clone[unitId]
-
-            const nextUnitId =
-              nextIdMap.unit[subPinSpec.unitId] ?? subPinSpec.unitId
-
-            merge_clone[nextUnitId] = {
-              [mergeUnitType]: { [subPinSpec.pinId]: true },
-            }
-
-            if (
-              mergeUnitId === unitId &&
-              mergeUnitType === type &&
-              mergeUnitPinId === pinId
-            ) {
-              deepSet(
-                nextPinIdMap,
-                [subPinSpec.unitId, mergeUnitType, subPinSpec.pinId],
-                {
-                  pinId,
-                  subPinId,
-                  ref,
-                  defaultIgnored,
-                  mergeId,
-                  merge: merge_clone,
-                }
-              )
-            }
-          }
-        )
-      } else if (subPinSpec.mergeId) {
-        const mergeSpec = merges[subPinSpec.mergeId]
-
-        if (isEmptyMerge(mergeSpec)) {
-          const mergeId = getPinMergeId(unitId, type, pinId)
-
-          if (mergeId) {
-            const merge = getMerge(mergeId)
-
-            const oppositeMerge = clone(merge)
-
-            delete oppositeMerge[unitId]
-
-            deepSet(nextMergePinId, [subPinSpec.mergeId, type], {
-              mergeId,
-              pinId,
-              subPinSpec: {
-                mergeId: subPinSpec.mergeId,
-              },
-              oppositeMerge,
-            })
-          } else {
-            deepSet(nextMergePinId, [subPinSpec.mergeId, type], {
-              mergeId: null,
-              pinId: null,
-              subPinSpec: {},
-              oppositeMerge: {},
-            })
-          }
-        } else {
-          const mergeId = getPinMergeId(unitId, type, pinId)
-
-          if (mergeId) {
-            const merge = getMerge(mergeId)
-
-            const oppositeMerge = clone(merge)
-
-            delete oppositeMerge[unitId]
-
-            deepSet(nextMergePinId, [subPinSpec.mergeId, type], {
-              mergeId,
-              oppositeMerge,
-            })
-          }
-        }
-      }
-    }
-  }
-
-  processPins('input', inputs)
-  processPins('output', outputs)
-
-  for (const mergeId in unitMerges) {
-    const merge = getMerge(mergeId)
-
-    const merge_clone = clone(merge)
-
-    const merge_unit = merge_clone[unitId]
-
-    if (isEmptyObject(merge_unit['input'] ?? {})) {
-      delete merge_unit['input']
-    }
-
-    if (isEmptyObject(merge_unit['output'] ?? {})) {
-      delete merge_unit['output']
-    }
-
-    const merge_unit_pin_type = getObjSingleKey(merge_unit)
-
-    const merge_unit_pin_id = getObjSingleKey(merge_unit[merge_unit_pin_type])
-
-    delete merge_clone[unitId]
-
-    const merge_pin_count = getMergePinCount(merge_clone)
-
-    if (merge_pin_count === 1 && merge_unit_pin_id !== SELF) {
-      const mergeUnitPinSpec = deepGet(spec, [
-        `${merge_unit_pin_type}s`,
-        merge_unit_pin_id,
-      ])
-
-      const { plug = {} } = mergeUnitPinSpec
-
-      let is_empty_merge = false
-
-      for (const subPinId in plug) {
-        const subPinSpec = plug[subPinId]
-
-        if (subPinSpec.mergeId) {
-          const mergeSpec = merges[subPinSpec.mergeId]
-
-          const mergePinCount = getMergePinCount(mergeSpec)
-
-          if (mergePinCount === 0) {
-            is_empty_merge = true
-          }
-        }
-      }
-
-      if (!is_empty_merge) {
-        const otherUnitId = getObjSingleKey(merge_clone)
-        const otherUnitPinType = getObjSingleKey(merge_clone[otherUnitId]) as IO
-        const otherUnitPinId = getObjSingleKey(
-          merge_clone[otherUnitId][otherUnitPinType]
-        )
-
-        deepSet(
-          nextIdMap,
-          ['link', otherUnitId, otherUnitPinType, otherUnitPinId],
-          {
-            mergeId,
-            oppositePinId: merge_unit_pin_id,
-          }
-        )
-      }
-    } else {
-      // TODO
-    }
-  }
-
-  forEachPinOnMerges(
-    unitMerges,
-    (mergeId, mergeUnitId, mergeUnitType, mergeUnitPinId) => {
-      const merge = getMerge(mergeId)
-    }
-  )
-
-  const collapseMap = {
-    nodeIds,
-    nextSpecId: null,
-    nextIdMap,
-    nextPinIdMap,
-    nextMergePinId,
-    nextPlugSpec,
-    nextUnitPinMergeMap,
-    nextSubComponentParentMap: {},
-    nextSubComponentChildrenMap: {},
-    nextSubComponentIndexMap: {},
-  }
-
-  return collapseMap
-}
-
-export function getUnitMergesSpec(
+export function findUnitMerges(
   spec: GraphSpec,
   unitId: string
 ): GraphMergesSpec {
@@ -923,6 +822,83 @@ export function getUnitMergesSpec(
   }
 
   return unit_merges
+}
+
+export function buildUnitPinToPlug(
+  source: GraphSpec,
+  unitId: string
+): IOOf<Dict<GraphPlugOuterSpec>> {
+  const pinToPlug: IOOf<Dict<GraphPlugOuterSpec>> = {}
+
+  forEachGraphSpecPin(
+    source,
+    (type: IO, pinId: string, pinSpec: GraphPinSpec) => {
+      const { plug = {} } = pinSpec
+
+      for (const subPinId in plug) {
+        const subPinSpec = plug[subPinId]
+
+        if (subPinSpec.unitId && subPinSpec.pinId) {
+          if (subPinSpec.unitId === unitId) {
+            deepSet_(pinToPlug, [subPinSpec.kind ?? type, subPinSpec.pinId], {
+              type,
+              pinId,
+              pinSpec,
+              subPinSpec,
+            })
+          }
+        } else if (subPinSpec.mergeId) {
+          const merge = getMerge(source, subPinSpec.mergeId)
+
+          forEachPinOnMerge(merge, (unitId_, type_, pinId_) => {
+            if (unitId_ === unitId) {
+              deepSet_(pinToPlug, [type_, pinId_], {
+                type,
+                pinId,
+                pinSpec,
+                subPinSpec,
+              })
+            }
+          })
+        }
+      }
+    }
+  )
+
+  return pinToPlug
+}
+
+export function buildUnitPinToMerge(
+  source: GraphSpec,
+  unitId: string
+): IOOf<Dict<string>> {
+  const pinToMerge: IOOf<Dict<string>> = {}
+
+  const merges = findUnitMerges(source, unitId)
+
+  forEachPinOnMerges(merges, (mergeId, unitId_, type_, pinId_) => {
+    if (unitId_ === unitId) {
+      deepSet_(pinToMerge, [type_, pinId_], mergeId)
+    }
+  })
+
+  return pinToMerge
+}
+
+export function getUnit(spec: GraphSpec, unitId: string): GraphUnitSpec {
+  const { units } = spec
+
+  const unit = units[unitId]
+
+  return unit
+}
+
+export function getMerge(spec: GraphSpec, mergeId: string): GraphMergeSpec {
+  const { merges = {} } = spec
+
+  const merge = merges[mergeId]
+
+  return merge
 }
 
 export function getUnitPinDatum(

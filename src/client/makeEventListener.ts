@@ -10,13 +10,16 @@ import {
   makeKeyupListener,
 } from './event/keyboard'
 import { makeLoadListener } from './event/load'
+import { makeLoadedDataListener } from './event/loadeddata'
+import { makeMessageListener } from './event/message'
 import { makePasteListener } from './event/paste'
 import { makeClickListener } from './event/pointer/click'
-import { makeMessageListener } from './event/pointer/message'
 import { makePointerDownListener } from './event/pointer/pointerdown'
 import { makePointerEnterListener } from './event/pointer/pointerenter'
+import { makePointerInListener } from './event/pointer/pointerin'
 import { makePointerLeaveListener } from './event/pointer/pointerleave'
 import { makePointerMoveListener } from './event/pointer/pointermove'
+import { makePointerOutListener } from './event/pointer/pointerout'
 import { makePointerUpListener } from './event/pointer/pointerup'
 import { makeToggleListener } from './event/popover/toggle'
 import { makeWheelListener } from './event/wheel'
@@ -32,6 +35,8 @@ export type IOUIEventName =
   | 'pointerup'
   | 'pointerenter'
   | 'pointerleave'
+  | 'pointerout'
+  | 'pointerin'
   | 'dragstart'
   | 'dragover'
   | 'dragend'
@@ -48,6 +53,7 @@ export type IOUIEventName =
   | 'show'
   | 'hide'
   | 'load'
+  | 'loadeddata'
 
 export const UI_EVENT_SET: Set<IOUIEventName> = new Set([
   'click',
@@ -75,6 +81,7 @@ export const UI_EVENT_SET: Set<IOUIEventName> = new Set([
   'show',
   'hide',
   'load',
+  'loadeddata',
 ])
 
 export function makeUIEventListener(
@@ -102,6 +109,10 @@ export function makeUIEventListener(
       return makePointerEnterListener(callback)
     case 'pointerleave':
       return makePointerLeaveListener(callback)
+    case 'pointerin':
+      return makePointerInListener(callback)
+    case 'pointerout':
+      return makePointerOutListener(callback)
     case 'dragstart':
       return makeDragStartListener(callback)
     case 'dragend':
@@ -128,6 +139,8 @@ export function makeUIEventListener(
       return makeToggleListener(callback)
     case 'load':
       return makeLoadListener(callback)
+    case 'loadeddata':
+      return makeLoadedDataListener(callback)
     default:
       throw new Error(`unknown UI event: ${event}`)
   }

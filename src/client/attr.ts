@@ -1,28 +1,34 @@
 import { Dict } from '../types/Dict'
 
-export function removeAllAttributes(element: HTMLElement | SVGElement): void {
-  const { attributes } = element
+export function applyAttr(
+  element: Element,
+  attr: Dict<string>,
+  current: Dict<string>,
+  override: Set<string>
+) {
+  for (const name in current) {
+    const value = attr[name]
 
-  for (let i = attributes.length - 1; i >= 0; i--) {
-    element.removeAttribute(attributes[i].name)
+    if (value === undefined) {
+      element.removeAttribute(name)
+    }
+  }
+
+  mergeAttr(element, attr)
+}
+
+export function removeAllAttr(element: Element) {
+  const attributes = element.attributes
+
+  for (const attr of attributes) {
+    attributes.removeNamedItem(attr.name)
   }
 }
 
-export function applyAttributes(
-  element: HTMLElement | SVGElement,
-  attr: Dict<string>
-): void {
-  for (const key in attr) {
-    const a = attr[key]
+export function mergeAttr(element: Element, attr: Dict<string>) {
+  for (const name in attr) {
+    const value = attr[name]
 
-    element.setAttribute(key, a)
+    element.setAttribute(name, value)
   }
-}
-
-export function setAttributes(
-  element: HTMLElement | SVGElement,
-  attr: Dict<string>
-): void {
-  // removeAllAttributes(element)
-  applyAttributes(element, attr)
 }

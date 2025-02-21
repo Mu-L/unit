@@ -23,8 +23,7 @@
           "unitId": "get",
           "pinId": "obj"
         }
-      },
-      "type": "object"
+      }
     }
   },
   "outputs": {
@@ -34,17 +33,14 @@
           "unitId": "get",
           "pinId": "value"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
-    "icon": "brackets-curly",
+    "icon": "object-get",
     "description": "extract offsetX from `obj`",
-    "complexity": 5,
     "tags": ["platform", "core", "api", "event"]
   },
   "id": "cd7cfbb3-c86b-401d-a6b7-9de912672d96",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

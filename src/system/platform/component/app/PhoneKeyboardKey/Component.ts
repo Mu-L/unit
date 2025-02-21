@@ -1,11 +1,11 @@
-import mergePropStyle from '../../../../../client/component/mergeStyle'
+import { mergePropStyle } from '../../../../../client/component/mergeStyle'
 import { Element } from '../../../../../client/element'
 import { keyToIcon } from '../../../../../client/event/keyboard'
 import {
   isChar,
+  isControlKey,
   keyToCode,
-  keyToKeyCode,
-} from '../../../../../client/event/keyboard/keyCode'
+} from '../../../../../client/event/keyboard/key'
 import { emitKeyboardEvent } from '../../../../../client/event/keyboard/write'
 import { makeClickListener } from '../../../../../client/event/pointer/click'
 import { makePointerCancelListener } from '../../../../../client/event/pointer/pointercancel'
@@ -13,7 +13,7 @@ import { makePointerDownListener } from '../../../../../client/event/pointer/poi
 import { makePointerEnterListener } from '../../../../../client/event/pointer/pointerenter'
 import { makePointerLeaveListener } from '../../../../../client/event/pointer/pointerleave'
 import { makePointerUpListener } from '../../../../../client/event/pointer/pointerup'
-import parentElement from '../../../../../client/platform/web/parentElement'
+import { parentElement } from '../../../../../client/platform/web/parentElement'
 import { userSelect } from '../../../../../client/util/style/userSelect'
 import { System } from '../../../../../system'
 import { Dict } from '../../../../../types/Dict'
@@ -216,10 +216,10 @@ export default class PhoneKeyboardKey extends Element<HTMLDivElement, Props> {
     const key_text_value = icon
       ? undefined
       : isChar(key)
-      ? shiftKey
-        ? key.toUpperCase()
-        : key
-      : ''
+        ? shiftKey
+          ? key.toUpperCase()
+          : key
+        : ''
 
     return key_text_value
   }
@@ -284,6 +284,7 @@ export default class PhoneKeyboardKey extends Element<HTMLDivElement, Props> {
     const { shiftKey = false, altKey = false } = this.$props
     const _key = shiftKey && isChar(key) ? key.toUpperCase() : key
     emitPhoneKey(this.$system, _key, shiftKey, altKey)
+    this.dispatchEvent('key', key)
   }
 }
 
@@ -293,12 +294,10 @@ export function emitPhoneKey(
   shiftKey: boolean,
   altKey: boolean
 ): void {
-  const keyCode = keyToKeyCode[key]
   const code = keyToCode[key]
 
   emitKeyboardEvent(system, 'keydown', {
     key,
-    keyCode,
     code,
     shiftKey,
     altKey,
@@ -307,20 +306,20 @@ export function emitPhoneKey(
     bubbles: true,
   })
 
-  // TODO 'keypress' should not be fired if key is a control key (e.g. ALT, CTRL, SHIFT, ESC)
-  emitKeyboardEvent(system, 'keypress', {
-    key,
-    keyCode,
-    code,
-    shiftKey,
-    altKey,
-    ctrlKey: false,
-    metaKey: false,
-    bubbles: true,
-  })
+  if (!isControlKey(key)) {
+    emitKeyboardEvent(system, 'keypress', {
+      key,
+      code,
+      shiftKey,
+      altKey,
+      ctrlKey: false,
+      metaKey: false,
+      bubbles: true,
+    })
+  }
+
   emitKeyboardEvent(system, 'keyup', {
     key,
-    keyCode,
     code,
     shiftKey,
     altKey,

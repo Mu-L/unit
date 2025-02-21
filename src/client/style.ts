@@ -7,6 +7,7 @@ import { Component } from './component'
 import { makeCustomListener } from './event/custom'
 import { makeResizeListener } from './event/resize'
 import { camelToDashed } from './id'
+import { cssTextToObj, objToCssText } from './rawExtractStyle'
 
 export const isVValue = (value: string) => {
   return value.endsWith('vh') || value.endsWith('vw')
@@ -14,7 +15,7 @@ export const isVValue = (value: string) => {
 
 export function reactToFrameSize(
   value: string,
-  component: Component<HTMLElement | SVGElement>,
+  component: Component,
   setValue: (value: number) => void
 ): Unlisten {
   let unlistenComponent = NOOP
@@ -50,15 +51,17 @@ export function reactToFrameSize(
       unlistenContext = NOOP
     }
 
-    if (component.$mounted) {
-      addContextListener()
+    addContextListener()
 
-      immediateResize()
-    }
+    immediateResize()
 
     unlistenComponent = component.addEventListeners([
       makeCustomListener('mount', () => {
         immediateResize()
+
+        if (unlistenContext) {
+          unlistenContext()
+        }
 
         addContextListener()
       }),
@@ -72,15 +75,11 @@ export function reactToFrameSize(
 }
 
 export function applyDynamicStyle(
-  component: Component<HTMLElement | SVGElement>,
-  $element: HTMLElement | SVGElement,
-  style: Dict<string> = {}
+  component: Component<any>,
+  $element: any,
+  style: Dict<string>
 ): Unlisten {
-  removeStyle($element)
-
   let { fontSize, width, height } = style
-
-  let unlistenResize = NOOP
 
   let styleUnlisten = component.$propUnlisten['style']
 
@@ -96,12 +95,20 @@ export function applyDynamicStyle(
     fontSize = `${fontSize}px`
   }
 
+  const set = (name: string, value: number) => {
+    const px = value + 'px'
+
+    style[name] = px
+
+    component.$element.style[name] = px
+  }
+
   if (fontSize && isVValue(fontSize)) {
     delete style.fontSize
 
     unlistenAll.push(
       reactToFrameSize(fontSize, component, (value) => {
-        $element.style.fontSize = value + 'px'
+        set('fontSize', value)
       })
     )
   }
@@ -111,7 +118,7 @@ export function applyDynamicStyle(
 
     unlistenAll.push(
       reactToFrameSize(width, component, (value) => {
-        $element.style.width = value + 'px'
+        set('width', value)
       })
     )
   }
@@ -121,12 +128,12 @@ export function applyDynamicStyle(
 
     unlistenAll.push(
       reactToFrameSize(height, component, (value) => {
-        $element.style.height = value + 'px'
+        set('height', value)
       })
     )
   }
 
-  mergeStyle($element, style)
+  applyStyle($element, style)
 
   styleUnlisten = callAll(unlistenAll)
 
@@ -136,30 +143,31 @@ export function applyDynamicStyle(
 }
 
 export function removeStyle(element: HTMLElement | SVGElement) {
-  const _style = element.style
-
-  while (_style[0]) {
-    _style.removeProperty(_style[0])
-  }
+  element.style.cssText = ''
 }
 
 export function applyStyle(
   element: HTMLElement | SVGElement,
   style: Dict<string>
 ) {
-  removeStyle(element)
-  mergeStyle(element, style)
+  element.style.cssText = objToCssText(style)
+}
+
+export function getStyleObj(element: HTMLElement | SVGElement): Dict<string> {
+  return cssTextToObj(element.style.cssText)
 }
 
 export function mergeStyle(
   element: HTMLElement | SVGElement,
   style: Dict<string>
 ) {
-  const _style = element.style
+  const current = getStyleObj(element)
 
   for (const key in style) {
     const value = style[key]
 
-    _style[camelToDashed(key)] = value
+    current[camelToDashed(key)] = value
   }
+
+  applyStyle(element, current)
 }

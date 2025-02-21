@@ -56,8 +56,7 @@
           "mergeId": "0"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     },
     "b": {
       "plug": {
@@ -66,8 +65,7 @@
           "pinId": "a"
         }
       },
-      "functional": true,
-      "type": "number"
+      "functional": true
     }
   },
   "outputs": {
@@ -77,17 +75,14 @@
           "unitId": "add",
           "pinId": "a + b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "metadata": {
     "icon": "random",
     "description": "output random natural `n` between `a` and `b`, not inclusive",
-    "complexity": 19,
     "tags": ["core", "common"]
   },
   "id": "9d2b69b2-c468-4fca-a7d5-d158033c0201",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

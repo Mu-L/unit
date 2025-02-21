@@ -1,6 +1,9 @@
+import { DataRef } from '../DataRef'
 import { Position } from '../client/util/geometry/types'
 import { BaseSpec } from './BaseSpec'
 import { Dict } from './Dict'
+import { GraphMergeSpec } from './GraphMergeSpec'
+import { GraphPinSpec } from './GraphPinSpec'
 import { GraphSpec } from './GraphSpec'
 import { IO } from './IO'
 import { IOOf } from './IOOf'
@@ -28,7 +31,6 @@ export type PinSpecBase = {
 
 export type PinBaseMetadataSpec = NodeMetadataSpec & {
   examples?: any[]
-  position?: Dict<Position>
   r?: number
 }
 
@@ -62,10 +64,6 @@ export type GraphSubPinSpec =
   | GraphExposedLinkPinSpec
   | GraphExposedEmptyPinSpec
 
-export type GraphPinSpec = PinSpecBase & {
-  plug?: Dict<GraphSubPinSpec>
-}
-
 export type GraphPinsSpec = Dict<GraphPinSpec>
 
 export type PinsSpec = Dict<PinSpec>
@@ -73,7 +71,7 @@ export type PinsSpec = Dict<PinSpec>
 export type Classes = Dict<UnitClass<any>>
 
 export type DatumSpec = {
-  value: string
+  value: string | DataRef<any>
   metadata?: DatumMetadataSpec
 }
 
@@ -92,7 +90,7 @@ export type Specs = {
 }
 
 export type GraphMetadataSpec = NodeMetadataSpec & {
-  position?: Dict<Dict<{ x: number; y: number }> | None>
+  position?: Dict<Dict<Position> | None>
 }
 
 export type BaseComponentSpec = {
@@ -113,7 +111,7 @@ export type GraphSubComponentSpec = {
 export type GraphSubComponentSpecs = Dict<GraphSubComponentSpec>
 
 export type GraphComponentSpec = BaseComponentSpec & {
-  slots?: [string, string][]
+  slots?: string[][]
   subComponents?: GraphSubComponentSpecs
   children?: string[]
 }
@@ -142,7 +140,7 @@ export type GraphUnitMetadataSpec = {
   }
   rename?: string | None
   comment?: string | None
-  position?: { x: number; y: number }
+  position?: Position
 }
 
 export type GraphUnitPinOuterSpec = {
@@ -154,13 +152,14 @@ export type GraphUnitPinOuterSpec = {
 export type GraphPlugOuterSpec = {
   type: IO
   pinId: string
-  kind?: IO
   subPinId: string
-}
-
-export type GraphPlugSpec = GraphPlugOuterSpec & {
   pinSpec: GraphPinSpec
   subPinSpec: GraphSubPinSpec
+}
+
+export type GraphOuterMergeSpec = {
+  mergeId: string
+  mergeSpec: GraphMergeSpec
 }
 
 export type GraphUnitOuterSpec = {

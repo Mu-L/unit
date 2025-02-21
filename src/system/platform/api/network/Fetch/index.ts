@@ -1,69 +1,94 @@
-import { Functional } from '../../../../../Class/Functional'
+import { $ } from '../../../../../Class/$'
 import { Done } from '../../../../../Class/Functional/Done'
+import { Holder } from '../../../../../Class/Holder'
 import { System } from '../../../../../system'
-import { ID_FETCH } from '../../../../_ids'
+import { BO } from '../../../../../types/interface/BO'
+import { RES } from '../../../../../types/interface/RES'
+import { isUnsafePort } from '../../../../../util/fetch'
+import { wrapResponse } from '../../../../../wrap/Response'
+import { ID_FETCH_0 } from '../../../../_ids'
 
 export type I = {
   url: string
   opt: RequestInit
+  body: BO & $
+  done: any
 }
 
 export type O = {
-  response: {
-    status: number
-    body: string
-  }
+  res: RES & $
+  done: any
 }
 
-export default class Fetch extends Functional<I, O> {
+export default class Fetch extends Holder<I, O> {
   constructor(system: System) {
     super(
       {
-        i: ['url', 'opt'],
-        o: ['response'],
+        fi: ['url', 'opt', 'body'],
+        fo: ['res'],
+        i: [],
+        o: ['done'],
       },
-      {},
+      {
+        input: {
+          body: {
+            ref: true,
+          },
+        },
+        output: {
+          res: {
+            ref: true,
+          },
+        },
+      },
       system,
-      ID_FETCH
+      ID_FETCH_0
     )
   }
 
-  private _fetch_index: number = 0
-
-  f({ url, opt }: I, done: Done<O>) {
+  async f({ url, opt, body }: I, done: Done<O>): Promise<void> {
     const {
       api: {
         http: { fetch },
       },
+      cache: { servers, interceptors },
     } = this.__system
 
-    const i = ++this._fetch_index
+    opt.body = await body.raw()
+
+    let port: string
 
     try {
-      fetch(url, opt)
+      ;({ port } = new URL(url))
+    } catch (err) {
+      done(undefined, 'invalid url')
+
+      return
+    }
+
+    if (isUnsafePort(Number.parseInt(port))) {
+      done(undefined, 'unsafe port')
+
+      return
+    }
+
+    const { method = 'GET' } = opt
+
+    if (method === 'GET' || method === 'HEAD') {
+      delete opt.body
+    }
+
+    try {
+      fetch(url, opt, servers, interceptors)
         .then((response) => {
-          if (i !== this._fetch_index) {
-            // request is outdated
-            return
-          }
+          const res = wrapResponse(response, this.__system)
 
-          return response.text().then((text) => {
-            if (i !== this._fetch_index) {
-              // request is outdated
-              return
-            }
-
-            done({
-              response: {
-                status: response.status,
-                body: text,
-              },
-            })
-          })
+          done({ res })
         })
         .catch((err) => {
-          if (i !== this._fetch_index) {
-            // request is outdated
+          if (err.message === 'Failed to fetch') {
+            done(undefined, 'failed to fetch')
+
             return
           }
 
@@ -71,7 +96,17 @@ export default class Fetch extends Functional<I, O> {
             err.message.toLowerCase() ===
             "failed to execute 'fetch' on 'window': request with get/head method cannot have body."
           ) {
-            done(undefined, 'request with GET/HEAD method cannot have body')
+            done(undefined, 'GET/HEAD request cannot have body')
+
+            return
+          }
+
+          if (
+            err.message.startsWith(
+              "Failed to execute 'fetch' on 'Window': Failed to parse URL from "
+            )
+          ) {
+            done(undefined, 'failed to parse url')
 
             return
           }
@@ -79,9 +114,13 @@ export default class Fetch extends Functional<I, O> {
           done(undefined, err.message.toLowerCase())
         })
     } catch (err) {
-      // console.log(err)
-
       done(undefined, 'malformed')
+
+      return
     }
+  }
+
+  b() {
+    this._output.done.push(true)
   }
 }

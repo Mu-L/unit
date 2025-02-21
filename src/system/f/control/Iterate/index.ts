@@ -46,8 +46,8 @@ export default class Iterate<T> extends Primitive<I<T>, O<T>> {
       this._next = true
       this._output.current.push(data)
       this._input.next.pull()
+      this._output.local.push(this._current)
       if (this._output.local.empty()) {
-        this._output.local.push(this._current)
         this._next = undefined
       }
     }
@@ -88,8 +88,8 @@ export default class Iterate<T> extends Primitive<I<T>, O<T>> {
   public snapshotSelf(): Dict<any> {
     return {
       ...super.snapshotSelf(),
-      _current: this._current,
-      _next: this._next,
+      ...(this._current !== undefined ? { _current: this._current } : {}),
+      ...(this._next !== undefined ? { _next: this._next } : {}),
     }
   }
 

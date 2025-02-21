@@ -5,16 +5,20 @@ import { Unlisten } from '../../types/Unlisten'
 import { callAll } from '../../util/call/callAll'
 import { Moment } from './../Moment'
 import { watchGraphBulkEditEvent } from './watchGraphBulkEditEvent'
+import { watchGraphDestroyEvent } from './watchGraphDestroyEvent'
 import { watchGraphExposePinEvent } from './watchGraphExposedPinEvent'
 import { watchGraphExposedPinSetEvent } from './watchGraphExposedPinSetEvent'
 import { watchGraphForkEvent } from './watchGraphForkEvent'
 import { watchGraphMergeEvent } from './watchGraphMergeEvent'
+import { watchGraphSetMetadataEvent } from './watchGraphMetadataEvent'
 import { watchGraphMoveSubComponentRoot } from './watchGraphMoveSubComponentRoot'
 import { watchGraphMoveSubgraphEvent } from './watchGraphMoveSubgraphIntoEvent'
 import { watchGraphPinMergeEvent } from './watchGraphPinMergeEvent'
 import { watchGraphPlugEvent } from './watchGraphPlugEvent'
 import { watchGraphRemoveUnitPinData } from './watchGraphRemoveUnitPinDataEvent'
 import { watchGraphReorderSubComponent } from './watchGraphReorderSubComponent'
+import { watchGraphSetNameEvent } from './watchGraphSetNameEvent'
+import { watchGraphSetPinSetDefaultIgnored } from './watchGraphSetPinSetDefaultIgnored'
 import { watchGraphSetUnitPinFunctional } from './watchGraphSetPinSetFunctionalEvent'
 import { watchGraphSetPinSetId } from './watchGraphSetPinSetIdEvent'
 import { watchGraphSetUnitIdEvent } from './watchGraphSetUnitIdEvent'
@@ -22,24 +26,17 @@ import { watchGraphSetUnitPinConstant } from './watchGraphSetUnitPinConstantEven
 import { watchGraphSetUnitPinData } from './watchGraphSetUnitPinDataEvent'
 import { watchGraphSetUnitPinIgnored } from './watchGraphSetUnitPinIgnoredEvent'
 import { watchGraphSetUnitPinSetId } from './watchGraphSetUnitPinSetIdEvent'
-import { watchGraphUnitComponentAppendEvent } from './watchGraphUnitComponentAppendEvent'
-import { watchGraphUnitComponentRemoveEvent } from './watchGraphUnitComponentRemoveEvent'
-import {
-  watchGraphCloneUnitEvent,
-  watchGraphUnitEvent,
-} from './watchGraphUnitEvent'
+import { watchGraphUnitEvent } from './watchGraphUnitEvent'
 import { watchGraphUnitMoveEvent as watchGraphMoveUnitEvent } from './watchGraphUnitMoveEvent'
 
 export const GRAPH_EVENT_TO_WATCHER: Dict<
   (event: string, graph: Graph, callback: Callback) => Unlisten
 > = {
   fork: watchGraphForkEvent,
+  set_name: watchGraphSetNameEvent,
   add_unit: watchGraphUnitEvent,
   remove_unit: watchGraphUnitEvent,
-  clone_unit: watchGraphCloneUnitEvent,
   move_unit: watchGraphMoveUnitEvent,
-  component_append: watchGraphUnitComponentAppendEvent,
-  component_remove: watchGraphUnitComponentRemoveEvent,
   add_merge: watchGraphMergeEvent,
   remove_merge: watchGraphMergeEvent,
   add_pin_to_merge: watchGraphPinMergeEvent,
@@ -59,10 +56,13 @@ export const GRAPH_EVENT_TO_WATCHER: Dict<
   set_unit_pin_ignored: watchGraphSetUnitPinIgnored,
   set_pin_set_functional: watchGraphSetUnitPinFunctional,
   set_pin_set_id: watchGraphSetPinSetId,
+  set_pin_set_default_ignored: watchGraphSetPinSetDefaultIgnored,
   set_unit_pin_data: watchGraphSetUnitPinData,
   remove_unit_pin_data: watchGraphRemoveUnitPinData,
   set_unit_id: watchGraphSetUnitIdEvent,
   bulk_edit: watchGraphBulkEditEvent,
+  destroy: watchGraphDestroyEvent,
+  set_metadata: watchGraphSetMetadataEvent,
 }
 
 export function watchGraphInternal(

@@ -55,7 +55,6 @@
           "kind": "input"
         }
       },
-      "type": "string",
       "ref": false
     }
   },
@@ -68,14 +67,12 @@
           "kind": "output"
         }
       },
-      "type": "string",
       "ref": false
     }
   },
   "metadata": {
     "icon": "brackets-curly",
-    "description": "get local storage property `name`",
-    "complexity": 16
+    "description": "get local storage property `name`"
   },
   "id": "ffe53373-f413-45c6-8c14-ac93f7b2f4bf"
 }

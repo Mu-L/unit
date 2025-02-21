@@ -1,6 +1,9 @@
 import { IO } from '../../types/IO'
+import { Memory } from './Memory'
 
 export type UnitGetGlobalIdData = {}
+
+export type UnitDestroyData = {}
 
 export type UnitPlayData = {}
 
@@ -19,6 +22,14 @@ export type UnitTakeInputData = {
   pinId: string
 }
 
+export type UnitTakeErrData = {}
+
+export type UnitSetPinIgnoredData = {
+  pinId: string
+  type: IO
+  ignored: boolean
+}
+
 export type UnitSetPinDataData = {
   pinId: string
   type: IO
@@ -30,14 +41,21 @@ export type UnitRemovePinDataData = {
   pinId: string
 }
 
-export type UnitGetPinDataData = {}
+export type UnitGetPinDataData = {
+  pinId: string
+  type: IO
+}
 
-export type UnitGetInputDataData = {}
+export type UnitGetAllPinDataData = {}
 
-export type UnitGetRefInputDataData = {}
+export type UnitGetAllInputDataData = {}
+
+export type UnitGetAllRefInputDataData = {}
 
 export type UnitGetUnitBundleSpecData = {
   deep?: boolean
 }
 
 export type UnitResetData = {}
+
+export type UnitRestoreData = { memory: Memory }

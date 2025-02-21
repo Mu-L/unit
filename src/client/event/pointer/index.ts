@@ -22,6 +22,8 @@ export interface IOMouseEvent {
   offsetY: number
   screenX: number
   screenY: number
+  pageX: number
+  pageY: number
 }
 
 export interface UnitPointerEvent extends IOMouseEvent {
@@ -36,34 +38,38 @@ export const applyContextTransformToPointerEvent = (
     clientY: number
     offsetX: number
     offsetY: number
+    pageX: number
+    pageY: number
   }
 ) => {
   const { $x, $y, $sx, $sy, $rz } = context
 
-  const { clientX, clientY, offsetX, offsetY } = event
+  const { clientX, clientY, offsetX, offsetY, pageX, pageY } = event
 
-  const tx = clientX - $x
-  const ty = clientY - $y
+  const ctx = clientX - $x
+  const cty = clientY - $y
 
-  const stx = tx / $sx
-  const sty = ty / $sy
+  const cstx = ctx / $sx
+  const csty = cty / $sy
 
-  const t = { x: stx, y: sty }
+  const sox = offsetX / $sx
+  const soy = offsetY / $sy
 
-  const fp = rotateVector(t, -$rz)
+  const c = { x: cstx, y: csty }
+  const o = { x: sox, y: soy }
 
-  const clientX_ = fp.x
-  const clientY_ = fp.y
+  const rc = rotateVector(c, -$rz)
+  const ro = rotateVector(o, -$rz)
 
   return {
-    clientX: clientX_,
-    clientY: clientY_,
-    offsetX: t.x,
-    offsetY: t.y,
+    clientX: rc.x,
+    clientY: rc.y,
+    offsetX: ro.x,
+    offsetY: ro.y,
     screenX: clientX,
     screenY: clientY,
-    // screenX,
-    // screenY,
+    pageX,
+    pageY,
   }
 }
 
@@ -76,6 +82,8 @@ export function makeSyntheticPointerEvent(
     clientY: number
     offsetX: number
     offsetY: number
+    pageX: number
+    pageY: number
   }
 ): UnitPointerEvent {
   const { pointerId, pointerType } = event
@@ -98,6 +106,10 @@ export function listenPointerEvent(
   const pointerEventListener = (_event: PointerEvent) => {
     const { $context } = component
 
+    if (!$context) {
+      return
+    }
+
     const event = makeSyntheticPointerEvent($context, _event)
 
     listener(event, _event)
@@ -110,17 +122,5 @@ export function listenPointerEvent(
     _global
   )
 
-  const { $listenCount } = component
-
-  $listenCount[type] = $listenCount[type] || 0
-  $listenCount[type]++
-
-  return () => {
-    $listenCount[type]--
-
-    if ($listenCount[type] === 0) {
-      delete $listenCount[type]
-    }
-    unlisten()
-  }
+  return unlisten
 }

@@ -1,23 +1,19 @@
-import { Element } from '../../../../client/element'
-import { htmlPropHandler, PropHandler } from '../../../../client/propHandler'
-import { renderComponent } from '../../../../client/render/renderComponent'
-import { applyStyle } from '../../../../client/style'
+import { Component } from '../../../../client/component'
+import HTMLElement_ from '../../../../client/html'
+import {
+  $renderComponent,
+  renderComponent,
+} from '../../../../client/render/renderComponent'
 import { System } from '../../../../system'
 import { Dict } from '../../../../types/Dict'
 import { $Component } from '../../../../types/interface/async/$Component'
+import { UCGEE } from '../../../../types/interface/UCGEE'
 import { Unlisten } from '../../../../types/Unlisten'
-import { removeChildren } from '../../../../util/element'
 
 export interface Props {
   component?: $Component
-  id?: string
-  className?: string
   style?: Dict<string>
-  innerText?: string
-  tabIndex?: number
-  title?: string
-  draggable?: boolean
-  data?: Dict<string> // TODO
+  attr?: Dict<string>
 }
 
 const DEFAULT_STYLE = {
@@ -27,81 +23,81 @@ const DEFAULT_STYLE = {
   boxSizing: 'border-box',
 }
 
-export default class Render extends Element<HTMLDivElement, Props> {
-  private _prop_handler: PropHandler
-
+export default class Render extends HTMLElement_<HTMLDivElement, Props> {
   private _unlisten: Unlisten
+  private _component: Component
+
+  public $input = {
+    component: UCGEE,
+  }
 
   constructor($props: Props, $system: System) {
-    super($props, $system)
+    super(
+      $props,
+      $system,
+      $system.api.document.createElement('div'),
+      DEFAULT_STYLE,
+      {},
+      {
+        component: (component: $Component) => {
+          if (this._unlisten) {
+            this._unlisten()
 
-    const {
-      component,
-      id,
-      className,
-      style,
-      innerText,
-      tabIndex,
-      title,
-      draggable,
-      data = {},
-    } = this.$props
+            this._unlisten = undefined
+          }
 
-    this.$element = this.$system.api.document.createElement('div')
-
-    if (id !== undefined) {
-      this.$element.id = id
-    }
-    if (className !== undefined) {
-      this.$element.className = className
-    }
-
-    applyStyle(this.$element, { ...DEFAULT_STYLE, ...style })
-
-    if (innerText) {
-      this.$element.innerText = innerText
-    }
-    if (tabIndex !== undefined) {
-      this.$element.tabIndex = tabIndex
-    }
-    if (title) {
-      this.$element.title = title
-    }
-    if (draggable !== undefined) {
-      this.$element.setAttribute('draggable', draggable.toString())
-    }
-    if (data !== undefined) {
-      for (const key in data) {
-        const d = data[key]
-
-        this.$element.dataset[key] = d
+          if (component) {
+            this._unlisten = $renderComponent(
+              this.$system,
+              this.$context,
+              this.$element,
+              component,
+              (component_) => {
+                this._component = component_
+              }
+            )
+          }
+        },
       }
-    }
+    )
+  }
 
-    this._prop_handler = {
-      ...htmlPropHandler(this, this.$element, DEFAULT_STYLE),
-      unit: (component: $Component) => {
-        if (this._unlisten) {
-          this._unlisten()
+  onUnmount(): void {
+    if (this._unlisten) {
+      this._unlisten()
 
-          this._unlisten = undefined
-
-          removeChildren(this.$element)
-        }
-
-        if (component) {
-          this._unlisten = renderComponent(
-            this.$element,
-            this.$system,
-            component
-          )
-        }
-      },
+      this._unlisten = undefined
     }
   }
 
-  onPropChanged(prop: string, current: any): void {
-    // console.log('Render', 'onPropChanged', prop, current)
-    this._prop_handler[prop](current)
+  onMount(): void {
+    if (this._unlisten) {
+      this._unlisten()
+
+      this._unlisten = undefined
+    }
+
+    if (this._component) {
+      this._unlisten = renderComponent(
+        this.$system,
+        this.$context,
+        this.$element,
+        this._component
+      )
+    }
+  }
+
+  focus() {
+    if (this._component) {
+      this._component.focus()
+
+      return
+    }
+
+    const child = this.$element.childNodes.item(0) as HTMLElement
+
+    if (child) {
+      child.focus()
+    }
   }
 }

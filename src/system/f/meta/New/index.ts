@@ -1,4 +1,4 @@
-import { Semifunctional } from '../../../../Class/Semifunctional'
+import { Holder } from '../../../../Class/Holder'
 import { Unit } from '../../../../Class/Unit'
 import { System } from '../../../../system'
 import { UnitBundle } from '../../../../types/UnitBundle'
@@ -13,13 +13,14 @@ export interface O<T> {
   unit: Unit<any, any>
 }
 
-export default class New<T> extends Semifunctional<I<T>, O<T>> {
+export default class New<T> extends Holder<I<T>, O<T>> {
+  private _unit: Unit
+
   constructor(system: System) {
     super(
       {
         fi: ['class'],
         fo: ['unit'],
-        i: ['done'],
       },
       {
         output: {
@@ -34,14 +35,20 @@ export default class New<T> extends Semifunctional<I<T>, O<T>> {
   }
 
   f({ class: Class }: I<T>, done): void {
-    done({ unit: new Class(this.__system) })
+    const unit = new Class(this.__system)
+
+    unit.play()
+
+    this._unit = unit
+
+    done({ unit })
   }
 
-  public onIterDataInputData(name: string, data: any): void {
-    // if (name === 'done') {
-    this._forward_all_empty()
-    this._backward('class')
-    this._backward('done')
-    // }
+  d() {
+    if (this._unit) {
+      this._unit.destroy()
+
+      this._unit = undefined
+    }
   }
 }

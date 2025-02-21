@@ -1,12 +1,11 @@
 import { Component } from '../../../../client/component'
 import { componentClassFromSpecId } from '../../../../client/componentClassFromSpecId'
-import { getComponentInterface } from '../../../../client/component_'
 import { parentClass } from '../../../../client/createParent'
-import { Element } from '../../../../client/element'
-import parentElement from '../../../../client/platform/web/parentElement'
+import HTMLElement_ from '../../../../client/html'
+import { getComponentInterface } from '../../../../client/interface'
+import { parentElement } from '../../../../client/platform/web/parentElement'
 import { ComponentClass, System } from '../../../../system'
 import { UnitBundleSpec } from '../../../../types/UnitBundleSpec'
-import { $Wrap } from '../../../../types/interface/async/$Wrap'
 import { insert, push, removeAt, unshift } from '../../../../util/array'
 
 export interface Props {
@@ -15,8 +14,8 @@ export interface Props {
 
 export const DEFAULT_STYLE = {}
 
-export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
-  $_ = ['W']
+export default class Wrap extends HTMLElement_<HTMLDivElement, Props> {
+  $_ = ['WP']
 
   private _Container: ComponentClass = parentClass()
 
@@ -25,13 +24,9 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
   private _parent_child_container: Component[] = []
 
   constructor(props: {}, $system: System) {
-    super(props, $system)
+    super(props, $system, parentElement($system), DEFAULT_STYLE, {}, {})
 
-    const $element = parentElement($system)
-
-    $element.className = 'wrap'
-
-    this.$element = $element
+    this.$element.className = 'wrap'
 
     this.$slot = {
       default: this,
@@ -147,14 +142,14 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
     return this._connected_container(at, '$refParentChildContainer')
   }
 
-  public memAppendChild(child: Component, slotName: string, at: number): void {
+  public memInsertChild(child: Component, slotName: string, at: number): void {
     const container = this._connected_child_container(at)
 
     this._child_container.push(container)
 
-    container.memAppendChild(child, 'default', at)
+    container.memInsertChild(child, 'default', at)
 
-    super.memAppendChild(child, slotName, at)
+    super.memInsertChild(child, slotName, at)
   }
 
   public memAppendParentChild(
@@ -177,7 +172,7 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
 
     push(this._parent_child_container, container)
 
-    container.memAppendChild(component, 'default', at)
+    container.memInsertChild(component, 'default', at)
 
     super.memAppendParentChild(component, slotName, at, _at)
   }
@@ -222,7 +217,7 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
 
     insert(this._parent_child_container, container, _at)
 
-    container.memAppendChild(component, 'default', _at)
+    container.memInsertChild(component, 'default', _at)
 
     super.memInsertParentChildAt(component, slotName, _at)
   }
@@ -333,7 +328,7 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
     super.postRemoveChild(child, at)
   }
 
-  public insertParentRoot(
+  public placeParentRoot(
     component: Component,
     at: number,
     slotName: string
@@ -344,7 +339,7 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
 
     insert(this._parent_container, container, at)
 
-    super.insertParentRoot(component, at, slotName)
+    super.placeParentRoot(component, at, slotName)
   }
 
   public unshiftParentRoot(component: Component, slotName: string): void {
@@ -376,7 +371,7 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
 
     this._parent_container.push(container)
 
-    container.memAppendChild(component, 'default', at)
+    container.memInsertChild(component, 'default', at)
 
     super.memAppendParentRoot(component, slotName, at)
   }
@@ -469,7 +464,6 @@ export default class Wrap extends Element<HTMLDivElement, Props, $Wrap> {
         componentClass = componentClassFromSpecId(
           this.$system.components,
           this.$system.specs,
-          this.$system.classes,
           id,
           input
         )

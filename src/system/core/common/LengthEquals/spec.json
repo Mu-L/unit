@@ -29,8 +29,7 @@
           "unitId": "length",
           "pinId": "a"
         }
-      },
-      "type": "<A>[]"
+      }
     },
     "b": {
       "plug": {
@@ -38,8 +37,7 @@
           "unitId": "equals",
           "pinId": "b"
         }
-      },
-      "type": "number"
+      }
     }
   },
   "outputs": {
@@ -49,17 +47,14 @@
           "unitId": "equals",
           "pinId": "a = b"
         }
-      },
-      "type": "boolean"
+      }
     }
   },
   "metadata": {
     "icon": "ruler",
-    "description": "check whther the length of `a` is equal to `n`?",
-    "complexity": 8,
+    "description": "check whether the length of `a` is equal to `n`?",
     "tags": ["core", "common"]
   },
   "id": "175c0cc6-1801-4b5d-9980-e780c10ea745",
-  "type": "`U`&`G`",
-  "system": true
+  "type": "`U`&`G`"
 }

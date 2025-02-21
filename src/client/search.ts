@@ -1,6 +1,6 @@
-import { Specs } from '../types'
+import { getSpec } from '../spec/util'
+import { Classes, Specs } from '../types'
 import { getSpecComplexity } from './complexity'
-import { getSpec } from './spec'
 
 const NUMERAL = '0123456789'
 
@@ -10,11 +10,12 @@ export function startsWithNumeral(str: string): boolean {
 
 export function compareByComplexity(
   specs: Specs,
+  classes: Classes,
   a: string,
   b: string
 ): number {
-  const aC = getSpecComplexity(specs, a, true)
-  const bC = getSpecComplexity(specs, b, true)
+  const aC = getSpecComplexity(specs, classes, a, true)
+  const bC = getSpecComplexity(specs, classes, b, true)
   if (aC < bC) {
     return -1
   } else if (aC > bC) {
