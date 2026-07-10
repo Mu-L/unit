@@ -107,14 +107,18 @@ export class Stateful<
   public set<K extends keyof I>(
     name: K,
     data: any,
-    auto: boolean = false
+    auto: boolean = false,
+    emit: boolean = true
   ): void {
     this._set_from_input = auto
 
     this._state[name] = data
-    this.emit('set', name, data)
-    // @ts-ignore
-    this.emit(name, data)
+
+    if (emit) {
+      this.emit('set', name, data)
+      // @ts-ignore
+      this.emit(name, data)
+    }
   }
 
   hasKey<K extends keyof I>(name: K): boolean {

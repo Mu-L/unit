@@ -18,6 +18,7 @@ export default class Select extends Field<HTMLSelectElement, Props> {
       valueKey: 'value',
       defaultStyle: $system.style['select'],
       defaultValue: '',
+      emitOnChange: false,
     })
   }
 }

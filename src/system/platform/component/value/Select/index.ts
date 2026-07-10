@@ -57,8 +57,6 @@ export default class Select extends Field<'value', I, O> {
 
     this._defaultState = {}
 
-    const setFirstOption = (option: Option) => {}
-
     const appendChildListener = ({
       bundle,
       child,
@@ -75,7 +73,7 @@ export default class Select extends Field<'value', I, O> {
           const value = option.peakInput('value')
 
           if (value !== undefined) {
-            void this.set('value', value)
+            void this.set('value', value, undefined, false)
 
             this._forward('value', value)
             this._backward('value')
@@ -129,13 +127,15 @@ export default class Select extends Field<'value', I, O> {
   }
 
   onDataInputDrop(name: string): void {
-    if (this._first_option) {
-      const value = this._first_option.peakInput('value')
+    if (!this._backwarding) {
+      if (this._first_option) {
+        const value = this._first_option.peakInput('value')
 
-      if (value !== undefined) {
-        void this.set('value', value)
+        if (value !== undefined) {
+          void this.set('value', value, undefined, false)
 
-        this._forward('value', value)
+          this._forward('value', value)
+        }
       }
     }
   }
