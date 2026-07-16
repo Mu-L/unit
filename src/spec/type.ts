@@ -33,7 +33,7 @@ import {
   isGeneric,
 } from './parser'
 import { stringifyDataValue } from './stringifyDataValue'
-import { findFirstMergePin, forEachPinOnMerge } from './util/spec'
+import { forEachPinOnMerge } from './util/spec'
 
 export type TypeInterface = IOOf<Dict<string>>
 export type TypeTreeInterface = IOOf<Dict<TreeNode>>
@@ -187,7 +187,7 @@ export const _getGraphTypeInterface = (
       inputType = getTree(type)
     } else {
       forEachValueKey(plug, ({ mergeId, unitId, pinId, kind = 'input' }) => {
-        let subPinType: TreeNode
+        let subPinType: TreeNode = getTree('any')
 
         if (mergeId) {
           const merge = spec.merges[mergeId] ?? {}
@@ -196,13 +196,19 @@ export const _getGraphTypeInterface = (
             return
           }
 
-          const mergeInputPin = findFirstMergePin(merge, 'input')
+          for (const unitId in merge) {
+            if (merge[unitId]['input']) {
+              for (const pinId in merge[unitId]['input']) {
+                const mergeInputType = deepGetOrDefault(
+                  unitTypeMap,
+                  [unitId, 'input', pinId],
+                  undefined
+                )
 
-          subPinType = deepGetOrDefault(
-            unitTypeMap,
-            [mergeInputPin.unitId, 'input', mergeInputPin.pinId],
-            undefined
-          )
+                subPinType = _mostSpecific(subPinType, mergeInputType)
+              }
+            }
+          }
         } else if (unitId && pinId) {
           if (kind === 'input') {
             subPinType = deepGetOrDefault(
@@ -218,6 +224,7 @@ export const _getGraphTypeInterface = (
         }
       })
     }
+
     typeInterface.input[inputId] = inputType
   })
 
@@ -279,32 +286,43 @@ export const _getGraphTypeInterface = (
         }
       })
     }
+
     typeInterface.output[outputId] = outputType
   })
 
   let i = 65
+
   const replacement: { [generic: string]: string } = {}
+
   const { input, output } = typeInterface
+
   const inputPinIds = keys(input).sort()
   const outputPinIds = keys(output).sort()
+
   for (const inputPinId of inputPinIds) {
     const type = input[inputPinId]
+
     const generics = _findGenerics(type)
+
     for (const generic of generics) {
       if (!replacement[generic]) {
         replacement[generic] = `<${String.fromCharCode(i++)}>`
       }
     }
+
     input[inputPinId] = _applyGenerics(type, replacement)
   }
   for (const outputPinId of outputPinIds) {
     const type = output[outputPinId]
+
     const generics = _findGenerics(type)
+
     for (const generic of generics) {
       if (!replacement[generic]) {
         replacement[generic] = `<${String.fromCharCode(i++)}>`
       }
     }
+
     output[outputPinId] = _applyGenerics(type, replacement)
   }
 
@@ -324,6 +342,7 @@ export function* genericGenerator() {
     yield prefix + main
 
     mainIndex++
+
     if (mainIndex >= letters.length) {
       mainIndex = 0
       prefixIndex++
@@ -335,7 +354,6 @@ export const createGenericTypeInterface = (
   id: string,
   specs: Specs
 ): TypeTreeInterface => {
-  // console.log('createGenericTypeInterface', id)
   const spec = specs[id]
   const typeInterface: TypeTreeInterface = emptyIO({}, {})
 
