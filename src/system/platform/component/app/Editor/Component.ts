@@ -3709,21 +3709,21 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
       const { items, files } = dataTransfer
 
       if (items) {
-        const fileItems: DataTransferItem[] = []
-        const stringItems: DataTransferItem[] = []
+        const file_items: DataTransferItem[] = []
+        const string_items: DataTransferItem[] = []
 
         for (let i = 0; i < items.length; i++) {
           const item = items[i]
 
           if (item.kind === 'file') {
-            fileItems.push(item)
+            file_items.push(item)
           } else if (item.kind === 'string') {
-            stringItems.push(item)
+            string_items.push(item)
           }
         }
 
-        for (let i = 0; i < fileItems.length; i++) {
-          const fileItem = fileItems[i]
+        for (let i = 0; i < file_items.length; i++) {
+          const fileItem = file_items[i]
 
           void this._drop_data_transfer_item(
             fileItem,
@@ -3734,13 +3734,23 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
 
         const DROP_PRIORITY = ['text/plain', 'text/html', 'text/uri-list']
 
-        stringItems.sort((a, b) => {
-          return DROP_PRIORITY.indexOf(a.type) - DROP_PRIORITY.indexOf(b.type)
+        const get_weight = (type: string) => {
+          if (!DROP_PRIORITY.includes(type)) {
+            return Infinity
+          } else {
+            return DROP_PRIORITY.indexOf(type)
+          }
+        }
+
+        string_items.sort((a, b) => {
+          return get_weight(a.type) - get_weight(b.type)
         })
 
-        if (stringItems.length > 0) {
+        if (string_items.length > 0) {
+          const first_string_item = string_items[0]
+
           void this._drop_data_transfer_item(
-            stringItems[0],
+            first_string_item,
             drop_position,
             screen_position
           )
