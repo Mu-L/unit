@@ -20473,6 +20473,13 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
           preventDefault: true,
         },
         {
+          combo: ['Control + e'],
+          keydown: () => {
+            this._on_ctrl_e_keydown()
+          },
+          preventDefault: true,
+        },
+        {
           combo: ['Control + o'],
           keydown: () => {
             this._on_ctrl_o_keydown()
@@ -52745,7 +52752,11 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
     this._set_spec_node_positions_rec(editor, spec, specs)
   }
 
-  public save = async (force_dialog: boolean = false) => {
+  private _save = async (
+    name: string,
+    bundle: BundleSpec,
+    force_dialog: boolean = false
+  ) => {
     const { specs } = this.$props
 
     const {
@@ -52757,10 +52768,6 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
         },
       },
     } = this.$system
-
-    const { name } = this._spec
-
-    const bundle = this.getBundle()
 
     if (isSaveFilePickerSupported()) {
       const options = {
@@ -52816,6 +52823,20 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
     }
   }
 
+  public save = async (force_dialog: boolean = false) => {
+    const bundle = this.getBundle()
+
+    const { name } = this._spec
+
+    return this._save(name, bundle, force_dialog)
+  }
+
+  private _save_selection = async (force_dialog: boolean) => {
+    const bundle = this._get_selected_bundle()
+
+    return this._save('selection', bundle, force_dialog)
+  }
+
   private _save_silently = async (bundle: BundleSpec) => {
     const {
       api: {
@@ -52836,6 +52857,12 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
     // console.log('Graph', '_on_ctrl_s_keydown')
 
     void this.save()
+  }
+
+  private _on_ctrl_e_keydown = () => {
+    // console.log('Graph', '_on_ctrl_e_keydown')
+
+    void this._save_selection(false)
   }
 
   private _on_ctrl_shift_s_keydown = () => {
@@ -53300,7 +53327,7 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
     void this._copy_nodes(node_ids, deep)
   }
 
-  public copy_selected_nodes = (deep: boolean) => {
+  private _get_selected_node_ids = () => {
     const selected_node_id_clone = clone(this._selected_node_id)
 
     for (const node_id in this._selected_node_id) {
@@ -53321,7 +53348,21 @@ export class Editor_ extends Element<HTMLDivElement, Props_> {
 
     const node_ids = keys(selected_node_id_clone)
 
+    return node_ids
+  }
+
+  public copy_selected_nodes = (deep: boolean) => {
+    const node_ids = this._get_selected_node_ids()
+
     void this._copy_nodes(node_ids, deep)
+  }
+
+  private _get_selected_bundle = () => {
+    const node_ids = this._get_selected_node_ids()
+
+    const bundle = this._sub_graph_selection(node_ids)
+
+    return bundle
   }
 
   private _validate_graph_spec = (data: any): boolean => {
